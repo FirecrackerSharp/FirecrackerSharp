@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Install;
+namespace FirecrackerSharp.Installation;
 
 public record FirecrackerInstall(
     string Version,

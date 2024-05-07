@@ -4,7 +4,7 @@ using Octokit;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
-namespace FirecrackerSharp.Install;
+namespace FirecrackerSharp.Installation;
 
 public class FirecrackerInstaller(
     string installRoot,
@@ -20,9 +20,9 @@ public class FirecrackerInstaller(
         var installDirectory = Path.Join(installRoot, releaseTag + Guid.NewGuid());
         Directory.CreateDirectory(installDirectory);
         var archivePath = await DownloadAssetsAndVerifyAsync(archiveAsset, archiveChecksumAsset);
-        var install = await ExtractToInstallRootAsync(archivePath, installDirectory);
+        var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory);
 
-        return install;
+        return firecracker;
     }
 
     private async Task<(ReleaseAsset, ReleaseAsset)> FetchAssetsFromApiAsync()
@@ -31,14 +31,14 @@ public class FirecrackerInstaller(
         var repository = await githubClient.Repository.Get(repoOwner, repoName);
         if (repository is null)
         {
-            throw new FirecrackerInstallException(
+            throw new FirecrackerInstallationException(
                 $"Could not the Firecracker GitHub repository owned by {repoOwner} and named {repoName}");
         }
 
         var releases = await githubClient.Repository.Release.GetAll(repository.Id);
         if (releases is null)
         {
-            throw new FirecrackerInstallException("Could not query Firecracker releases on the specified repository");
+            throw new FirecrackerInstallationException("Could not query Firecracker releases on the specified repository");
         }
 
         var release = releaseTag is null
@@ -46,7 +46,7 @@ public class FirecrackerInstaller(
             : releases.FirstOrDefault(x => x.TagName == releaseTag);
         if (release is null)
         {
-            throw new FirecrackerInstallException(
+            throw new FirecrackerInstallationException(
                 releaseTag is null ? "Could not find the latest release" : $"Could not find the release with the tag {releaseTag}");
         }
 
@@ -54,7 +54,7 @@ public class FirecrackerInstaller(
         var archiveChecksumAsset = release.Assets.FirstOrDefault(x => x.Name.EndsWith("x86_64.tgz.sha256.txt"));
         if (archiveAsset is null || archiveChecksumAsset is null)
         {
-            throw new FirecrackerInstallException("Could not fetch the necessary x86_64 archive and checksum");
+            throw new FirecrackerInstallationException("Could not fetch the necessary x86_64 archive and checksum");
         }
 
         return (archiveAsset, archiveChecksumAsset);
@@ -78,7 +78,7 @@ public class FirecrackerInstaller(
         var subdirectoryPath = Directory.GetDirectories(temporaryDirectory).FirstOrDefault();
         if (subdirectoryPath is null)
         {
-            throw new FirecrackerInstallException("The extracted Firecracker directory doesn't contain the" +
+            throw new FirecrackerInstallationException("The extracted Firecracker directory doesn't contain the" +
                                                   "expected subdirectory");
         }
 
@@ -111,7 +111,7 @@ public class FirecrackerInstaller(
         var actualChecksum = ToHex(SHA256.HashData(archiveBytes));
         if (expectedChecksum != actualChecksum)
         {
-            throw new FirecrackerInstallException("The actual checksum doesn't match the expected one from GitHub");
+            throw new FirecrackerInstallationException("The actual checksum doesn't match the expected one from GitHub");
         }
         
         await File.WriteAllBytesAsync(archivePath, archiveBytes);
