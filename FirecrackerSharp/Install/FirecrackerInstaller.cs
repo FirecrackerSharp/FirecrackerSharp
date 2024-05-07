@@ -89,6 +89,10 @@ public class FirecrackerInstaller(
         var newJailerBinaryPath = Path.Join(installDirectory, "jailer");
         File.Copy(firecrackerBinaryPath, newFirecrackerBinaryPath);
         File.Copy(jailerBinaryPath, newJailerBinaryPath);
+#pragma warning disable CA1416
+        File.SetUnixFileMode(newFirecrackerBinaryPath, UnixFileMode.UserExecute);
+        File.SetUnixFileMode(newJailerBinaryPath, UnixFileMode.UserExecute);
+#pragma warning restore CA1416
         
         Directory.Delete(temporaryDirectory, recursive: true);
         File.Delete(archivePath);
