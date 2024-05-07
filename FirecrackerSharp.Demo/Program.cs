@@ -1,4 +1,5 @@
 ﻿using FirecrackerSharp.Installation;
 
-var installer = new FirecrackerInstaller("/home/kanpov/Documents/firecracker");
-await installer.InstallAsync();
+var installManager = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
+var install = await installManager.InstallToStorageAsync();
+await installManager.AddToIndexAsync(install);
