@@ -6,4 +6,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Octokit" Version="11.0.1" />
+      <PackageReference Include="SharpCompress" Version="0.37.2" />
+      <PackageReference Include="System.Text.Json" Version="8.0.3" />
+    </ItemGroup>
+
 </Project>

@@ -1,3 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿using FirecrackerSharp.Install;
 
-Console.WriteLine("Hello, World!");
+var installer = new FirecrackerInstaller("/home/kanpov/Documents/firecracker");
+await installer.InstallAsync();
