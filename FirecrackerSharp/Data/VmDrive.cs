@@ -5,7 +5,7 @@ public record VmDrive(
     bool IsRootDevice,
     string? Partuuid = null,
     VmCacheType CacheType = VmCacheType.Unsafe,
-    bool? IsReadOnly = null,
+    bool IsReadOnly = false,
     string? PathOnHost = null,
     VmIoEngine IoEngine = VmIoEngine.Sync,
     string? Socket = null,
