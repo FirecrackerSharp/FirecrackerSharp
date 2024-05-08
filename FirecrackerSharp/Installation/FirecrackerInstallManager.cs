@@ -23,19 +23,31 @@ public class FirecrackerInstallManager(
         return await installer.InstallAsync();
     }
     
-    public async Task AddToIndexAsync(FirecrackerInstall firecrackerInstall)
+    public async Task AddToIndexAsync(FirecrackerInstall addedInstall)
     {
         if (!File.Exists(IndexPath))
         {
-            var newInstalls = new List<FirecrackerInstall> { firecrackerInstall };
+            var newInstalls = new List<FirecrackerInstall> { addedInstall };
             var newIndexJson = JsonSerializer.Serialize(newInstalls, jsonSerializerOptions);
             await File.WriteAllTextAsync(IndexPath, newIndexJson);
             return;
         }
+        
+        var installs = await GetAllFromIndexAsync();
+        installs.Add(addedInstall);
+        await WriteIndexAsync(installs);
+    }
 
+    public async Task AddManyToIndexAsync(IEnumerable<FirecrackerInstall> addedInstalls)
+    {
+        if (!File.Exists(IndexPath))
+        {
+            await WriteIndexAsync(addedInstalls);
+            return;
+        }
 
         var installs = await GetAllFromIndexAsync();
-        installs.Add(firecrackerInstall);
+        installs.AddRange(addedInstalls);
         await WriteIndexAsync(installs);
     }
 
@@ -67,7 +79,7 @@ public class FirecrackerInstallManager(
         await WriteIndexAsync([]);
     }
 
-    private async Task WriteIndexAsync(List<FirecrackerInstall> installs)
+    private async Task WriteIndexAsync(IEnumerable<FirecrackerInstall> installs)
     {
         var json = JsonSerializer.Serialize(installs, jsonSerializerOptions);
         await File.WriteAllTextAsync(IndexPath, json);
