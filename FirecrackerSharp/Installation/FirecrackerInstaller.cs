@@ -8,7 +8,7 @@ namespace FirecrackerSharp.Installation;
 
 public class FirecrackerInstaller(
     string installRoot,
-    string? releaseTag = null,
+    string releaseTag = "latest",
     string repoOwner = "firecracker-microvm",
     string repoName = "firecracker")
 {
@@ -16,16 +16,17 @@ public class FirecrackerInstaller(
     
     public async Task<FirecrackerInstall> InstallAsync()
     {
-        var (archiveAsset, archiveChecksumAsset) = await FetchAssetsFromApiAsync();
-        var installDirectory = Path.Join(installRoot, releaseTag + Guid.NewGuid());
+        var (archiveAsset, archiveChecksumAsset, release) = await FetchAssetsFromApiAsync();
+        var fetchedReleaseTag = release.TagName;
+        var installDirectory = Path.Join(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
         Directory.CreateDirectory(installDirectory);
         var archivePath = await DownloadAssetsAndVerifyAsync(archiveAsset, archiveChecksumAsset);
-        var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory);
+        var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory, fetchedReleaseTag);
 
         return firecracker;
     }
 
-    private async Task<(ReleaseAsset, ReleaseAsset)> FetchAssetsFromApiAsync()
+    private async Task<(ReleaseAsset, ReleaseAsset, Release)> FetchAssetsFromApiAsync()
     {
         var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp"));
         var repository = await githubClient.Repository.Get(repoOwner, repoName);
@@ -41,13 +42,13 @@ public class FirecrackerInstaller(
             throw new FirecrackerInstallationException("Could not query Firecracker releases on the specified repository");
         }
 
-        var release = releaseTag is null
+        var release = releaseTag == "latest"
             ? releases.MaxBy(x => x.CreatedAt)
             : releases.FirstOrDefault(x => x.TagName == releaseTag);
         if (release is null)
         {
             throw new FirecrackerInstallationException(
-                releaseTag is null ? "Could not find the latest release" : $"Could not find the release with the tag {releaseTag}");
+                releaseTag == "latest" ? "Could not find the latest release" : $"Could not find the release with the tag {releaseTag}");
         }
 
         var archiveAsset = release.Assets.FirstOrDefault(x => x.Name.EndsWith("x86_64.tgz"));
@@ -57,10 +58,11 @@ public class FirecrackerInstaller(
             throw new FirecrackerInstallationException("Could not fetch the necessary x86_64 archive and checksum");
         }
 
-        return (archiveAsset, archiveChecksumAsset);
+        return (archiveAsset, archiveChecksumAsset, release);
     }
 
-    private async Task<FirecrackerInstall> ExtractToInstallRootAsync(string archivePath, string installDirectory)
+    private async Task<FirecrackerInstall> ExtractToInstallRootAsync(string archivePath, string installDirectory,
+        string fetchedReleaseTag)
     {
         var temporaryDirectory = Directory.CreateTempSubdirectory().FullName;
 
@@ -97,7 +99,7 @@ public class FirecrackerInstaller(
         Directory.Delete(temporaryDirectory, recursive: true);
         File.Delete(archivePath);
         
-        return new FirecrackerInstall(releaseTag ?? "latest", newFirecrackerBinaryPath, newJailerBinaryPath);
+        return new FirecrackerInstall(fetchedReleaseTag, newFirecrackerBinaryPath, newJailerBinaryPath);
     }
 
     private static async Task<string> DownloadAssetsAndVerifyAsync(ReleaseAsset archiveAsset, ReleaseAsset archiveChecksumAsset)

@@ -16,7 +16,7 @@ public class FirecrackerInstallManager(
     public FirecrackerInstallManager(string storagePath, string indexFilename = "index.json") 
         : this(storagePath, DefaultSerializerOptions, indexFilename) {}
 
-    public async Task<FirecrackerInstall> InstallToStorageAsync(string? releaseTag = null,
+    public async Task<FirecrackerInstall> InstallAsync(string releaseTag = "latest",
         string repoOwner = "firecracker-microvm", string repoName = "firecracker")
     {
         var installer = new FirecrackerInstaller(storagePath, releaseTag, repoOwner, repoName);
@@ -33,10 +33,50 @@ public class FirecrackerInstallManager(
             return;
         }
 
-        var indexJson = await File.ReadAllTextAsync(IndexPath);
-        var installs = JsonSerializer.Deserialize<List<FirecrackerInstall>>(indexJson, jsonSerializerOptions)!;
+
+        var installs = await GetAllFromIndexAsync();
         installs.Add(firecrackerInstall);
-        var addedIndexJson = JsonSerializer.Serialize(installs, jsonSerializerOptions);
-        await File.WriteAllTextAsync(IndexPath, addedIndexJson);
+        await WriteIndexAsync(installs);
+    }
+
+    public async Task<List<FirecrackerInstall>> GetAllFromIndexAsync()
+    {
+        var indexJson = await File.ReadAllTextAsync(IndexPath);
+        return JsonSerializer.Deserialize<List<FirecrackerInstall>>(indexJson, jsonSerializerOptions)!;
+    }
+
+    public async Task<FirecrackerInstall?> GetFromIndexAsync(string version, bool strict = false)
+    {
+        var installs = await GetAllFromIndexAsync();
+        return FindInIndex(installs, version, strict);
+    }
+
+    public async Task<bool> RemoveFromIndexAsync(string version, bool strict = false)
+    {
+        var installs = await GetAllFromIndexAsync();
+        var install = FindInIndex(installs, version, strict);
+        if (install is null) return false;
+        
+        installs.Remove(install);
+        await WriteIndexAsync(installs);
+        return true;
+    }
+
+    public async Task RemoveAllFromIndexAsync()
+    {
+        await WriteIndexAsync([]);
+    }
+
+    private async Task WriteIndexAsync(List<FirecrackerInstall> installs)
+    {
+        var json = JsonSerializer.Serialize(installs, jsonSerializerOptions);
+        await File.WriteAllTextAsync(IndexPath, json);
+    }
+
+    private static FirecrackerInstall? FindInIndex(List<FirecrackerInstall> installs, string version, bool strict = false)
+    {
+        return strict
+            ? installs.FirstOrDefault(x => x.Version == version)
+            : installs.FirstOrDefault(x => x.Version.Contains(version));
     }
 }
