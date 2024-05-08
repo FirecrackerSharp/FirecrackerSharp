@@ -4,14 +4,20 @@ using Serilog;
 
 namespace FirecrackerSharp.Core;
 
-public class UnrestrictedFirecrackerVm(
-    VmConfiguration vmConfiguration,
-    FirecrackerInstall firecrackerInstall,
-    FirecrackerOptions firecrackerOptions,
-    int? bootDelay = 2) : FirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions)
+public class UnrestrictedFirecrackerVm : FirecrackerVm
 {
     private static readonly ILogger Logger = Log.ForContext(typeof(UnrestrictedFirecrackerVm));
-    
+    private readonly int? _bootDelay;
+
+    private UnrestrictedFirecrackerVm(
+        VmConfiguration vmConfiguration,
+        FirecrackerInstall firecrackerInstall,
+        FirecrackerOptions firecrackerOptions,
+        int? bootDelay = 2) : base(vmConfiguration, firecrackerInstall, firecrackerOptions)
+    {
+        _bootDelay = bootDelay;
+    }
+
     internal override async Task StartProcessAsync()
     {
         var configPath = Path.GetTempFileName();
@@ -21,10 +27,12 @@ public class UnrestrictedFirecrackerVm(
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);
         Process = FirecrackerInstall.RunFirecracker(args);
 
-        if (bootDelay.HasValue)
+        if (_bootDelay.HasValue)
         {
-            await Task.Delay(bootDelay.Value * 1000);
+            await Task.Delay(_bootDelay.Value * 1000);
         }
+        
+        Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);
     }
 
     public static async Task<FirecrackerVm> StartAsync(

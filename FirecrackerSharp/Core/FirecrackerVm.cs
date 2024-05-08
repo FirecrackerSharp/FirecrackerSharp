@@ -10,7 +10,7 @@ public abstract class FirecrackerVm
 {
     private static readonly ILogger Logger = Log.ForContext(typeof(FirecrackerVm));
     
-    private readonly VmConfiguration _vmConfiguration;
+    protected VmConfiguration VmConfiguration;
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected readonly string SocketPath;
@@ -28,7 +28,7 @@ public abstract class FirecrackerVm
         
         Logger.Debug("The Unix socket for the microVM will be created at: {socketPath}", SocketPath);
         
-        _vmConfiguration = vmConfiguration;
+        VmConfiguration = vmConfiguration;
         FirecrackerInstall = firecrackerInstall;
         FirecrackerOptions = firecrackerOptions;
     }
@@ -37,7 +37,7 @@ public abstract class FirecrackerVm
 
     protected async Task<string> SerializeConfigToFileAsync(string configPath)
     {
-        var configJson = JsonSerializer.Serialize(_vmConfiguration, InternalUtil.SerializerOptions);
+        var configJson = JsonSerializer.Serialize(VmConfiguration, InternalUtil.SerializerOptions);
         await File.WriteAllTextAsync(configPath, configJson);
         
         Log.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
