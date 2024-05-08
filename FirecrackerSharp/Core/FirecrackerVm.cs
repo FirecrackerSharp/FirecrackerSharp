@@ -13,6 +13,7 @@ public class FirecrackerVm
     private readonly VmConfiguration _vmConfiguration;
     private readonly FirecrackerInstall _firecrackerInstall;
     private readonly FirecrackerOptions _firecrackerOptions;
+    private readonly JailerOptions? _jailerOptions;
     private readonly string _socketPath;
     
     private Process? _process;
@@ -21,7 +22,8 @@ public class FirecrackerVm
     private FirecrackerVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
-        FirecrackerOptions firecrackerOptions)
+        FirecrackerOptions firecrackerOptions,
+        JailerOptions? jailerOptions)
     {
         if (!Directory.Exists(firecrackerOptions.SocketDirectory)) Directory.CreateDirectory(firecrackerOptions.SocketDirectory);
         _socketPath = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
@@ -31,12 +33,13 @@ public class FirecrackerVm
         _vmConfiguration = vmConfiguration;
         _firecrackerInstall = firecrackerInstall;
         _firecrackerOptions = firecrackerOptions;
+        _jailerOptions = jailerOptions;
     }
 
     private async Task InternalStartAsync()
     {
         var configPath = await PrepareForBootAsync();
-        var args = $"--config-file {configPath} --api-sock {_socketPath} {_firecrackerOptions.ExtraArguments}";
+        var args = $" --config-file \"{configPath}\" --api-sock \"{_socketPath}\" {_firecrackerOptions.ExtraArguments}";
         Log.Debug("Launch arguments for microVM {vmId} are: {args}", _vmId, args);
         _process = _firecrackerInstall.RunFirecracker(args);
         
@@ -45,6 +48,24 @@ public class FirecrackerVm
             await Task.Delay(_firecrackerOptions.WaitSecondsAfterBoot.Value * 1000);
         }
         Log.Information("Launched microVM {vmId}", _vmId);
+    }
+    
+    private async Task InternalStartInJailerAsync()
+    {
+        if (_jailerOptions is null)
+            throw new ArgumentNullException(nameof(_jailerOptions), "microVM can't be started in jailer without JailerOptions");
+        
+        var configPath = await PrepareForBootAsync();
+        var firecrackerArgs = $"--config-file {configPath} --api-sock {_socketPath} {_firecrackerOptions.ExtraArguments}";
+        var args = $" --exec-file {_firecrackerInstall.FirecrackerBinary} --id {_jailerOptions.JailId} --uid {_jailerOptions.LinuxUid} --gid {_jailerOptions.LinuxGid}";
+        Log.Debug("Launch arguments for microVM {vmId} in jailer are: {args}", _vmId, args);
+        _process = _firecrackerInstall.RunJailer(args);
+        
+        if (_firecrackerOptions.WaitSecondsAfterBoot.HasValue)
+        {
+            await Task.Delay(_firecrackerOptions.WaitSecondsAfterBoot.Value * 1000);
+        }
+        Log.Information("Launched microVM {vmId} in jailer", _vmId);
     }
 
     private async Task<string> PrepareForBootAsync()
@@ -63,8 +84,19 @@ public class FirecrackerVm
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions)
     {
-        var firecrackerVm = new FirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions);
+        var firecrackerVm = new FirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions: null);
         await firecrackerVm.InternalStartAsync();
+        return firecrackerVm;
+    }
+
+    public static async Task<FirecrackerVm> StartInJailerAsync(
+        VmConfiguration vmConfiguration,
+        FirecrackerInstall firecrackerInstall,
+        FirecrackerOptions firecrackerOptions,
+        JailerOptions jailerOptions)
+    {
+        var firecrackerVm = new FirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions);
+        await firecrackerVm.InternalStartInJailerAsync();
         return firecrackerVm;
     }
 

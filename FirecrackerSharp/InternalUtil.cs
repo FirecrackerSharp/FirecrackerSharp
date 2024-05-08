@@ -27,8 +27,8 @@ internal static class InternalUtil
     {
         return RunProcess(install.JailerBinary, args);
     }
-    
-    internal static Process RunProcess(string command, string args)
+
+    private static Process RunProcess(string command, string args)
     {
         var process = new Process
         {
