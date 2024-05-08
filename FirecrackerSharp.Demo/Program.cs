@@ -17,5 +17,5 @@ var testConfig = new VmConfiguration(
 
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
 var install = await im.GetFromIndexAsync("v1.7.0");
-var vm = await FirecrackerVm.StartAsync(testConfig, install!, new FirecrackerArguments(ShowLevel: true));
+var vm = await FirecrackerVm.StartAsync(testConfig, install!, new FirecrackerOptions("test"));
 await vm.ShutdownAsync();
