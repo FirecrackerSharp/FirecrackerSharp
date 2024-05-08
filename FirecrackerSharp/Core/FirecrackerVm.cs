@@ -72,6 +72,7 @@ public class FirecrackerVm : IAsyncDisposable
     {
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+        File.Delete(_socketPath);
         
         await _process!.StandardInput.WriteLineAsync("reboot");
         try
