@@ -35,8 +35,8 @@ internal static class InternalUtil
             StartInfo = new ProcessStartInfo
             {
                 FileName = command,
-                Arguments = args,
                 UseShellExecute = false,
+                Arguments = args,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
