@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Octokit;
+using Serilog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
@@ -13,6 +14,7 @@ public class FirecrackerInstaller(
     string repoName = "firecracker")
 {
     private static readonly HttpClient HttpClient = new();
+    private static readonly ILogger Logger = Log.ForContext(typeof(FirecrackerInstaller));
     
     public async Task<FirecrackerInstall> InstallAsync()
     {
@@ -23,6 +25,7 @@ public class FirecrackerInstaller(
         var archivePath = await DownloadAssetsAndVerifyAsync(archiveAsset, archiveChecksumAsset);
         var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory, fetchedReleaseTag);
 
+        Logger.Information("Installed Firecracker {tag} to: {installDirectory}", fetchedReleaseTag, installDirectory);
         return firecracker;
     }
 
@@ -35,12 +38,14 @@ public class FirecrackerInstaller(
             throw new FirecrackerInstallationException(
                 $"Could not the Firecracker GitHub repository owned by {repoOwner} and named {repoName}");
         }
+        Logger.Debug("Fetched GitHub repository from API");
 
         var releases = await githubClient.Repository.Release.GetAll(repository.Id);
         if (releases is null)
         {
             throw new FirecrackerInstallationException("Could not query Firecracker releases on the specified repository");
         }
+        Logger.Debug("Fetched GitHub releases from API");
 
         var release = releaseTag == "latest"
             ? releases.MaxBy(x => x.CreatedAt)
@@ -76,6 +81,7 @@ public class FirecrackerInstaller(
                         new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
             }
         }
+        Logger.Debug("Extracted Firecracker binaries archive");
 
         var subdirectoryPath = Directory.GetDirectories(temporaryDirectory).FirstOrDefault();
         if (subdirectoryPath is null)
@@ -109,12 +115,14 @@ public class FirecrackerInstaller(
         
         var archivePath = Path.GetTempFileName() + ".tar.gz";
         var archiveBytes = await HttpClient.GetByteArrayAsync(archiveAsset.BrowserDownloadUrl);
+        Logger.Debug("Downloaded Firecracker binaries archive");
 
         var actualChecksum = ToHex(SHA256.HashData(archiveBytes));
         if (expectedChecksum != actualChecksum)
         {
             throw new FirecrackerInstallationException("The actual checksum doesn't match the expected one from GitHub");
         }
+        Logger.Debug("Verified checksums successfully");
         
         await File.WriteAllBytesAsync(archivePath, archiveBytes);
 

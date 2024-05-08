@@ -15,6 +15,7 @@ public class FirecrackerVm : IAsyncDisposable
     private readonly FirecrackerInstall _firecrackerInstall;
     private Process? _process;
     private readonly int? _bootWaitSeconds;
+    private readonly Guid _vmId = Guid.NewGuid();
 
     private FirecrackerVm(VmConfiguration vmConfiguration, FirecrackerInstall firecrackerInstall,
         string socketDirectory = "/tmp/firecracker/sockets", string? socketFilename = null, int? bootWaitSeconds = 2)
@@ -22,6 +23,8 @@ public class FirecrackerVm : IAsyncDisposable
         socketFilename ??= Guid.NewGuid().ToString();
         _socketPath = Path.Join(socketDirectory, socketFilename + ".sock");
         if (!Directory.Exists(socketDirectory)) Directory.CreateDirectory(socketDirectory);
+        
+        Logger.Debug("The Unix socket for the VM will be created at: {socketPath}", _socketPath);
         
         _vmConfiguration = vmConfiguration;
         _firecrackerInstall = firecrackerInstall;
@@ -31,12 +34,16 @@ public class FirecrackerVm : IAsyncDisposable
     private async Task InternalStartAsync()
     {
         var configPath = await PrepareForBootAsync();
-        _process = _firecrackerInstall.RunFirecracker(
-            $" --config-file {configPath} --api-sock {_socketPath}");
+        var commandArgs = $" --config-file {configPath} --api-sock {_socketPath} --id {_vmId}";
+        _process = _firecrackerInstall.RunFirecracker(commandArgs);
+        
+        Log.Information("Launched Firecracker microVM {vmId}", _vmId);
         
         if (_bootWaitSeconds.HasValue)
         {
             await Task.Delay(_bootWaitSeconds.Value * 1000);
+            Log.Information("Waited {seconds} seconds for Firecracker microVM {vmId} to initialize",
+                _bootWaitSeconds.Value, _vmId);
         }
     }
 
@@ -45,6 +52,8 @@ public class FirecrackerVm : IAsyncDisposable
         var configPath = Path.GetTempFileName() + ".json";
         var configJson = JsonSerializer.Serialize(_vmConfiguration, InternalUtil.SerializerOptions);
         await File.WriteAllTextAsync(configPath, configJson);
+        
+        Log.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
 
         return configPath;
     }
@@ -62,16 +71,18 @@ public class FirecrackerVm : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(20));
+        cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
         
         await _process!.StandardInput.WriteLineAsync("reboot");
         try
         {
             await _process.WaitForExitAsync(cancellationTokenSource.Token);
+            Log.Information("Firecracker microVM {vmId} exited gracefully", _vmId);
         }
         catch (Exception)
         {
             _process.Kill();
+            Log.Warning("Firecracker microVM {vmId} had to be forcefully killed", _vmId);
         }
     }
 }
