@@ -50,7 +50,7 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
 
     public async Task ExtractGzipAsync(string archivePath, string destinationPath)
     {
-        await using Stream stream = File.OpenRead(archivePath);
+        await using var stream = File.OpenRead(archivePath);
 
         var reader = ReaderFactory.Open(stream);
         while (reader.MoveToNextEntry())

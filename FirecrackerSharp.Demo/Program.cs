@@ -1,6 +1,7 @@
 ﻿using FirecrackerSharp.Installation;
 using FirecrackerSharp.Transport;
-using FirecrackerSharp.Transport.Native;
+using FirecrackerSharp.Transport.SSH;
+using Renci.SshNet;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -9,10 +10,14 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .CreateLogger();
 
-IFirecrackerTransport.Current = new NativeFirecrackerTransport();
+var host = Console.ReadLine()!;
+var password = Console.ReadLine()!;
+IFirecrackerTransport.Current =
+    new SshFirecrackerTransport(new ConnectionInfo(host, "root", new PasswordAuthenticationMethod("root", password)));
 
-var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
-var inst = await im.GetAllFromIndexAsync();
+var im = new FirecrackerInstallManager("/tmp/firecracker");
+var inst = await im.InstallAsync();
+await im.AddToIndexAsync(inst);
 Console.WriteLine(inst);
 
 // var testConfig = new VmConfiguration(
