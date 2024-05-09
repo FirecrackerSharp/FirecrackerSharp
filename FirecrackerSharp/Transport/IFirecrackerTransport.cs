@@ -4,29 +4,29 @@ public interface IFirecrackerTransport
 {
     public static IFirecrackerTransport Current { internal get; set; } = null!;
 
-    internal Task WriteTextFileAsync(string path, string content);
+    public Task WriteTextFileAsync(string path, string content);
 
-    internal Task WriteBinaryFileAsync(string path, byte[] content);
+    public Task WriteBinaryFileAsync(string path, byte[] content);
 
-    internal Task<string> ReadTextFileAsync(string path);
+    public Task<string> ReadTextFileAsync(string path);
 
-    internal Task CopyFileAsync(string sourcePath, string destinationPath);
+    public Task CopyFileAsync(string sourcePath, string destinationPath);
 
-    internal void CreateDirectory(string path);
+    public void CreateDirectory(string path);
 
-    internal IEnumerable<string> GetSubdirectories(string path);
+    public IEnumerable<string> GetSubdirectories(string path);
 
-    internal IEnumerable<string> GetFiles(string path);
+    public IEnumerable<string> GetFiles(string path);
 
-    internal Task ExtractGzipAsync(string archivePath, string destinationPath);
+    public Task ExtractGzipAsync(string archivePath, string destinationPath);
 
-    internal void MakeFileExecutable(string path);
+    public void MakeFileExecutable(string path);
 
-    internal void DeleteFile(string path);
+    public void DeleteFile(string path);
 
-    internal void DeleteDirectoryRecursively(string path);
+    public void DeleteDirectoryRecursively(string path);
 
-    internal string JoinPaths(params string[] paths);
+    public string JoinPaths(params string[] paths);
 
-    internal string CreateTemporaryDirectory();
+    public string CreateTemporaryDirectory();
 }

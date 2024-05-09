@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FirecrackerSharp.Transport;
 
 namespace FirecrackerSharp.Installation;
 
@@ -29,7 +30,7 @@ public class FirecrackerInstallManager(
         {
             var newInstalls = new List<FirecrackerInstall> { addedInstall };
             var newIndexJson = JsonSerializer.Serialize(newInstalls, jsonSerializerOptions);
-            await File.WriteAllTextAsync(IndexPath, newIndexJson);
+            await IFirecrackerTransport.Current.WriteTextFileAsync(IndexPath, newIndexJson);
             return;
         }
         
@@ -53,7 +54,7 @@ public class FirecrackerInstallManager(
 
     public async Task<List<FirecrackerInstall>> GetAllFromIndexAsync()
     {
-        var indexJson = await File.ReadAllTextAsync(IndexPath);
+        var indexJson = await IFirecrackerTransport.Current.ReadTextFileAsync(IndexPath);
         return JsonSerializer.Deserialize<List<FirecrackerInstall>>(indexJson, jsonSerializerOptions)!;
     }
 
@@ -82,10 +83,10 @@ public class FirecrackerInstallManager(
     private async Task WriteIndexAsync(IEnumerable<FirecrackerInstall> installs)
     {
         var json = JsonSerializer.Serialize(installs, jsonSerializerOptions);
-        await File.WriteAllTextAsync(IndexPath, json);
+        await IFirecrackerTransport.Current.WriteTextFileAsync(IndexPath, json);
     }
 
-    private static FirecrackerInstall? FindInIndex(List<FirecrackerInstall> installs, string version, bool strict = false)
+    private static FirecrackerInstall? FindInIndex(IEnumerable<FirecrackerInstall> installs, string version, bool strict = false)
     {
         return strict
             ? installs.FirstOrDefault(x => x.Version == version)

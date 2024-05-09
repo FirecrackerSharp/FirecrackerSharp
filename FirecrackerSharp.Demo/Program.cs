@@ -12,8 +12,8 @@ Log.Logger = new LoggerConfiguration()
 IFirecrackerTransport.Current = new NativeFirecrackerTransport();
 
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
-var inst = await im.InstallAsync();
-await im.AddToIndexAsync(inst);
+var inst = await im.GetAllFromIndexAsync();
+Console.WriteLine(inst);
 
 // var testConfig = new VmConfiguration(
 //     BootSource: new VmBootSource("/home/kanpov/.tmp/vmlinux-5.10.210", "console=ttyS0 reboot=k panic=1 pci=off"),
