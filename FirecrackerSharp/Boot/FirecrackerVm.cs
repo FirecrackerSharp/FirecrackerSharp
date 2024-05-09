@@ -4,7 +4,7 @@ using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
 using Serilog;
 
-namespace FirecrackerSharp.Core;
+namespace FirecrackerSharp.Boot;
 
 public abstract class FirecrackerVm
 {
@@ -13,7 +13,7 @@ public abstract class FirecrackerVm
     protected VmConfiguration VmConfiguration;
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
-    protected readonly string SocketPath;
+    protected string SocketPath;
     
     protected Process? Process;
     protected readonly Guid VmId = Guid.NewGuid();
@@ -35,14 +35,20 @@ public abstract class FirecrackerVm
 
     internal abstract Task StartProcessAsync();
 
-    protected async Task<string> SerializeConfigToFileAsync(string configPath)
+    protected async Task SerializeConfigToFileAsync(string configPath)
     {
         var configJson = JsonSerializer.Serialize(VmConfiguration, InternalUtil.SerializerOptions);
         await File.WriteAllTextAsync(configPath, configJson);
         
         Log.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
+    }
 
-        return configPath;
+    protected async Task WaitForBootAsync()
+    {
+        if (FirecrackerOptions.WaitSecondsAfterBoot.HasValue)
+        {
+            await Task.Delay(FirecrackerOptions.WaitSecondsAfterBoot.Value * 1000);
+        }
     }
 
     public async Task ShutdownAsync()

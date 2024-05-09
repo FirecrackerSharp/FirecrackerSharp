@@ -1,13 +1,16 @@
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
+using Serilog;
 
-namespace FirecrackerSharp.Core;
+namespace FirecrackerSharp.Boot;
 
 public class JailedFirecrackerVm : FirecrackerVm
 {
+    private static readonly ILogger Logger = Log.ForContext(typeof(JailedFirecrackerVm));
     private readonly JailerOptions _jailerOptions;
 
-    private JailedFirecrackerVm(VmConfiguration vmConfiguration,
+    private JailedFirecrackerVm(
+        VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
         JailerOptions jailerOptions) : base(vmConfiguration, firecrackerInstall, firecrackerOptions)
@@ -17,23 +20,40 @@ public class JailedFirecrackerVm : FirecrackerVm
 
     internal override async Task StartProcessAsync()
     {
+        // create and move all to jail
         var jailPath = Path.Join(
-            _jailerOptions.ChrootBaseDirectory, "firecracker", VmId.ToString(), "root");
+            _jailerOptions.ChrootBaseDirectory, "firecracker", _jailerOptions.JailId, "root");
         Directory.CreateDirectory(jailPath);
         VmConfiguration = await MoveAllToJailAsync(jailPath);
-        Console.WriteLine("neat");
+        // move config
+        var configPath = Path.Join(jailPath, "vm_config.json");
+        await SerializeConfigToFileAsync(configPath);
+        // move socket
+        SocketPath = "api.sock";
+        
+        var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", null);
+        var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary);
+        var args = $"{jailerArgs} -- {firecrackerArgs}";
+        Logger.Debug("Launch arguments for microVM {vmId} (jail {jailId}) are: {args}",
+            VmId, _jailerOptions.JailId, args);
+        Process = await InternalUtil.RunProcessInSudoAsync(_jailerOptions.SudoPassword, FirecrackerInstall.JailerBinary, args);
+
+        await WaitForBootAsync();
+        Logger.Information("Launched microVM {vmId} (jail {jailId})", VmId, _jailerOptions.JailId);
     }
 
     private async Task<VmConfiguration> MoveAllToJailAsync(string jailPath)
     {
         var tasks = new List<Task>();
         
+        // move kernel
         tasks.Add(MoveToJailAsync(VmConfiguration.BootSource.KernelImagePath, jailPath, "kernel_image"));
+        // move initrd if it's specified
         if (VmConfiguration.BootSource.InitrdPath != null)
         {
             tasks.Add(MoveToJailAsync(VmConfiguration.BootSource.InitrdPath, jailPath, "initrd"));
         }
-
+        // move physical locations of drives
         var newDrives = new List<VmDrive>();
         foreach (var drive in VmConfiguration.Drives)
         {
@@ -51,11 +71,12 @@ public class JailedFirecrackerVm : FirecrackerVm
 
         await Task.WhenAll(tasks);
 
+        // recreate configuration with moved paths
         return VmConfiguration with
         {
             BootSource = VmConfiguration.BootSource with
             {
-                KernelImagePath = "kernelImage",
+                KernelImagePath = "kernel_image",
                 InitrdPath = VmConfiguration.BootSource.InitrdPath != null ? "initrd" : null
             },
             Drives = newDrives

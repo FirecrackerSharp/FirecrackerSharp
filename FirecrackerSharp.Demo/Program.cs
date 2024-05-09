@@ -1,4 +1,4 @@
-﻿using FirecrackerSharp.Core;
+﻿using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
 using Serilog;
@@ -18,5 +18,5 @@ var testConfig = new VmConfiguration(
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
 var install = await im.GetFromIndexAsync("v1.7.0");
 var vm = await JailedFirecrackerVm.StartAsync(
-    testConfig, install!, new FirecrackerOptions("test"), new JailerOptions("1234", 1000, 1000));
+    testConfig, install!, new FirecrackerOptions("test"), new JailerOptions(Random.Shared.NextInt64(0, 100000).ToString(), 1000, 1000, "495762"));
 await vm.ShutdownAsync();

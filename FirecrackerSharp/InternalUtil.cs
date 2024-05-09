@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using FirecrackerSharp.Installation;
 
 namespace FirecrackerSharp;
 
@@ -17,18 +16,8 @@ internal static class InternalUtil
             new JsonStringEnumConverter()
         }
     };
-    
-    internal static Process RunFirecracker(this FirecrackerInstall install, string args)
-    {
-        return RunProcess(install.FirecrackerBinary, args);
-    }
 
-    internal static Process RunJailer(this FirecrackerInstall install, string args)
-    {
-        return RunProcess(install.JailerBinary, args);
-    }
-
-    private static Process RunProcess(string command, string args)
+    internal static Process RunProcess(string command, string args)
     {
         var process = new Process
         {
@@ -45,6 +34,16 @@ internal static class InternalUtil
         };
 
         process.Start();
+        return process;
+    }
+
+    internal static async Task<Process> RunProcessInSudoAsync(string password, string command, string commandArgs)
+    {
+        var sudoBinary = File.Exists("/usr/bin/su") ? "/usr/bin/su" : "/bin/su";
+        var process = RunProcess(sudoBinary, "");
+        await process.StandardInput.WriteLineAsync(password);
+        await process.StandardInput.WriteLineAsync($"{command} {commandArgs}");
+        
         return process;
     }
 }
