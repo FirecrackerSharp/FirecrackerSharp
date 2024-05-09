@@ -6,7 +6,7 @@ namespace FirecrackerSharp.Boot;
 
 public class UnrestrictedFirecrackerVm : FirecrackerVm
 {
-    private static readonly ILogger Logger = Log.ForContext(typeof(UnrestrictedFirecrackerVm));
+    private static readonly ILogger Logger = Log.ForContext<UnrestrictedFirecrackerVm>();
 
     private UnrestrictedFirecrackerVm(
         VmConfiguration vmConfiguration,

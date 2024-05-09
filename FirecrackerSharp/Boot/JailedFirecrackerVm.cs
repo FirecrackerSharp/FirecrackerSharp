@@ -6,7 +6,7 @@ namespace FirecrackerSharp.Boot;
 
 public class JailedFirecrackerVm : FirecrackerVm
 {
-    private static readonly ILogger Logger = Log.ForContext(typeof(JailedFirecrackerVm));
+    private static readonly ILogger Logger = Log.ForContext<JailedFirecrackerVm>();
     private readonly JailerOptions _jailerOptions;
     private readonly string _jailPath;
     private readonly string _socketPathInJail;

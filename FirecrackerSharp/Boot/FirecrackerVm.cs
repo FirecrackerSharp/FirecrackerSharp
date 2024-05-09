@@ -13,7 +13,7 @@ public abstract class FirecrackerVm(
     FirecrackerOptions firecrackerOptions,
     string vmId)
 {
-    private static readonly ILogger Logger = Log.ForContext(typeof(FirecrackerVm));
+    private static readonly ILogger Logger = Log.ForContext<FirecrackerVm>();
     
     protected VmConfiguration VmConfiguration = vmConfiguration;
     protected readonly FirecrackerInstall FirecrackerInstall = firecrackerInstall;
