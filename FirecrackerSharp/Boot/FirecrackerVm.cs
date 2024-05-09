@@ -53,7 +53,7 @@ public abstract class FirecrackerVm(
         var configJson = JsonSerializer.Serialize(VmConfiguration, InternalUtil.SerializerOptions);
         await File.WriteAllTextAsync(configPath, configJson);
         
-        Log.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
+        Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
     }
 
     protected async Task WaitForBootAsync()
@@ -69,17 +69,24 @@ public abstract class FirecrackerVm(
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
         File.Delete(SocketPath!);
-
-        await Process!.StandardInput.WriteLineAsync("reboot");
+        
         try
         {
-            await Process.WaitForExitAsync(cancellationTokenSource.Token);
-            Log.Information("microVM {vmId} exited gracefully", VmId);
+            await Process!.StandardInput.WriteLineAsync("reboot");
+            try
+            {
+                await Process.WaitForExitAsync(cancellationTokenSource.Token);
+                Logger.Information("microVM {vmId} exited gracefully", VmId);
+            }
+            catch (Exception)
+            {
+                Process.Kill();
+                Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);
+            }
         }
         catch (Exception)
         {
-            Process.Kill();
-            Log.Warning("microVM {vmId} had to be forcefully killed", VmId);
+            Logger.Warning("microVM {vmId} prematurely shut down", VmId);
         }
         
         CleanupAfterShutdown();
