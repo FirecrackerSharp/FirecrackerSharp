@@ -26,7 +26,6 @@ public class JailedFirecrackerVm : FirecrackerVm
         _socketPathInJail = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
         Directory.CreateDirectory(Path.Join(_jailPath, firecrackerOptions.SocketDirectory));
         SocketPath = Path.Join(_jailPath, _socketPathInJail);
-        Console.WriteLine();
     }
 
     internal override async Task StartProcessAsync()
