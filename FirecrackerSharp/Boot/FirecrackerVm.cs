@@ -7,17 +7,21 @@ using Serilog;
 
 namespace FirecrackerSharp.Boot;
 
-public abstract class FirecrackerVm
+public abstract class FirecrackerVm(
+    VmConfiguration vmConfiguration,
+    FirecrackerInstall firecrackerInstall,
+    FirecrackerOptions firecrackerOptions,
+    string vmId)
 {
     private static readonly ILogger Logger = Log.ForContext(typeof(FirecrackerVm));
     
-    protected VmConfiguration VmConfiguration;
-    protected readonly FirecrackerInstall FirecrackerInstall;
-    protected readonly FirecrackerOptions FirecrackerOptions;
-    protected string SocketPath;
+    protected VmConfiguration VmConfiguration = vmConfiguration;
+    protected readonly FirecrackerInstall FirecrackerInstall = firecrackerInstall;
+    protected readonly FirecrackerOptions FirecrackerOptions = firecrackerOptions;
+    protected string? SocketPath;
+    protected readonly string VmId = vmId;
     
     protected Process? Process;
-    protected readonly Guid VmId = Guid.NewGuid();
 
     private HttpClient? _backingSocketHttpClient;
     public HttpClient SocketHttpClient
@@ -29,7 +33,7 @@ public abstract class FirecrackerVm
                 ConnectCallback = async (_, token) =>
                 {
                     var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
-                    var endpoint = new UnixDomainSocketEndPoint(SocketPath);
+                    var endpoint = new UnixDomainSocketEndPoint(SocketPath!);
                     await socket.ConnectAsync(endpoint, token);
                     return new NetworkStream(socket, ownsSocket: true);
                 }
@@ -40,22 +44,9 @@ public abstract class FirecrackerVm
         }
     }
 
-    protected FirecrackerVm(
-        VmConfiguration vmConfiguration,
-        FirecrackerInstall firecrackerInstall,
-        FirecrackerOptions firecrackerOptions)
-    {
-        if (!Directory.Exists(firecrackerOptions.SocketDirectory)) Directory.CreateDirectory(firecrackerOptions.SocketDirectory);
-        SocketPath = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
-        
-        Logger.Debug("The Unix socket for the microVM will be created at: {socketPath}", SocketPath);
-        
-        VmConfiguration = vmConfiguration;
-        FirecrackerInstall = firecrackerInstall;
-        FirecrackerOptions = firecrackerOptions;
-    }
-
     internal abstract Task StartProcessAsync();
+
+    public abstract void CleanupAfterShutdown();
 
     protected async Task SerializeConfigToFileAsync(string configPath)
     {
@@ -77,8 +68,8 @@ public abstract class FirecrackerVm
     {
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
-        File.Delete(SocketPath);
-        
+        File.Delete(SocketPath!);
+
         await Process!.StandardInput.WriteLineAsync("reboot");
         try
         {
@@ -90,5 +81,8 @@ public abstract class FirecrackerVm
             Process.Kill();
             Log.Warning("microVM {vmId} had to be forcefully killed", VmId);
         }
+        
+        CleanupAfterShutdown();
+        Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
     }
 }

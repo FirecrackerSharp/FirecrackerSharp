@@ -18,8 +18,11 @@ var testConfig = new VmConfiguration(
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
 var install = await im.GetFromIndexAsync("v1.7.0");
 var vm = await JailedFirecrackerVm.StartAsync(
-    testConfig, install!, new FirecrackerOptions("test"),
-    new JailerOptions(Random.Shared.NextInt64(0, 100000).ToString(), 1000, 1000, "495762"));
+    testConfig, install!,
+    new FirecrackerOptions("test"),
+    new JailerOptions(1000, 1000, "495762"),
+    vmId: Random.Shared.NextInt64(100000).ToString());
+
 var str = await vm.SocketHttpClient.GetStringAsync("/");
 Console.WriteLine(str);
 await vm.ShutdownAsync();

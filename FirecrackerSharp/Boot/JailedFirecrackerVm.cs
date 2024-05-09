@@ -9,39 +9,48 @@ public class JailedFirecrackerVm : FirecrackerVm
     private static readonly ILogger Logger = Log.ForContext(typeof(JailedFirecrackerVm));
     private readonly JailerOptions _jailerOptions;
     private readonly string _jailPath;
+    private readonly string _socketPathInJail;
 
     private JailedFirecrackerVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
-        JailerOptions jailerOptions) : base(vmConfiguration, firecrackerInstall, firecrackerOptions)
+        JailerOptions jailerOptions,
+        string vmId) : base(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId)
     {
         _jailerOptions = jailerOptions;
         
-        _jailPath = Path.Join(_jailerOptions.ChrootBaseDirectory, "firecracker", _jailerOptions.JailId, "root");
+        _jailPath = Path.Join(_jailerOptions.ChrootBaseDirectory, "firecracker", vmId, "root");
         Directory.CreateDirectory(_jailPath);
-        
-        SocketPath = Path.Join(_jailPath, "run", "firecracker.socket");
+
+        _socketPathInJail = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
+        Directory.CreateDirectory(Path.Join(_jailPath, firecrackerOptions.SocketDirectory));
+        SocketPath = Path.Join(_jailPath, _socketPathInJail);
+        Console.WriteLine();
     }
 
     internal override async Task StartProcessAsync()
     {
         // create and move all to jail
         VmConfiguration = await MoveAllToJailAsync(_jailPath);
-        Logger.Debug("Moved all resources to jail {jailId} of microVM {vmId}", _jailerOptions.JailId, VmId);
+        Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
         // move config
         var configPath = Path.Join(_jailPath, "vm_config.json");
         await SerializeConfigToFileAsync(configPath);
         
-        var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", null);
-        var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary);
+        var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", _socketPathInJail);
+        var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary, VmId);
         var args = $"{jailerArgs} -- {firecrackerArgs}";
-        Logger.Debug("Launch arguments for microVM {vmId} (jail {jailId}) are: {args}",
-            VmId, _jailerOptions.JailId, args);
+        Logger.Debug("Launch arguments for microVM {vmId} (jailed) are: {args}", VmId, args);
         Process = await InternalUtil.RunProcessInSudoAsync(_jailerOptions.SudoPassword, FirecrackerInstall.JailerBinary, args);
 
         await WaitForBootAsync();
-        Logger.Information("Launched microVM {vmId} (jail {jailId})", VmId, _jailerOptions.JailId);
+        Logger.Information("Launched microVM {vmId} (jailed)", VmId);
+    }
+
+    public override void CleanupAfterShutdown()
+    {
+        Directory.Delete(_jailPath, recursive: true);
     }
 
     private async Task<VmConfiguration> MoveAllToJailAsync(string jailPath)
@@ -97,9 +106,10 @@ public class JailedFirecrackerVm : FirecrackerVm
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
-        JailerOptions jailerOptions)
+        JailerOptions jailerOptions,
+        string vmId)
     {
-        var vm = new JailedFirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions);
+        var vm = new JailedFirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions, vmId);
         await vm.StartProcessAsync();
         return vm;
     }

@@ -2,7 +2,7 @@ namespace FirecrackerSharp.Boot;
 
 public record FirecrackerOptions(
     string SocketFilename,
-    string SocketDirectory = "/tmp/firecracker/sockets",
+    string SocketDirectory = "/tmp/firecracker",
     string ExtraArguments = "",
     int? WaitSecondsAfterBoot = 2)
 {
