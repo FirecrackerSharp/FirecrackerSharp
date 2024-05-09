@@ -8,6 +8,7 @@ public class JailedFirecrackerVm : FirecrackerVm
 {
     private static readonly ILogger Logger = Log.ForContext(typeof(JailedFirecrackerVm));
     private readonly JailerOptions _jailerOptions;
+    private readonly string _jailPath;
 
     private JailedFirecrackerVm(
         VmConfiguration vmConfiguration,
@@ -16,20 +17,21 @@ public class JailedFirecrackerVm : FirecrackerVm
         JailerOptions jailerOptions) : base(vmConfiguration, firecrackerInstall, firecrackerOptions)
     {
         _jailerOptions = jailerOptions;
+        
+        _jailPath = Path.Join(_jailerOptions.ChrootBaseDirectory, "firecracker", _jailerOptions.JailId, "root");
+        Directory.CreateDirectory(_jailPath);
+        
+        SocketPath = Path.Join(_jailPath, "run", "firecracker.socket");
     }
 
     internal override async Task StartProcessAsync()
     {
         // create and move all to jail
-        var jailPath = Path.Join(
-            _jailerOptions.ChrootBaseDirectory, "firecracker", _jailerOptions.JailId, "root");
-        Directory.CreateDirectory(jailPath);
-        VmConfiguration = await MoveAllToJailAsync(jailPath);
+        VmConfiguration = await MoveAllToJailAsync(_jailPath);
+        Logger.Debug("Moved all resources to jail {jailId} of microVM {vmId}", _jailerOptions.JailId, VmId);
         // move config
-        var configPath = Path.Join(jailPath, "vm_config.json");
+        var configPath = Path.Join(_jailPath, "vm_config.json");
         await SerializeConfigToFileAsync(configPath);
-        // move socket
-        SocketPath = "api.sock";
         
         var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", null);
         var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary);

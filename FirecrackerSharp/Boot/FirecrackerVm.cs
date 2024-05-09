@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
@@ -17,6 +18,27 @@ public abstract class FirecrackerVm
     
     protected Process? Process;
     protected readonly Guid VmId = Guid.NewGuid();
+
+    private HttpClient? _backingSocketHttpClient;
+    public HttpClient SocketHttpClient
+    {
+        get
+        {
+            return _backingSocketHttpClient ??= new HttpClient(new SocketsHttpHandler
+            {
+                ConnectCallback = async (_, token) =>
+                {
+                    var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+                    var endpoint = new UnixDomainSocketEndPoint(SocketPath);
+                    await socket.ConnectAsync(endpoint, token);
+                    return new NetworkStream(socket, ownsSocket: true);
+                }
+            })
+            {
+                BaseAddress = new Uri("http://localhost")
+            };
+        }
+    }
 
     protected FirecrackerVm(
         VmConfiguration vmConfiguration,
