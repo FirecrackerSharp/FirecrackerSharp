@@ -1,4 +1,5 @@
-﻿using Renci.SshNet;
+﻿using System.Text;
+using Renci.SshNet;
 
 namespace FirecrackerSharp.Transport.SSH;
 
@@ -44,17 +45,16 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
         return Task.FromResult(sftp.ReadAllText(path));
     }
 
-    public async Task CopyFileAsync(string sourcePath, string destinationPath)
+    public Task CopyFileAsync(string sourcePath, string destinationPath)
     {
-        using var sftp = Sftp;
-        await using var sourceStream = sftp.OpenRead(sourcePath);
-        await using var destinationStream = sftp.OpenWrite(destinationPath);
-        await sourceStream.CopyToAsync(destinationStream);
+        using var ssh = Ssh;
+        ssh.CreateCommand($"cp {sourcePath} {destinationPath}").Execute();
+        return Task.CompletedTask;
     }
 
     public string GetTemporaryFilename()
     {
-        return Path.Join("/tmp", Guid.NewGuid().ToString());
+        return JoinPaths("/tmp", Guid.NewGuid().ToString());
     }
 
     public void CreateDirectory(string path)
@@ -120,9 +120,22 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
     {
         using var sftp = Sftp;
         
-        var temporaryDirectory = Path.Join("/tmp", Guid.NewGuid().ToString());
+        var temporaryDirectory = JoinPaths("/tmp", Guid.NewGuid().ToString());
         sftp.CreateDirectory(temporaryDirectory);
         return temporaryDirectory;
+    }
+
+    public string JoinPaths(params string[] paths)
+    {
+        var finalBuilder = new StringBuilder();
+        foreach (var path in paths)
+        {
+            finalBuilder.Append("/" + path);
+        }
+
+        return finalBuilder.ToString()
+            .Replace("//", "/")
+            .Replace("///", "/");
     }
 
     public IFirecrackerProcess LaunchProcess(string executable, string args)

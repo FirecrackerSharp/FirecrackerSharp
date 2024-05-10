@@ -16,7 +16,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
         string vmId) : base(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId)
     {
         IFirecrackerTransport.Current.CreateDirectory(firecrackerOptions.SocketDirectory);
-        SocketPath = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
+        SocketPath = IFirecrackerTransport.Current.JoinPaths(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
         
         Logger.Debug("The Unix socket for the unrestricted microVM will be created at: {socketPath}", SocketPath);
     }

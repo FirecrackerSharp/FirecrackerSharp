@@ -30,5 +30,7 @@ public interface IFirecrackerTransport
 
     public string CreateTemporaryDirectory();
 
+    public string JoinPaths(params string[] paths);
+
     public IFirecrackerProcess LaunchProcess(string executable, string args);
 }

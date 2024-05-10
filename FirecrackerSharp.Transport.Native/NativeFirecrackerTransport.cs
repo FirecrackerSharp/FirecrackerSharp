@@ -91,6 +91,11 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
         return Directory.CreateTempSubdirectory().FullName;
     }
 
+    public string JoinPaths(params string[] paths)
+    {
+        return Path.Join(paths);
+    }
+
     public IFirecrackerProcess LaunchProcess(string executable, string args)
     {
         var process = new Process

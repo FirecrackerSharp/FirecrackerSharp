@@ -21,12 +21,12 @@ public class JailedFirecrackerVm : FirecrackerVm
     {
         _jailerOptions = jailerOptions;
         
-        _jailPath = Path.Join(_jailerOptions.ChrootBaseDirectory, "firecracker", vmId, "root");
+        _jailPath = IFirecrackerTransport.Current.JoinPaths(_jailerOptions.ChrootBaseDirectory, "firecracker", vmId, "root");
         IFirecrackerTransport.Current.CreateDirectory(_jailPath);
 
-        _socketPathInJail = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
-        IFirecrackerTransport.Current.CreateDirectory(Path.Join(_jailPath, firecrackerOptions.SocketDirectory));
-        SocketPath = Path.Join(_jailPath, _socketPathInJail);
+        _socketPathInJail = IFirecrackerTransport.Current.JoinPaths(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
+        IFirecrackerTransport.Current.CreateDirectory(IFirecrackerTransport.Current.JoinPaths(_jailPath, firecrackerOptions.SocketDirectory));
+        SocketPath = IFirecrackerTransport.Current.JoinPaths(_jailPath, _socketPathInJail);
     }
 
     internal override async Task StartProcessAsync()
@@ -35,7 +35,7 @@ public class JailedFirecrackerVm : FirecrackerVm
         VmConfiguration = await MoveAllToJailAsync(_jailPath);
         Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
         // move config
-        var configPath = Path.Join(_jailPath, "vm_config.json");
+        var configPath = IFirecrackerTransport.Current.JoinPaths(_jailPath, "vm_config.json");
         await SerializeConfigToFileAsync(configPath);
         
         var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", _socketPathInJail);
@@ -97,7 +97,7 @@ public class JailedFirecrackerVm : FirecrackerVm
     private static Task MoveToJailAsync(string originalPath, string jailPath, string newFilename)
     {
         return IFirecrackerTransport.Current.CopyFileAsync(
-            originalPath, Path.Join(jailPath, newFilename));
+            originalPath, IFirecrackerTransport.Current.JoinPaths(jailPath, newFilename));
     }
 
     public static async Task<FirecrackerVm> StartAsync(

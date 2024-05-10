@@ -12,7 +12,7 @@ public class FirecrackerInstallManager(
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
-    private string IndexPath => Path.Join(storagePath, indexFilename);
+    private string IndexPath => IFirecrackerTransport.Current.JoinPaths(storagePath, indexFilename);
     
     public FirecrackerInstallManager(string storagePath, string indexFilename = "index.json") 
         : this(storagePath, DefaultSerializerOptions, indexFilename) {}
