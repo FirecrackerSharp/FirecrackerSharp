@@ -1,5 +1,6 @@
 ﻿using FirecrackerSharp.Data;
 using FirecrackerSharp.Demo;
+using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Host.Local;
 using Serilog;
@@ -11,6 +12,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 LocalHost.Configure();
+Console.WriteLine(IHostProcessManager.Current.IsEscalated);
 
 // var im = new FirecrackerInstallManager("/tmp/firecracker");
 // var inst = await im.InstallAsync();
