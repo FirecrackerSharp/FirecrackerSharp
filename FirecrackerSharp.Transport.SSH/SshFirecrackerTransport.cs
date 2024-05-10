@@ -124,4 +124,11 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
         sftp.CreateDirectory(temporaryDirectory);
         return temporaryDirectory;
     }
+
+    public IFirecrackerProcess LaunchProcess(string executable, string args)
+    {
+        var ssh = Ssh;
+        var command = ssh.CreateCommand(executable + " " + args);
+        return new SshFirecrackerProcess(command, ssh);
+    }
 }

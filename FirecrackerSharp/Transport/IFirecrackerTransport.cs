@@ -29,4 +29,6 @@ public interface IFirecrackerTransport
     public void DeleteDirectoryRecursively(string path);
 
     public string CreateTemporaryDirectory();
+
+    public IFirecrackerProcess LaunchProcess(string executable, string args);
 }

@@ -28,7 +28,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
 
         var args = FirecrackerOptions.FormatToArguments(configPath, SocketPath);
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);
-        Process = InternalUtil.RunProcess(FirecrackerInstall.FirecrackerBinary, args);
+        Process = IFirecrackerTransport.Current.LaunchProcess(FirecrackerInstall.FirecrackerBinary, args);
 
         await WaitForBootAsync();
         Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);

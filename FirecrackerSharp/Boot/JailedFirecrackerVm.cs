@@ -1,5 +1,6 @@
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Transport;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -21,10 +22,10 @@ public class JailedFirecrackerVm : FirecrackerVm
         _jailerOptions = jailerOptions;
         
         _jailPath = Path.Join(_jailerOptions.ChrootBaseDirectory, "firecracker", vmId, "root");
-        Directory.CreateDirectory(_jailPath);
+        IFirecrackerTransport.Current.CreateDirectory(_jailPath);
 
         _socketPathInJail = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
-        Directory.CreateDirectory(Path.Join(_jailPath, firecrackerOptions.SocketDirectory));
+        IFirecrackerTransport.Current.CreateDirectory(Path.Join(_jailPath, firecrackerOptions.SocketDirectory));
         SocketPath = Path.Join(_jailPath, _socketPathInJail);
     }
 
@@ -41,7 +42,7 @@ public class JailedFirecrackerVm : FirecrackerVm
         var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary, VmId);
         var args = $"{jailerArgs} -- {firecrackerArgs}";
         Logger.Debug("Launch arguments for microVM {vmId} (jailed) are: {args}", VmId, args);
-        Process = await InternalUtil.RunProcessInSudoAsync(_jailerOptions.SudoPassword, FirecrackerInstall.JailerBinary, args);
+        Process = IFirecrackerTransport.Current.LaunchProcess(FirecrackerInstall.JailerBinary, args);
 
         await WaitForBootAsync();
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
@@ -93,12 +94,10 @@ public class JailedFirecrackerVm : FirecrackerVm
         };
     }
 
-    private static async Task MoveToJailAsync(string originalPath, string jailPath, string newFilename)
+    private static Task MoveToJailAsync(string originalPath, string jailPath, string newFilename)
     {
-        var newPath = Path.Join(jailPath, newFilename);
-        await using var sourceStream = File.OpenRead(originalPath);
-        await using var destinationStream = File.OpenWrite(newPath);
-        await sourceStream.CopyToAsync(destinationStream);
+        return IFirecrackerTransport.Current.CopyFileAsync(
+            originalPath, Path.Join(jailPath, newFilename));
     }
 
     public static async Task<FirecrackerVm> StartAsync(

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
@@ -21,8 +22,8 @@ public abstract class FirecrackerVm(
     protected readonly FirecrackerOptions FirecrackerOptions = firecrackerOptions;
     protected string? SocketPath;
     protected readonly string VmId = vmId;
-    
-    protected Process? Process;
+
+    protected IFirecrackerProcess? Process;
 
     private HttpClient? _backingSocketHttpClient;
     public HttpClient SocketHttpClient
@@ -72,10 +73,11 @@ public abstract class FirecrackerVm(
         
         try
         {
-            await Process!.StandardInput.WriteLineAsync("reboot");
+            await Process!.StandardInput.WriteAsync(
+                new ReadOnlyMemory<byte>("reboot\n"u8.ToArray()), cancellationTokenSource.Token);
             try
             {
-                await Process.WaitForExitAsync(cancellationTokenSource.Token);
+                await Process.WaitUntilCompletionAsync(cancellationTokenSource.Token);
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
             }
             catch (Exception)

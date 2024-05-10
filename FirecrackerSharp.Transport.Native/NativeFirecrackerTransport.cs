@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Serilog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
@@ -88,5 +89,23 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
     public string CreateTemporaryDirectory()
     {
         return Directory.CreateTempSubdirectory().FullName;
+    }
+
+    public IFirecrackerProcess LaunchProcess(string executable, string args)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = executable,
+                Arguments = args,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                CreateNoWindow = true
+            }
+        };
+        return new NativeFirecrackerProcess(process);
     }
 }

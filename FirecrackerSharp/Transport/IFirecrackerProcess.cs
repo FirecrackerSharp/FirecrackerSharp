@@ -2,9 +2,9 @@ namespace FirecrackerSharp.Transport;
 
 public interface IFirecrackerProcess
 {
-    public StreamReader StandardOutput { get; set; }
-    public StreamReader StandardError { get; set; }
-    public StreamWriter StandardInput { get; set; }
+    public Stream StandardOutput { get; }
+    public Stream StandardInput { get; }
 
     public void Kill();
+    public Task WaitUntilCompletionAsync(CancellationToken cancellationToken);
 }

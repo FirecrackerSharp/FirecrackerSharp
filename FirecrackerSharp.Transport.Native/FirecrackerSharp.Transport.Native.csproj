@@ -10,4 +10,8 @@
       <ProjectReference Include="..\FirecrackerSharp\FirecrackerSharp.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="SharpCompress" Version="0.37.2" />
+    </ItemGroup>
+
 </Project>
