@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using FirecrackerSharp.Transport;
+using FirecrackerSharp.Host;
 using Octokit;
 using Serilog;
 
@@ -20,8 +20,8 @@ public class FirecrackerInstaller(
         var (archiveAsset, archiveChecksumAsset, release) = await FetchAssetsFromApiAsync();
         var fetchedReleaseTag = release.TagName;
         var installDirectory =
-            IFirecrackerTransport.Current.JoinPaths(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
-        IFirecrackerTransport.Current.CreateDirectory(installDirectory);
+            IHostFilesystem.Current.JoinPaths(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
+        IHostFilesystem.Current.CreateDirectory(installDirectory);
         var archivePath = await DownloadAssetsAndVerifyAsync(archiveAsset, archiveChecksumAsset);
         var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory, fetchedReleaseTag);
 
@@ -69,11 +69,11 @@ public class FirecrackerInstaller(
     private static async Task<FirecrackerInstall> ExtractToInstallRootAsync(string archivePath, string installDirectory,
         string fetchedReleaseTag)
     {
-        var temporaryDirectory = IFirecrackerTransport.Current.CreateTemporaryDirectory();
-        await IFirecrackerTransport.Current.ExtractGzipAsync(archivePath, temporaryDirectory);
+        var temporaryDirectory = IHostFilesystem.Current.CreateTemporaryDirectory();
+        await IHostFilesystem.Current.ExtractGzipAsync(archivePath, temporaryDirectory);
         Logger.Debug("Extracted Firecracker binaries archive");
 
-        var subdirectoryPath = IFirecrackerTransport.Current
+        var subdirectoryPath = IHostFilesystem.Current
             .GetSubdirectories(temporaryDirectory)
             .FirstOrDefault();
         if (subdirectoryPath is null)
@@ -82,24 +82,24 @@ public class FirecrackerInstaller(
                                                   "expected subdirectory");
         }
 
-        var files = IFirecrackerTransport.Current
+        var files = IHostFilesystem.Current
             .GetFiles(subdirectoryPath)
             .ToList();
         var firecrackerBinaryPath = files.First(x => x.Contains("firecracker") && !x.Contains("debug"));
         var jailerBinaryPath = files.First(x => x.Contains("jailer") && !x.Contains("debug"));
-        var newFirecrackerBinaryPath = IFirecrackerTransport.Current.JoinPaths(installDirectory, "firecracker");
-        var newJailerBinaryPath = IFirecrackerTransport.Current.JoinPaths(installDirectory, "jailer");
+        var newFirecrackerBinaryPath = IHostFilesystem.Current.JoinPaths(installDirectory, "firecracker");
+        var newJailerBinaryPath = IHostFilesystem.Current.JoinPaths(installDirectory, "jailer");
         
         await Task.WhenAll([
-            IFirecrackerTransport.Current.CopyFileAsync(firecrackerBinaryPath, newFirecrackerBinaryPath),
-            IFirecrackerTransport.Current.CopyFileAsync(jailerBinaryPath, newJailerBinaryPath)
+            IHostFilesystem.Current.CopyFileAsync(firecrackerBinaryPath, newFirecrackerBinaryPath),
+            IHostFilesystem.Current.CopyFileAsync(jailerBinaryPath, newJailerBinaryPath)
         ]);
         
-        IFirecrackerTransport.Current.MakeFileExecutable(newFirecrackerBinaryPath);
-        IFirecrackerTransport.Current.MakeFileExecutable(newJailerBinaryPath);
+        IHostFilesystem.Current.MakeFileExecutable(newFirecrackerBinaryPath);
+        IHostFilesystem.Current.MakeFileExecutable(newJailerBinaryPath);
         
-        IFirecrackerTransport.Current.DeleteDirectoryRecursively(temporaryDirectory);
-        IFirecrackerTransport.Current.DeleteFile(archivePath);
+        IHostFilesystem.Current.DeleteDirectoryRecursively(temporaryDirectory);
+        IHostFilesystem.Current.DeleteFile(archivePath);
         
         return new FirecrackerInstall(fetchedReleaseTag, newFirecrackerBinaryPath, newJailerBinaryPath);
     }
@@ -120,7 +120,7 @@ public class FirecrackerInstaller(
         }
         Logger.Debug("Verified checksums successfully");
 
-        await IFirecrackerTransport.Current.WriteBinaryFileAsync(archivePath, archiveBytes);
+        await IHostFilesystem.Current.WriteBinaryFileAsync(archivePath, archiveBytes);
 
         return archivePath;
     }

@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp", "Firecra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Demo", "FirecrackerSharp.Demo\FirecrackerSharp.Demo.csproj", "{DB1784C1-717C-425B-A5E7-9A7111CAE3EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Transport.Native", "FirecrackerSharp.Transport.Native\FirecrackerSharp.Transport.Native.csproj", "{D658F68D-0513-4619-A7AE-F73CFE569C43}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Local", "FirecrackerSharp.Host.Local\FirecrackerSharp.Host.Local.csproj", "{D658F68D-0513-4619-A7AE-F73CFE569C43}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Transport.SSH", "FirecrackerSharp.Transport.SSH\FirecrackerSharp.Transport.SSH.csproj", "{74D288A5-5BCB-4750-80F0-19CAE3DCC118}"
 EndProject

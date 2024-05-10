@@ -1,5 +1,5 @@
 using System.Text.Json;
-using FirecrackerSharp.Transport;
+using FirecrackerSharp.Host;
 
 namespace FirecrackerSharp.Installation;
 
@@ -12,7 +12,7 @@ public class FirecrackerInstallManager(
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
-    private string IndexPath => IFirecrackerTransport.Current.JoinPaths(storagePath, indexFilename);
+    private string IndexPath => IHostFilesystem.Current.JoinPaths(storagePath, indexFilename);
     
     public FirecrackerInstallManager(string storagePath, string indexFilename = "index.json") 
         : this(storagePath, DefaultSerializerOptions, indexFilename) {}
@@ -30,7 +30,7 @@ public class FirecrackerInstallManager(
         {
             var newInstalls = new List<FirecrackerInstall> { addedInstall };
             var newIndexJson = JsonSerializer.Serialize(newInstalls, jsonSerializerOptions);
-            await IFirecrackerTransport.Current.WriteTextFileAsync(IndexPath, newIndexJson);
+            await IHostFilesystem.Current.WriteTextFileAsync(IndexPath, newIndexJson);
             return;
         }
         
@@ -54,7 +54,7 @@ public class FirecrackerInstallManager(
 
     public async Task<List<FirecrackerInstall>> GetAllFromIndexAsync()
     {
-        var indexJson = await IFirecrackerTransport.Current.ReadTextFileAsync(IndexPath);
+        var indexJson = await IHostFilesystem.Current.ReadTextFileAsync(IndexPath);
         return JsonSerializer.Deserialize<List<FirecrackerInstall>>(indexJson, jsonSerializerOptions)!;
     }
 
@@ -83,7 +83,7 @@ public class FirecrackerInstallManager(
     private async Task WriteIndexAsync(IEnumerable<FirecrackerInstall> installs)
     {
         var json = JsonSerializer.Serialize(installs, jsonSerializerOptions);
-        await IFirecrackerTransport.Current.WriteTextFileAsync(IndexPath, json);
+        await IHostFilesystem.Current.WriteTextFileAsync(IndexPath, json);
     }
 
     private static FirecrackerInstall? FindInIndex(IEnumerable<FirecrackerInstall> installs, string version, bool strict = false)

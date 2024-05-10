@@ -1,9 +1,7 @@
 ﻿using FirecrackerSharp.Data;
 using FirecrackerSharp.Demo;
 using FirecrackerSharp.Installation;
-using FirecrackerSharp.Transport;
-using FirecrackerSharp.Transport.SSH;
-using Renci.SshNet;
+using FirecrackerSharp.Host.Local;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -12,8 +10,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .CreateLogger();
 
-IFirecrackerTransport.Current =
-    new SshFirecrackerTransport(new ConnectionInfo("192.168.88.112", "root", new PasswordAuthenticationMethod("root", "495762")));
+LocalHost.Configure();
 
 // var im = new FirecrackerInstallManager("/tmp/firecracker");
 // var inst = await im.InstallAsync();
@@ -29,7 +26,7 @@ var install = await im.GetFromIndexAsync("v1.7.0");
 var str = new StressTester(install!, testConfig);
 
 var tasks = new List<Task>();
-for (var i = 0; i < 100; ++i)
+for (var i = 0; i < 50; ++i)
 {
     tasks.Add(str.StartVm());
 }

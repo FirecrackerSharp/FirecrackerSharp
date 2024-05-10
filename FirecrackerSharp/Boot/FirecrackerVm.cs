@@ -3,8 +3,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
-using FirecrackerSharp.Transport;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -23,7 +23,7 @@ public abstract class FirecrackerVm(
     protected string? SocketPath;
     protected readonly string VmId = vmId;
 
-    protected IFirecrackerProcess? Process;
+    protected IHostProcess? Process;
 
     private HttpClient? _backingSocketHttpClient;
     public HttpClient SocketHttpClient
@@ -53,7 +53,7 @@ public abstract class FirecrackerVm(
     protected async Task SerializeConfigToFileAsync(string configPath)
     {
         var configJson = JsonSerializer.Serialize(VmConfiguration, InternalUtil.SerializerOptions);
-        await IFirecrackerTransport.Current.WriteTextFileAsync(configPath, configJson);
+        await IHostFilesystem.Current.WriteTextFileAsync(configPath, configJson);
         
         Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
     }

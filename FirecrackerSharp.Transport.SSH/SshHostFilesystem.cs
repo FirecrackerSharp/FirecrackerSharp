@@ -1,9 +1,10 @@
 ﻿using System.Text;
+using FirecrackerSharp.Host;
 using Renci.SshNet;
 
 namespace FirecrackerSharp.Transport.SSH;
 
-public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrackerTransport
+internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesystem
 {
     private SshClient Ssh
     {
@@ -136,12 +137,5 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
         return finalBuilder.ToString()
             .Replace("//", "/")
             .Replace("///", "/");
-    }
-
-    public IFirecrackerProcess LaunchProcess(string executable, string args)
-    {
-        var ssh = Ssh;
-        var command = ssh.CreateCommand(executable + " " + args);
-        return new SshFirecrackerProcess(command, ssh);
     }
 }

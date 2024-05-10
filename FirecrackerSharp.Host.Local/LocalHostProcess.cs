@@ -1,8 +1,8 @@
 using System.Diagnostics;
 
-namespace FirecrackerSharp.Transport.Native;
+namespace FirecrackerSharp.Host.Local;
 
-public class NativeFirecrackerProcess(Process osProcess) : IFirecrackerProcess
+internal class LocalHostProcess(Process osProcess) : IHostProcess
 {
     public Stream StandardOutput => osProcess.StandardOutput.BaseStream;
     public Stream StandardInput => osProcess.StandardInput.BaseStream;

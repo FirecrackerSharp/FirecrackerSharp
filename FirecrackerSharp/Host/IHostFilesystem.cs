@@ -1,8 +1,8 @@
-namespace FirecrackerSharp.Transport;
+namespace FirecrackerSharp.Host;
 
-public interface IFirecrackerTransport
+public interface IHostFilesystem
 {
-    public static IFirecrackerTransport Current { internal get; set; } = null!;
+    public static IHostFilesystem Current { internal get; set; } = null!;
 
     public Task WriteTextFileAsync(string path, string content);
 
@@ -31,6 +31,4 @@ public interface IFirecrackerTransport
     public string CreateTemporaryDirectory();
 
     public string JoinPaths(params string[] paths);
-
-    public IFirecrackerProcess LaunchProcess(string executable, string args);
 }

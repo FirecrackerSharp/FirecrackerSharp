@@ -1,6 +1,6 @@
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
-using FirecrackerSharp.Transport;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -15,20 +15,20 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
         FirecrackerOptions firecrackerOptions,
         string vmId) : base(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId)
     {
-        IFirecrackerTransport.Current.CreateDirectory(firecrackerOptions.SocketDirectory);
-        SocketPath = IFirecrackerTransport.Current.JoinPaths(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
+        IHostFilesystem.Current.CreateDirectory(firecrackerOptions.SocketDirectory);
+        SocketPath = IHostFilesystem.Current.JoinPaths(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
         
         Logger.Debug("The Unix socket for the unrestricted microVM will be created at: {socketPath}", SocketPath);
     }
     
     internal override async Task StartProcessAsync()
     {
-        var configPath = IFirecrackerTransport.Current.GetTemporaryFilename();
+        var configPath = IHostFilesystem.Current.GetTemporaryFilename();
         await SerializeConfigToFileAsync(configPath);
 
         var args = FirecrackerOptions.FormatToArguments(configPath, SocketPath);
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);
-        Process = IFirecrackerTransport.Current.LaunchProcess(FirecrackerInstall.FirecrackerBinary, args);
+        Process = IHostProcessManager.Current.LaunchProcess(FirecrackerInstall.FirecrackerBinary, args);
 
         await WaitForBootAsync();
         Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);
@@ -36,7 +36,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
 
     public override void CleanupAfterShutdown()
     {
-        IFirecrackerTransport.Current.DeleteFile(SocketPath!);
+        IHostFilesystem.Current.DeleteFile(SocketPath!);
     }
 
     public static async Task<FirecrackerVm> StartAsync(

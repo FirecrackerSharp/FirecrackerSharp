@@ -1,6 +1,6 @@
-namespace FirecrackerSharp.Transport;
+namespace FirecrackerSharp.Host;
 
-public interface IFirecrackerProcess
+public interface IHostProcess
 {
     public Stream StandardOutput { get; }
     public Stream StandardInput { get; }

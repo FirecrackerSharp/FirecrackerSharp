@@ -1,15 +1,14 @@
-using System.Diagnostics;
 using Serilog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 
-namespace FirecrackerSharp.Transport.Native;
+namespace FirecrackerSharp.Host.Local;
 
-public class NativeFirecrackerTransport : IFirecrackerTransport
+internal class LocalHostFilesystem : IHostFilesystem
 {
-    public NativeFirecrackerTransport()
+    public LocalHostFilesystem()
     {
-        Log.ForContext<NativeFirecrackerTransport>().Information("Using native (Linux-only) transport for FirecrackerSharp");
+        Log.ForContext<LocalHostFilesystem>().Information("Using native (Linux-only) transport for FirecrackerSharp");
     }
     
     public async Task WriteTextFileAsync(string path, string content)
@@ -94,24 +93,5 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
     public string JoinPaths(params string[] paths)
     {
         return Path.Join(paths);
-    }
-
-    public IFirecrackerProcess LaunchProcess(string executable, string args)
-    {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = executable,
-                Arguments = args,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                CreateNoWindow = true
-            }
-        };
-        process.Start();
-        return new NativeFirecrackerProcess(process);
     }
 }

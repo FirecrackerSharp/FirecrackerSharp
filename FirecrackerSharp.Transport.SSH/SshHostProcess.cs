@@ -1,8 +1,9 @@
+using FirecrackerSharp.Host;
 using Renci.SshNet;
 
 namespace FirecrackerSharp.Transport.SSH;
 
-public class SshFirecrackerProcess(SshCommand sshCommand, SshClient sshClient) : IFirecrackerProcess
+internal class SshHostProcess(SshCommand sshCommand, IBaseClient sshClient) : IHostProcess
 {
     public Stream StandardOutput => sshCommand.OutputStream;
     
