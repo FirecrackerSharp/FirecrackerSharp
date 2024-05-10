@@ -1,5 +1,6 @@
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Transport;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -14,7 +15,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
         FirecrackerOptions firecrackerOptions,
         string vmId) : base(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId)
     {
-        if (!Directory.Exists(firecrackerOptions.SocketDirectory)) Directory.CreateDirectory(firecrackerOptions.SocketDirectory);
+        IFirecrackerTransport.Current.CreateDirectory(firecrackerOptions.SocketDirectory);
         SocketPath = Path.Join(firecrackerOptions.SocketDirectory, firecrackerOptions.SocketFilename + ".sock");
         
         Logger.Debug("The Unix socket for the unrestricted microVM will be created at: {socketPath}", SocketPath);
@@ -22,7 +23,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
     
     internal override async Task StartProcessAsync()
     {
-        var configPath = Path.GetTempFileName();
+        var configPath = IFirecrackerTransport.Current.GetTemporaryFilename();
         await SerializeConfigToFileAsync(configPath);
 
         var args = FirecrackerOptions.FormatToArguments(configPath, SocketPath);
@@ -35,7 +36,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
 
     public override void CleanupAfterShutdown()
     {
-        File.Delete(SocketPath!);
+        IFirecrackerTransport.Current.DeleteFile(SocketPath!);
     }
 
     public static async Task<FirecrackerVm> StartAsync(

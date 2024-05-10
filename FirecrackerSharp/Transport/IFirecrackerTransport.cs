@@ -12,6 +12,8 @@ public interface IFirecrackerTransport
 
     public Task CopyFileAsync(string sourcePath, string destinationPath);
 
+    public string GetTemporaryFilename();
+
     public void CreateDirectory(string path);
 
     public IEnumerable<string> GetSubdirectories(string path);

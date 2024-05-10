@@ -33,6 +33,11 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
         await sourceStream.CopyToAsync(destinationStream);
     }
 
+    public string GetTemporaryFilename()
+    {
+        return Path.GetTempFileName();
+    }
+
     public void CreateDirectory(string path)
     {
         Directory.CreateDirectory(path);

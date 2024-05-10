@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Renci.SshNet;
+﻿using Renci.SshNet;
 
 namespace FirecrackerSharp.Transport.SSH;
 
@@ -51,6 +50,11 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
         await using var sourceStream = sftp.OpenRead(sourcePath);
         await using var destinationStream = sftp.OpenWrite(destinationPath);
         await sourceStream.CopyToAsync(destinationStream);
+    }
+
+    public string GetTemporaryFilename()
+    {
+        return Path.Join("/tmp", Guid.NewGuid().ToString());
     }
 
     public void CreateDirectory(string path)
