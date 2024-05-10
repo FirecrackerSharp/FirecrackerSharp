@@ -80,11 +80,6 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
         Directory.Delete(path, recursive: true);
     }
 
-    public string JoinPaths(params string[] paths)
-    {
-        return Path.Join(paths);
-    }
-
     public string CreateTemporaryDirectory()
     {
         return Directory.CreateTempSubdirectory().FullName;

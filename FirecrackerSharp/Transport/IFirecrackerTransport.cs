@@ -26,7 +26,5 @@ public interface IFirecrackerTransport
 
     public void DeleteDirectoryRecursively(string path);
 
-    public string JoinPaths(params string[] paths);
-
     public string CreateTemporaryDirectory();
 }

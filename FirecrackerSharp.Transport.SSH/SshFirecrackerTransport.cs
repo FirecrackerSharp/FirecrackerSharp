@@ -56,7 +56,15 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
     public void CreateDirectory(string path)
     {
         using var sftp = Sftp;
-        sftp.CreateDirectory(path);
+        var slices = path.Split('/').Skip(1).ToArray();
+        for (var i = 0; i < slices.Length; ++i)
+        {
+            var directoryPath = '/' + Path.Join(slices.Take(i + 1).ToArray());
+            if (!sftp.Exists(directoryPath))
+            {
+                sftp.CreateDirectory(directoryPath);
+            }
+        }
     }
 
     public IEnumerable<string> GetSubdirectories(string path)
@@ -64,7 +72,7 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
         using var sftp = Sftp;
         return sftp
             .ListDirectory(path)
-            .Where(x => x.IsDirectory)
+            .Where(x => x.IsDirectory && x.Name != "." && x.Name != "..")
             .Select(x => x.FullName);
     }
 
@@ -100,27 +108,15 @@ public class SshFirecrackerTransport(ConnectionInfo connectionInfo) : IFirecrack
 
     public void DeleteDirectoryRecursively(string path)
     {
-        using var sftp = Sftp;
-        sftp.DeleteDirectory(path);
-    }
-
-    public string JoinPaths(params string[] paths)
-    {
-        var builder = new StringBuilder();
-        foreach (var path in paths)
-        {
-            builder.Append(path);
-            builder.Append('/');
-        }
-
-        return builder.ToString();
+        using var ssh = Ssh;
+        ssh.CreateCommand($"rm -r {path}").Execute();
     }
 
     public string CreateTemporaryDirectory()
     {
         using var sftp = Sftp;
         
-        var temporaryDirectory = JoinPaths("/tmp", Guid.NewGuid().ToString());
+        var temporaryDirectory = Path.Join("/tmp", Guid.NewGuid().ToString());
         sftp.CreateDirectory(temporaryDirectory);
         return temporaryDirectory;
     }

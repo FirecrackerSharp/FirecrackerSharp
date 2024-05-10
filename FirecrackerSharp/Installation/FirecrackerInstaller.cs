@@ -19,7 +19,7 @@ public class FirecrackerInstaller(
     {
         var (archiveAsset, archiveChecksumAsset, release) = await FetchAssetsFromApiAsync();
         var fetchedReleaseTag = release.TagName;
-        var installDirectory = IFirecrackerTransport.Current.JoinPaths(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
+        var installDirectory = Path.Join(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
         IFirecrackerTransport.Current.CreateDirectory(installDirectory);
         var archivePath = await DownloadAssetsAndVerifyAsync(archiveAsset, archiveChecksumAsset);
         var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory, fetchedReleaseTag);
@@ -86,8 +86,8 @@ public class FirecrackerInstaller(
             .ToList();
         var firecrackerBinaryPath = files.First(x => x.Contains("firecracker") && !x.Contains("debug"));
         var jailerBinaryPath = files.First(x => x.Contains("jailer") && !x.Contains("debug"));
-        var newFirecrackerBinaryPath = IFirecrackerTransport.Current.JoinPaths(installDirectory, "firecracker");
-        var newJailerBinaryPath = IFirecrackerTransport.Current.JoinPaths(installDirectory, "jailer");
+        var newFirecrackerBinaryPath = Path.Join(installDirectory, "firecracker");
+        var newJailerBinaryPath = Path.Join(installDirectory, "jailer");
         
         await Task.WhenAll([
             IFirecrackerTransport.Current.CopyFileAsync(firecrackerBinaryPath, newFirecrackerBinaryPath),
