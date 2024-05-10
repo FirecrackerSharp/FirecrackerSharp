@@ -111,6 +111,7 @@ public class NativeFirecrackerTransport : IFirecrackerTransport
                 CreateNoWindow = true
             }
         };
+        process.Start();
         return new NativeFirecrackerProcess(process);
     }
 }
