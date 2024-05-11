@@ -3,7 +3,7 @@ using Serilog;
 
 namespace FirecrackerSharp.Host.Ssh;
 
-public class SshHost
+public static class SshHost
 {
     public static void Configure(ConnectionInfo connectionInfo, uint concurrentConnections)
     {
@@ -12,5 +12,10 @@ public class SshHost
         IHostProcessManager.Current = new SshHostProcessManager(connectionManager);
         
         Log.Information("Using remote SSH host for FirecrackerSharp");
+    }
+
+    public static void Dispose()
+    {
+        ConnectionPool.DisposeAll();
     }
 }

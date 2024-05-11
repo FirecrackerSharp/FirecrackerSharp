@@ -62,7 +62,7 @@ public class JailedFirecrackerVm : FirecrackerVm
 
     public override void CleanupAfterShutdown()
     {
-        Directory.Delete(_jailPath, recursive: true);
+        IHostFilesystem.Current.DeleteDirectoryRecursively(_jailPath);
     }
 
     private async Task<VmConfiguration> MoveAllToJailAsync(string jailPath)

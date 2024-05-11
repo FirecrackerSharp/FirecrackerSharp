@@ -38,7 +38,7 @@ internal class SshHostFilesystem(ConnectionPool connectionPool) : IHostFilesyste
         var slices = path.Split('/').Skip(1).ToArray();
         for (var i = 0; i < slices.Length; ++i)
         {
-            var directoryPath = '/' + Path.Join(slices.Take(i + 1).ToArray());
+            var directoryPath = '/' + JoinPaths(slices.Take(i + 1).ToArray());
             if (!sftp.Exists(directoryPath))
             {
                 sftp.CreateDirectory(directoryPath);

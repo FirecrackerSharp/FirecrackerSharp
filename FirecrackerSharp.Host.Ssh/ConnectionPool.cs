@@ -4,6 +4,8 @@ namespace FirecrackerSharp.Host.Ssh;
 
 internal class ConnectionPool : IDisposable
 {
+    private static readonly List<ConnectionPool> _connectionPools = [];
+    
     internal readonly ConnectionInfo ConnectionInfo;
 
     private readonly List<SshClient> _sshConnections = [];
@@ -38,6 +40,8 @@ internal class ConnectionPool : IDisposable
     
     internal ConnectionPool(ConnectionInfo connectionInfo, uint upkeep)
     {
+        _connectionPools.Add(this);
+        
         ConnectionInfo = connectionInfo;
         _upkeep = upkeep;
 
@@ -66,5 +70,10 @@ internal class ConnectionPool : IDisposable
     {
         _sshConnections.ForEach(x => x.Disconnect());
         _sftpConnections.ForEach(x => x.Disconnect());
+    }
+
+    internal static void DisposeAll()
+    {
+        _connectionPools.ForEach(x => x.Dispose());
     }
 }

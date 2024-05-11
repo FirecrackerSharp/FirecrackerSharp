@@ -3,6 +3,8 @@ using FirecrackerSharp.Demo;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Host.Local;
+using FirecrackerSharp.Host.Ssh;
+using Renci.SshNet;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -11,7 +13,9 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .CreateLogger();
 
-LocalHost.Configure();
+SshHost.Configure(
+    new ConnectionInfo("192.168.88.112", "root", new PasswordAuthenticationMethod("root", "495762")),
+    5);
 
 // var im = new FirecrackerInstallManager("/tmp/firecracker");
 // var inst = await im.InstallAsync();
@@ -27,7 +31,7 @@ var install = await im.GetFromIndexAsync("v1.7.0");
 var str = new StressTester(install!, testConfig);
 
 var tasks = new List<Task>();
-for (var i = 0; i < 15; ++i)
+for (var i = 0; i < 5; ++i)
 {
     tasks.Add(str.StartVm());
 }
@@ -38,6 +42,8 @@ Log.Information("ALL VMS BOOTED");
 await Task.Delay(3000);
 await str.ShutdownVms();
 Log.Information("ALL VMS SHUT DOWN");
+
+SshHost.Dispose();
 
 //
 //
