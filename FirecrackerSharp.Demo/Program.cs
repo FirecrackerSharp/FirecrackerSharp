@@ -1,8 +1,6 @@
 ﻿using FirecrackerSharp.Data;
 using FirecrackerSharp.Demo;
-using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
-using FirecrackerSharp.Host.Local;
 using FirecrackerSharp.Host.Ssh;
 using Renci.SshNet;
 using Serilog;
@@ -14,8 +12,11 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 SshHost.Configure(
-    new ConnectionInfo("192.168.88.112", "root", new PasswordAuthenticationMethod("root", "495762")),
-    5);
+    new ConnectionPoolConfiguration(
+        new ConnectionInfo("192.168.88.112", "root", new PasswordAuthenticationMethod("root", "495762")),
+        SftpConnectionAmount: 3,
+        SshConnectionAmount: 3,
+        KeepAliveInterval: TimeSpan.FromMinutes(1)));
 
 // var im = new FirecrackerInstallManager("/tmp/firecracker");
 // var inst = await im.InstallAsync();

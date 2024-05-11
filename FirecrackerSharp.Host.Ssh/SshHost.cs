@@ -1,21 +1,26 @@
-using Renci.SshNet;
 using Serilog;
 
 namespace FirecrackerSharp.Host.Ssh;
 
 public static class SshHost
 {
-    public static void Configure(ConnectionInfo connectionInfo, uint concurrentConnections)
+    private static ConnectionPool? _currentConnectionPool;
+    
+    public static void Configure(ConnectionPoolConfiguration connectionPoolConfiguration)
     {
-        var connectionManager = new ConnectionPool(connectionInfo, concurrentConnections);
-        IHostFilesystem.Current = new SshHostFilesystem(connectionManager);
-        IHostProcessManager.Current = new SshHostProcessManager(connectionManager);
+        _currentConnectionPool = new ConnectionPool(connectionPoolConfiguration);
+        IHostFilesystem.Current = new SshHostFilesystem(_currentConnectionPool);
+        IHostProcessManager.Current = new SshHostProcessManager(_currentConnectionPool);
         
         Log.Information("Using remote SSH host for FirecrackerSharp");
     }
 
     public static void Dispose()
     {
-        ConnectionPool.DisposeAll();
+        if (_currentConnectionPool is null)
+            throw new ArgumentNullException(nameof(_currentConnectionPool),
+                "No SSH & SFTP connection pool to dispose of");
+        
+        _currentConnectionPool.Dispose();
     }
 }
