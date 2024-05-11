@@ -27,7 +27,7 @@ var install = await im.GetFromIndexAsync("v1.7.0");
 var str = new StressTester(install!, testConfig);
 
 var tasks = new List<Task>();
-for (var i = 0; i < 1; ++i)
+for (var i = 0; i < 15; ++i)
 {
     tasks.Add(str.StartVm());
 }

@@ -1,7 +1,6 @@
-using FirecrackerSharp.Host;
 using Renci.SshNet;
 
-namespace FirecrackerSharp.Transport.SSH;
+namespace FirecrackerSharp.Host.Ssh;
 
 internal class SshHostProcess(SshCommand sshCommand, IBaseClient sshClient) : IHostProcess
 {

@@ -1,55 +1,29 @@
 ﻿using System.Text;
-using FirecrackerSharp.Host;
-using Renci.SshNet;
 
-namespace FirecrackerSharp.Transport.SSH;
+namespace FirecrackerSharp.Host.Ssh;
 
-internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesystem
+internal class SshHostFilesystem(ConnectionPool connectionPool) : IHostFilesystem
 {
-    private SshClient Ssh
-    {
-        get
-        {
-            var client = new SshClient(connectionInfo);
-            client.Connect();
-            return client;
-        }
-    }
-
-    private SftpClient Sftp
-    {
-        get
-        {
-            var client = new SftpClient(connectionInfo);
-            client.Connect();
-            return client;
-        }
-    }
-    
     public Task WriteTextFileAsync(string path, string content)
     {
-        using var sftp = Sftp;
-        sftp.WriteAllText(path, content);
+        connectionPool.Sftp.WriteAllText(path, content);
         return Task.CompletedTask;
     }
 
     public Task WriteBinaryFileAsync(string path, byte[] content)
     {
-        using var sftp = Sftp;
-        sftp.WriteAllBytes(path, content);
+        connectionPool.Sftp.WriteAllBytes(path, content);
         return Task.CompletedTask;
     }
 
     public Task<string> ReadTextFileAsync(string path)
     {
-        using var sftp = Sftp;
-        return Task.FromResult(sftp.ReadAllText(path));
+        return Task.FromResult(connectionPool.Sftp.ReadAllText(path));
     }
 
     public Task CopyFileAsync(string sourcePath, string destinationPath)
     {
-        using var ssh = Ssh;
-        ssh.CreateCommand($"cp {sourcePath} {destinationPath}").Execute();
+        connectionPool.Ssh.CreateCommand($"cp {sourcePath} {destinationPath}").Execute();
         return Task.CompletedTask;
     }
 
@@ -60,7 +34,7 @@ internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesyste
 
     public void CreateDirectory(string path)
     {
-        using var sftp = Sftp;
+        var sftp = connectionPool.Sftp;
         var slices = path.Split('/').Skip(1).ToArray();
         for (var i = 0; i < slices.Length; ++i)
         {
@@ -74,8 +48,7 @@ internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesyste
 
     public IEnumerable<string> GetSubdirectories(string path)
     {
-        using var sftp = Sftp;
-        return sftp
+        return connectionPool.Sftp
             .ListDirectory(path)
             .Where(x => x.IsDirectory && x.Name != "." && x.Name != "..")
             .Select(x => x.FullName);
@@ -83,8 +56,7 @@ internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesyste
 
     public IEnumerable<string> GetFiles(string path)
     {
-        using var sftp = Sftp;
-        return sftp
+        return connectionPool.Sftp
             .ListDirectory(path)
             .Where(x => !x.IsDirectory)
             .Select(x => x.FullName);
@@ -92,8 +64,7 @@ internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesyste
 
     public Task ExtractGzipAsync(string archivePath, string destinationPath)
     {
-        using var ssh = Ssh;
-        var command = ssh.CreateCommand($"tar -zxvf {archivePath} -C {destinationPath}");
+        var command = connectionPool.Ssh.CreateCommand($"tar -zxvf {archivePath} -C {destinationPath}");
         command.Execute();
         return Task.CompletedTask;
     }
@@ -101,28 +72,23 @@ internal class SshHostFilesystem(ConnectionInfo connectionInfo) : IHostFilesyste
     public void MakeFileExecutable(string path)
     {
         // TODO: investigate how this can be done better
-        using var sftp = Sftp;
-        sftp.ChangePermissions(path, mode: 777);
+        connectionPool.Sftp.ChangePermissions(path, mode: 777);
     }
 
     public void DeleteFile(string path)
     {
-        using var sftp = Sftp;
-        sftp.DeleteFile(path);
+        connectionPool.Sftp.DeleteFile(path);
     }
 
     public void DeleteDirectoryRecursively(string path)
     {
-        using var ssh = Ssh;
-        ssh.CreateCommand($"rm -r {path}").Execute();
+        connectionPool.Ssh.CreateCommand($"rm -r {path}").Execute();
     }
 
     public string CreateTemporaryDirectory()
     {
-        using var sftp = Sftp;
-        
         var temporaryDirectory = JoinPaths("/tmp", Guid.NewGuid().ToString());
-        sftp.CreateDirectory(temporaryDirectory);
+        connectionPool.Sftp.CreateDirectory(temporaryDirectory);
         return temporaryDirectory;
     }
 

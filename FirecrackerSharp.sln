@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Demo", "Fi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Local", "FirecrackerSharp.Host.Local\FirecrackerSharp.Host.Local.csproj", "{D658F68D-0513-4619-A7AE-F73CFE569C43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Transport.SSH", "FirecrackerSharp.Transport.SSH\FirecrackerSharp.Transport.SSH.csproj", "{74D288A5-5BCB-4750-80F0-19CAE3DCC118}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Ssh", "FirecrackerSharp.Host.Ssh\FirecrackerSharp.Host.Ssh.csproj", "{74D288A5-5BCB-4750-80F0-19CAE3DCC118}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
