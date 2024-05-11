@@ -6,11 +6,6 @@ namespace FirecrackerSharp.Host.Local;
 
 internal class LocalHostFilesystem : IHostFilesystem
 {
-    public LocalHostFilesystem()
-    {
-        Log.ForContext<LocalHostFilesystem>().Information("Using native (Linux-only) transport for FirecrackerSharp");
-    }
-    
     public async Task WriteTextFileAsync(string path, string content)
     {
         await File.WriteAllTextAsync(path, content);

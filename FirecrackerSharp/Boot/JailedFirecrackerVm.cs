@@ -42,7 +42,19 @@ public class JailedFirecrackerVm : FirecrackerVm
         var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary, VmId);
         var args = $"{jailerArgs} -- {firecrackerArgs}";
         Logger.Debug("Launch arguments for microVM {vmId} (jailed) are: {args}", VmId, args);
-        Process = IHostProcessManager.Current.LaunchProcess(FirecrackerInstall.JailerBinary, args);
+
+        if (IHostProcessManager.Current.IsEscalated)
+        {
+            Process = IHostProcessManager.Current.LaunchProcess(FirecrackerInstall.JailerBinary, args);
+        }
+        else
+        {
+            if (_jailerOptions.SudoPassword is null)
+                throw new ArgumentNullException(nameof(_jailerOptions.SudoPassword));
+            
+            Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
+                FirecrackerInstall.JailerBinary, args);
+        }
 
         await WaitForBootAsync();
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
