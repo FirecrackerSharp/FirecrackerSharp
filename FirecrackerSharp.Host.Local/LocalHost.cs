@@ -8,6 +8,7 @@ public static class LocalHost
     {
         IHostFilesystem.Current = new LocalHostFilesystem();
         IHostProcessManager.Current = new LocalHostProcessManager();
+        IHostSocketManager.Current = new LocalHostSocketManager();
         
         Log.Information("Using local (Linux) host for FirecrackerSharp");
     }

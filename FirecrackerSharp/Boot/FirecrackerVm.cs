@@ -25,24 +25,13 @@ public abstract class FirecrackerVm(
 
     protected IHostProcess? Process;
 
-    private HttpClient? _backingSocketHttpClient;
-    public HttpClient SocketHttpClient
+    private IHostSocket? _backingSocket;
+    public IHostSocket Socket
     {
         get
         {
-            return _backingSocketHttpClient ??= new HttpClient(new SocketsHttpHandler
-            {
-                ConnectCallback = async (_, token) =>
-                {
-                    var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
-                    var endpoint = new UnixDomainSocketEndPoint(SocketPath!);
-                    await socket.ConnectAsync(endpoint, token);
-                    return new NetworkStream(socket, ownsSocket: true);
-                }
-            })
-            {
-                BaseAddress = new Uri("http://localhost")
-            };
+            _backingSocket ??= IHostSocketManager.Current.Connect(SocketPath!, "http://localhost:80");
+            return _backingSocket;
         }
     }
 

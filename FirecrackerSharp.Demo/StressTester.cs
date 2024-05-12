@@ -16,6 +16,7 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             new JailerOptions(1000, 1000, "495762"),
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
+        Console.WriteLine(await vm.Socket.GetAsync("/machine-config"));
     }
 
     public async Task ShutdownVms()
