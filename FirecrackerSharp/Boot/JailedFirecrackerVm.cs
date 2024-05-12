@@ -60,7 +60,7 @@ public class JailedFirecrackerVm : FirecrackerVm
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
     }
 
-    public override void CleanupAfterShutdown()
+    protected override void CleanupAfterShutdown()
     {
         IHostFilesystem.Current.DeleteDirectoryRecursively(_jailPath);
     }

@@ -34,7 +34,7 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
         Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);
     }
 
-    public override void CleanupAfterShutdown()
+    protected override void CleanupAfterShutdown()
     {
         IHostFilesystem.Current.DeleteFile(SocketPath!);
     }

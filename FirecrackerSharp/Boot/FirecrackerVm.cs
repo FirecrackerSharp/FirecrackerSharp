@@ -37,11 +37,11 @@ public abstract class FirecrackerVm(
 
     internal abstract Task StartProcessAsync();
 
-    public abstract void CleanupAfterShutdown();
+    protected abstract void CleanupAfterShutdown();
 
     protected async Task SerializeConfigToFileAsync(string configPath)
     {
-        var configJson = JsonSerializer.Serialize(VmConfiguration, InternalUtil.SerializerOptions);
+        var configJson = JsonSerializer.Serialize(VmConfiguration, FirecrackerSerialization.Options);
         await IHostFilesystem.Current.WriteTextFileAsync(configPath, configJson);
         
         Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
@@ -57,6 +57,8 @@ public abstract class FirecrackerVm(
 
     public async Task ShutdownAsync()
     {
+        Socket.Dispose();
+        
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
         

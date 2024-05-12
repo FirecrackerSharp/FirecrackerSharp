@@ -1,19 +1,51 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using FirecrackerSharp.Management;
+
 namespace FirecrackerSharp.Host.Local;
 
 public class LocalHostSocket(HttpClient httpClient) : IHostSocket
 {
-    public async Task<string> GetAsync(string uri)
+    public async Task<ManagementResponse> GetAsync<T>(string uri)
     {
-        return await httpClient.GetStringAsync(uri);
+        var response = await httpClient.GetAsync(uri);
+        var json = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode) return HandleFault(response, json);
+        var obj = JsonSerializer.Deserialize<T>(json, FirecrackerSerialization.Options);
+        return ManagementResponse.Ok(obj);
     }
 
-    public async Task PutAsync(string uri, string content)
+    public async Task<ManagementResponse> PutAsync<T>(string uri, T content)
     {
-        await httpClient.PutAsync(uri, new StringContent(content));
+        var response = await httpClient.PutAsJsonAsync(uri, content, FirecrackerSerialization.Options);
+        if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
+        var json = await response.Content.ReadAsStringAsync();
+        return HandleFault(response, json);
     }
 
-    public async Task PatchAsync(string uri, string content)
+    public async Task<ManagementResponse> PatchAsync<T>(string uri, T content)
     {
-        await httpClient.PatchAsync(uri, new StringContent(content));
+        var response = await httpClient.PatchAsJsonAsync(uri, content, FirecrackerSerialization.Options);
+        if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
+        var json = await response.Content.ReadAsStringAsync();
+        return HandleFault(response, json);
+    }
+
+    public void Dispose()
+    {
+        httpClient.Dispose();
+    }
+
+    private static ManagementResponse HandleFault(HttpResponseMessage response, string json)
+    {
+        var badRequest = response.StatusCode == HttpStatusCode.BadRequest;
+        var faultMessage = JsonSerializer
+            .Deserialize<JsonNode>(json, FirecrackerSerialization.Options)
+            !["fault_message"]
+            !.GetValue<string>();
+
+        return badRequest ? ManagementResponse.BadRequest(faultMessage) : ManagementResponse.InternalError(faultMessage);
     }
 }

@@ -1,10 +1,12 @@
+using FirecrackerSharp.Management;
+
 namespace FirecrackerSharp.Host;
 
-public interface IHostSocket
+public interface IHostSocket : IDisposable
 {
-    public Task<string> GetAsync(string uri);
+    public Task<ManagementResponse> GetAsync<T>(string uri);
 
-    public Task PutAsync(string uri, string content);
+    public Task<ManagementResponse> PutAsync<T>(string uri, T content);
 
-    public Task PatchAsync(string uri, string content);
+    public Task<ManagementResponse> PatchAsync<T>(string uri, T content);
 }
