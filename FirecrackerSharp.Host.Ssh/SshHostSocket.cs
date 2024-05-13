@@ -61,14 +61,13 @@ internal class SshHostSocket(
         }
         command.EndExecute(asyncResult);
         
-        if (!int.TryParse(command.Result, out var responseCode))
-            return ManagementResponse.InternalError("could not receive HTTP status code");
-        
         var responseText = sftp.ReadAllText(responseFile);
+        sftp.DeleteFile(responseFile);
         if (responseText is null)
             return ManagementResponse.InternalError("could not read response file");
-
-        sftp.DeleteFile(responseFile);
+        
+        if (!int.TryParse(command.Result, out var responseCode))
+            return ManagementResponse.InternalError("could not receive HTTP status code");
 
         if (responseCode < 400) return okHandler(responseText);
 
