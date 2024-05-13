@@ -6,14 +6,14 @@ namespace FirecrackerSharp.Demo;
 
 public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration testConfig)
 {
-    private List<FirecrackerVm> _vms = [];
+    private readonly List<FirecrackerVm> _vms = [];
     
     public async Task StartVm()
     {
-        var vm = await JailedFirecrackerVm.StartAsync(
+        var vm = await UnrestrictedFirecrackerVm.StartAsync(
             testConfig, firecrackerInstall,
             new FirecrackerOptions(Guid.NewGuid().ToString()),
-            new JailerOptions(1000, 1000, "495762"),
+            //new JailerOptions(1000, 1000, "495762"),
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
     }
