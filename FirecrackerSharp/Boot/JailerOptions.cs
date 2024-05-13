@@ -3,7 +3,7 @@ namespace FirecrackerSharp.Boot;
 public record JailerOptions(
     ulong LinuxGid,
     ulong LinuxUid,
-    string SudoPassword,
+    string? SudoPassword = null,
     string ChrootBaseDirectory = "/srv/jailer",
     string ExtraArguments = "")
 {

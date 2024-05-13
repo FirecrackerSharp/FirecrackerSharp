@@ -1,9 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
+using FirecrackerSharp.Host;
 using Octokit;
 using Serilog;
-using SharpCompress.Common;
-using SharpCompress.Readers;
 
 namespace FirecrackerSharp.Installation;
 
@@ -20,8 +19,9 @@ public class FirecrackerInstaller(
     {
         var (archiveAsset, archiveChecksumAsset, release) = await FetchAssetsFromApiAsync();
         var fetchedReleaseTag = release.TagName;
-        var installDirectory = Path.Join(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
-        Directory.CreateDirectory(installDirectory);
+        var installDirectory =
+            IHostFilesystem.Current.JoinPaths(installRoot, fetchedReleaseTag, Guid.NewGuid().ToString());
+        IHostFilesystem.Current.CreateDirectory(installDirectory);
         var archivePath = await DownloadAssetsAndVerifyAsync(archiveAsset, archiveChecksumAsset);
         var firecracker = await ExtractToInstallRootAsync(archivePath, installDirectory, fetchedReleaseTag);
 
@@ -66,44 +66,40 @@ public class FirecrackerInstaller(
         return (archiveAsset, archiveChecksumAsset, release);
     }
 
-    private async Task<FirecrackerInstall> ExtractToInstallRootAsync(string archivePath, string installDirectory,
+    private static async Task<FirecrackerInstall> ExtractToInstallRootAsync(string archivePath, string installDirectory,
         string fetchedReleaseTag)
     {
-        var temporaryDirectory = Directory.CreateTempSubdirectory().FullName;
-
-        await using (Stream stream = File.OpenRead(archivePath))
-        {            
-            var reader = ReaderFactory.Open(stream);
-            while (reader.MoveToNextEntry())
-            {
-                if (!reader.Entry.IsDirectory)
-                    reader.WriteEntryToDirectory(temporaryDirectory,
-                        new ExtractionOptions { ExtractFullPath = true, Overwrite = true });
-            }
-        }
+        var temporaryDirectory = IHostFilesystem.Current.CreateTemporaryDirectory();
+        await IHostFilesystem.Current.ExtractGzipAsync(archivePath, temporaryDirectory);
         Logger.Debug("Extracted Firecracker binaries archive");
 
-        var subdirectoryPath = Directory.GetDirectories(temporaryDirectory).FirstOrDefault();
+        var subdirectoryPath = IHostFilesystem.Current
+            .GetSubdirectories(temporaryDirectory)
+            .FirstOrDefault();
         if (subdirectoryPath is null)
         {
             throw new FirecrackerInstallationException("The extracted Firecracker directory doesn't contain the" +
                                                   "expected subdirectory");
         }
 
-        var files = Directory.GetFiles(subdirectoryPath);
+        var files = IHostFilesystem.Current
+            .GetFiles(subdirectoryPath)
+            .ToList();
         var firecrackerBinaryPath = files.First(x => x.Contains("firecracker") && !x.Contains("debug"));
         var jailerBinaryPath = files.First(x => x.Contains("jailer") && !x.Contains("debug"));
-        var newFirecrackerBinaryPath = Path.Join(installDirectory, "firecracker");
-        var newJailerBinaryPath = Path.Join(installDirectory, "jailer");
-        File.Copy(firecrackerBinaryPath, newFirecrackerBinaryPath);
-        File.Copy(jailerBinaryPath, newJailerBinaryPath);
-#pragma warning disable CA1416
-        File.SetUnixFileMode(newFirecrackerBinaryPath, UnixFileMode.UserExecute);
-        File.SetUnixFileMode(newJailerBinaryPath, UnixFileMode.UserExecute);
-#pragma warning restore CA1416
+        var newFirecrackerBinaryPath = IHostFilesystem.Current.JoinPaths(installDirectory, "firecracker");
+        var newJailerBinaryPath = IHostFilesystem.Current.JoinPaths(installDirectory, "jailer");
         
-        Directory.Delete(temporaryDirectory, recursive: true);
-        File.Delete(archivePath);
+        await Task.WhenAll([
+            IHostFilesystem.Current.CopyFileAsync(firecrackerBinaryPath, newFirecrackerBinaryPath),
+            IHostFilesystem.Current.CopyFileAsync(jailerBinaryPath, newJailerBinaryPath)
+        ]);
+        
+        IHostFilesystem.Current.MakeFileExecutable(newFirecrackerBinaryPath);
+        IHostFilesystem.Current.MakeFileExecutable(newJailerBinaryPath);
+        
+        IHostFilesystem.Current.DeleteDirectoryRecursively(temporaryDirectory);
+        IHostFilesystem.Current.DeleteFile(archivePath);
         
         return new FirecrackerInstall(fetchedReleaseTag, newFirecrackerBinaryPath, newJailerBinaryPath);
     }
@@ -123,8 +119,8 @@ public class FirecrackerInstaller(
             throw new FirecrackerInstallationException("The actual checksum doesn't match the expected one from GitHub");
         }
         Logger.Debug("Verified checksums successfully");
-        
-        await File.WriteAllBytesAsync(archivePath, archiveBytes);
+
+        await IHostFilesystem.Current.WriteBinaryFileAsync(archivePath, archiveBytes);
 
         return archivePath;
     }
