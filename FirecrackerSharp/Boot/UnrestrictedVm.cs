@@ -5,11 +5,11 @@ using Serilog;
 
 namespace FirecrackerSharp.Boot;
 
-public class UnrestrictedFirecrackerVm : FirecrackerVm
+public class UnrestrictedVm : Vm
 {
-    private static readonly ILogger Logger = Log.ForContext<UnrestrictedFirecrackerVm>();
+    private static readonly ILogger Logger = Log.ForContext<UnrestrictedVm>();
 
-    private UnrestrictedFirecrackerVm(
+    private UnrestrictedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
@@ -39,13 +39,13 @@ public class UnrestrictedFirecrackerVm : FirecrackerVm
         IHostFilesystem.Current.DeleteFile(SocketPath!);
     }
 
-    public static async Task<FirecrackerVm> StartAsync(
+    public static async Task<Vm> StartAsync(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
         string vmId)
     {
-        var vm = new UnrestrictedFirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId);
+        var vm = new UnrestrictedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId);
         await vm.StartProcessAsync();
         return vm;
     }

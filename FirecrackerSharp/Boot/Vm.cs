@@ -5,34 +5,45 @@ using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Management;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
 
-public abstract class FirecrackerVm(
-    VmConfiguration vmConfiguration,
-    FirecrackerInstall firecrackerInstall,
-    FirecrackerOptions firecrackerOptions,
-    string vmId)
+public abstract class Vm
 {
-    private static readonly ILogger Logger = Log.ForContext<FirecrackerVm>();
+    private static readonly ILogger Logger = Log.ForContext<Vm>();
     
-    protected VmConfiguration VmConfiguration = vmConfiguration;
-    protected readonly FirecrackerInstall FirecrackerInstall = firecrackerInstall;
-    protected readonly FirecrackerOptions FirecrackerOptions = firecrackerOptions;
+    protected VmConfiguration VmConfiguration;
+    protected readonly FirecrackerInstall FirecrackerInstall;
+    protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
-    protected readonly string VmId = vmId;
+    protected readonly string VmId;
 
     protected IHostProcess? Process;
 
     private IHostSocket? _backingSocket;
-    public IHostSocket Socket
+    internal IHostSocket Socket
     {
         get
         {
             _backingSocket ??= IHostSocketManager.Current.Connect(SocketPath!, "http://localhost:80");
             return _backingSocket;
         }
+    }
+    public readonly VmManagement Management;
+
+    protected Vm(
+        VmConfiguration vmConfiguration,
+        FirecrackerInstall firecrackerInstall,
+        FirecrackerOptions firecrackerOptions,
+        string vmId)
+    {
+        VmConfiguration = vmConfiguration;
+        FirecrackerInstall = firecrackerInstall;
+        FirecrackerOptions = firecrackerOptions;
+        VmId = vmId;
+        Management = new VmManagement(this);
     }
 
     internal abstract Task StartProcessAsync();

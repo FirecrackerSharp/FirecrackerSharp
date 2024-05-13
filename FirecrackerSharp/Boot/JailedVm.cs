@@ -5,14 +5,14 @@ using Serilog;
 
 namespace FirecrackerSharp.Boot;
 
-public class JailedFirecrackerVm : FirecrackerVm
+public class JailedVm : Vm
 {
-    private static readonly ILogger Logger = Log.ForContext<JailedFirecrackerVm>();
+    private static readonly ILogger Logger = Log.ForContext<JailedVm>();
     private readonly JailerOptions _jailerOptions;
     private readonly string _jailPath;
     private readonly string _socketPathInJail;
 
-    private JailedFirecrackerVm(
+    private JailedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
@@ -112,14 +112,14 @@ public class JailedFirecrackerVm : FirecrackerVm
             originalPath, IHostFilesystem.Current.JoinPaths(jailPath, newFilename));
     }
 
-    public static async Task<FirecrackerVm> StartAsync(
+    public static async Task<Vm> StartAsync(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
         JailerOptions jailerOptions,
         string vmId)
     {
-        var vm = new JailedFirecrackerVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions, vmId);
+        var vm = new JailedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions, vmId);
         await vm.StartProcessAsync();
         return vm;
     }

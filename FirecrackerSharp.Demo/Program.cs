@@ -41,7 +41,7 @@ for (var i = 0; i < 1; ++i)
 await Task.WhenAll(tasks);
 
 Log.Information("ALL VMS BOOTED");
-await Task.Delay(500000);
+await Task.Delay(3000);
 await str.ShutdownVms();
 Log.Information("ALL VMS SHUT DOWN");
 
