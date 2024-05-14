@@ -5,6 +5,11 @@ using Serilog;
 
 namespace FirecrackerSharp.Boot;
 
+/// <summary>
+/// A microVM that was booted through the jailer binary inside a chroot jail.
+///
+/// Refer to <see cref="UnrestrictedVm"/> documentation on when to use this instead of a <see cref="UnrestrictedVm"/>.
+/// </summary>
 public class JailedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<JailedVm>();
@@ -112,7 +117,16 @@ public class JailedVm : Vm
             originalPath, IHostFilesystem.Current.JoinPaths(jailPath, newFilename));
     }
 
-    public static async Task<Vm> StartAsync(
+    /// <summary>
+    /// Boot up a <see cref="JailedVm"/> with the given parameters and return its instance for further management.
+    /// </summary>
+    /// <param name="vmConfiguration">The entire pre-boot <see cref="VmConfiguration"/> for this microVM</param>
+    /// <param name="firecrackerInstall">The <see cref="FirecrackerInstall"/> to be used to boot this microVM</param>
+    /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to be passed into the firecracker binary</param>
+    /// <param name="jailerOptions">The <see cref="JailerOptions"/> to be passed into the jailer binary</param>
+    /// <param name="vmId">A unique microVM identifier that must not be repeated for multiple VMs.</param>
+    /// <returns></returns>
+    public static async Task<JailedVm> StartAsync(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
