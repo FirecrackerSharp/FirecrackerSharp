@@ -6,6 +6,21 @@ using Serilog;
 
 namespace FirecrackerSharp.Installation;
 
+/// <summary>
+/// An automatic installation tool for a single installation of Firecracker, which contains the firecracker binary and the
+/// jailer binary.
+///
+/// The installation process is automated with the help of the GitHub API referencing the releases of the public
+/// Firecracker GitHub repository (currently, firecracker-microvm/firecracker), however, the repository can be
+/// overridden if necessary.
+///
+/// If you're looking to manage multiple simultaneous installations of Firecracker (as is recommended), please consider
+/// using <see cref="FirecrackerInstallManager"/> instead, as it provides that capability out-of-the-box.
+/// </summary>
+/// <param name="installRoot">The installation root directory (the final directory is $installRoot/$version/$randomGuid)</param>
+/// <param name="releaseTag">Either the GitHub tag of the needed release, or "latest" indicating the most recent available release</param>
+/// <param name="repoOwner">The GitHub owner account of the repository (firecracker-microvm by default)</param>
+/// <param name="repoName">The name of the GitHub repository (firecracker by default)</param>
 public class FirecrackerInstaller(
     string installRoot,
     string releaseTag = "latest",
@@ -15,6 +30,12 @@ public class FirecrackerInstaller(
     private static readonly HttpClient HttpClient = new();
     private static readonly ILogger Logger = Log.ForContext(typeof(FirecrackerInstaller));
     
+    /// <summary>
+    /// Asynchronously install Firecracker with the parameters specified in <see cref="FirecrackerInstaller"/>'s
+    /// constructor.
+    /// </summary>
+    /// <returns>The <see cref="FirecrackerInstall"/> object referencing the new install, which can be used in
+    /// order to interface with VM boot-up facilities of this SDk</returns>
     public async Task<FirecrackerInstall> InstallAsync()
     {
         var (archiveAsset, archiveChecksumAsset, release) = await FetchAssetsFromApiAsync();

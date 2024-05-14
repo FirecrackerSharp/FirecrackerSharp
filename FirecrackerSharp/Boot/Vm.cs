@@ -10,6 +10,9 @@ using Serilog;
 
 namespace FirecrackerSharp.Boot;
 
+/// <summary>
+/// The base class representing all Firecracker microVMs.
+/// </summary>
 public abstract class Vm
 {
     private static readonly ILogger Logger = Log.ForContext<Vm>();
@@ -31,6 +34,11 @@ public abstract class Vm
             return _backingSocket;
         }
     }
+    
+    /// <summary>
+    /// The <see cref="VmManagement"/> instance linked to this <see cref="Vm"/> that allows access to the Firecracker
+    /// Management API that is linked to this <see cref="Vm"/>'s Firecracker UDS.
+    /// </summary>
     public readonly VmManagement Management;
 
     protected Vm(
@@ -66,6 +74,13 @@ public abstract class Vm
         }
     }
 
+    /// <summary>
+    /// Shutdown this microVM and dispose of all associated transient resources.
+    ///
+    /// The shutdown process can either succeed after a graceful shutdown, or fail if the microVM process had been
+    /// killed before <see cref="ShutdownAsync"/> was called or if the microVM didn't respond to the TTY exit command
+    /// ("reboot") and thus had the process was terminated.
+    /// </summary>
     public async Task ShutdownAsync()
     {
         Socket.Dispose();
