@@ -1,11 +1,9 @@
-using System.Diagnostics;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Management;
+using FirecrackerSharp.Terminal;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -17,13 +15,13 @@ public abstract class Vm
 {
     private static readonly ILogger Logger = Log.ForContext<Vm>();
     
-    protected VmConfiguration VmConfiguration;
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
-    protected readonly string VmId;
+    protected internal readonly string VmId;
 
-    protected IHostProcess? Process;
+    protected internal VmConfiguration VmConfiguration;
+    protected internal IHostProcess? Process;
 
     private IHostSocket? _backingSocket;
     internal IHostSocket Socket
@@ -41,6 +39,12 @@ public abstract class Vm
     /// </summary>
     public readonly VmManagement Management;
 
+    /// <summary>
+    /// The <see cref="VmTerminal"/> instance linked to this <see cref="Vm"/> that allows one-operation-per-time
+    /// access to the VM's main TTY if one is started upon boot.
+    /// </summary>
+    public readonly VmTerminal Terminal;
+
     protected Vm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
@@ -52,6 +56,7 @@ public abstract class Vm
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
         Management = new VmManagement(this);
+        Terminal = new VmTerminal(this);
     }
 
     internal abstract Task StartProcessAsync();
@@ -68,10 +73,8 @@ public abstract class Vm
 
     protected async Task WaitForBootAsync()
     {
-        if (FirecrackerOptions.WaitSecondsAfterBoot.HasValue)
-        {
-            await Task.Delay(FirecrackerOptions.WaitSecondsAfterBoot.Value * 1000);
-        }
+        var source = new CancellationTokenSource(TimeSpan.FromSeconds(FirecrackerOptions.WaitSecondsAfterBoot ?? 5));
+        await Terminal.LogLifecycleAsync(source);
     }
 
     /// <summary>
@@ -85,16 +88,18 @@ public abstract class Vm
     {
         Socket.Dispose();
         
-        var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+        var source = new CancellationTokenSource();
+        source.CancelAfter(TimeSpan.FromSeconds(30));
+
+        await Terminal.LogLifecycleAsync(source);
         
         try
         {
             await Process!.StandardInput.WriteAsync(
-                new ReadOnlyMemory<byte>("reboot\n"u8.ToArray()), cancellationTokenSource.Token);
+                new ReadOnlyMemory<byte>("reboot\n"u8.ToArray()), source.Token);
             try
             {
-                await Process.WaitUntilCompletionAsync(cancellationTokenSource.Token);
+                await Process.WaitUntilCompletionAsync(source.Token);
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
             }
             catch (Exception)

@@ -6,6 +6,8 @@ public interface IHostFilesystem
 
     public Task WriteTextFileAsync(string path, string content);
 
+    public Task AppendToTextFileAsync(string path, string content);
+
     public Task WriteBinaryFileAsync(string path, byte[] content);
 
     public Task<string> ReadTextFileAsync(string path);

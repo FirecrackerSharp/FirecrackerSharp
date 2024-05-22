@@ -10,6 +10,12 @@ internal class SshHostFilesystem(ConnectionPool connectionPool) : IHostFilesyste
         return Task.CompletedTask;
     }
 
+    public Task AppendToTextFileAsync(string path, string content)
+    {
+        connectionPool.Sftp.AppendAllText(path, content);
+        return Task.CompletedTask;
+    }
+
     public Task WriteBinaryFileAsync(string path, byte[] content)
     {
         connectionPool.Sftp.WriteAllBytes(path, content);
