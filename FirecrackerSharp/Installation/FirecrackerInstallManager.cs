@@ -48,7 +48,7 @@ public class FirecrackerInstallManager(
     /// <param name="releaseTag"></param>
     /// <param name="repoOwner"></param>
     /// <param name="repoName"></param>
-    /// <returns></returns>
+    /// <returns>The acquired <see cref="FirecrackerInstall"/></returns>
     public async Task<FirecrackerInstall> InstallAsync(string releaseTag = "latest",
         string repoOwner = "firecracker-microvm", string repoName = "firecracker")
     {
