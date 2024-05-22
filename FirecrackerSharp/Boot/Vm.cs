@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Host;
@@ -18,9 +19,9 @@ public abstract class Vm
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
-    protected internal readonly string VmId;
-
-    protected internal VmConfiguration VmConfiguration;
+    protected readonly string VmId;
+    protected VmConfiguration VmConfiguration;
+    
     protected internal IHostProcess? Process;
 
     private IHostSocket? _backingSocket;
@@ -73,8 +74,10 @@ public abstract class Vm
 
     protected async Task WaitForBootAsync()
     {
-        var source = new CancellationTokenSource(TimeSpan.FromSeconds(FirecrackerOptions.WaitSecondsAfterBoot ?? 5));
-        await Terminal.LogLifecycleAsync(source);
+        if (FirecrackerOptions.WaitSecondsAfterBoot.HasValue)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(FirecrackerOptions.WaitSecondsAfterBoot.Value));
+        }
     }
 
     /// <summary>
@@ -88,18 +91,17 @@ public abstract class Vm
     {
         Socket.Dispose();
         
-        var source = new CancellationTokenSource();
-        source.CancelAfter(TimeSpan.FromSeconds(30));
+        var rebootTokenSource = new CancellationTokenSource();
+        rebootTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+        var logTokenSource = new CancellationTokenSource();
+        logTokenSource.CancelAfter(TimeSpan.FromSeconds(3));
 
-        await Terminal.LogLifecycleAsync(source);
-        
         try
         {
-            await Process!.StandardInput.WriteAsync(
-                new ReadOnlyMemory<byte>("reboot\n"u8.ToArray()), source.Token);
+            await Process!.InputWriter.WriteLineAsync(new StringBuilder("reboot"), rebootTokenSource.Token);
             try
             {
-                await Process.WaitUntilCompletionAsync(source.Token);
+                await Process.WaitUntilCompletionAsync(rebootTokenSource.Token);
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
             }
             catch (Exception)

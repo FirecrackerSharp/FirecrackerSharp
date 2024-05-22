@@ -8,6 +8,4 @@ public record VmConfiguration(
     [property: JsonPropertyName("machine-config")]
     VmMachineConfiguration MachineConfiguration,
     [property: JsonPropertyName("drives")]
-    IEnumerable<VmDrive> Drives,
-    [property: JsonIgnore]
-    VmLogging Logging);
+    IEnumerable<VmDrive> Drives);
