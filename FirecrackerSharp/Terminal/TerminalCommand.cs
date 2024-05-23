@@ -15,20 +15,33 @@ public class TerminalCommand
         Arguments = arguments;
     }
 
-    public async Task<bool> WaitUntilCompletionAsync(uint timeoutSeconds = 3, uint pollMillis = 10)
+    public async Task<bool> AwaitAndReadAsync(uint timeoutSeconds = 3, uint pollMillis = 10)
     {
         var source = new CancellationTokenSource();
         source.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        var firstRead = true;
 
         while (true)
         {
             if (source.IsCancellationRequested) return false;
 
-            var appendix = _terminal.ReadNew(source);
-            if (appendix.TrimEnd().EndsWith('$')) return true;
-            
-            CurrentOutput += appendix;
-            
+            var appendix = await _terminal.ReadNewAsync(source, awaitChanges: false);
+            if (appendix.TrimEnd().EndsWith('$'))
+            {
+                Console.WriteLine(appendix);
+                return true;
+            }
+
+            if (!firstRead)
+            {
+                Console.WriteLine(appendix);
+                CurrentOutput += appendix;
+            }
+            else
+            {
+                firstRead = false;
+            }
+
             // ReSharper disable once MethodSupportsCancellation
             await Task.Delay(TimeSpan.FromMilliseconds(pollMillis));
         }

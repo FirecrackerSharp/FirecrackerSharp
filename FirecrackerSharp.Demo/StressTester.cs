@@ -16,6 +16,10 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             //new JailerOptions(1000, 1000, "495762"),
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
+
+        var command = await vm.Terminal.StartCommandAsync("du");
+        await command.AwaitAndReadAsync(timeoutSeconds: 100);
+        Console.WriteLine(command.CurrentOutput);
     }
 
     public async Task ShutdownVms()

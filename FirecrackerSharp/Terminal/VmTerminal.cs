@@ -9,7 +9,7 @@ namespace FirecrackerSharp.Terminal;
 /// An interface to a microVM's primary TTY that is exposed by Firecracker every time it is configured through a
 /// kernel boot argument (as is highly recommended, so that a graceful shutdown can occur).
 /// 
-/// This is an <b>extremely</b> limited way to access the microVM: only CLI operations are supported and only 1 operation
+/// This is an <b>extremely</b> limited way to access the microVM: only CLI operations are supported, only 1 operation
 /// at a time can be made (accomplished through <see cref="Locked"/> internally). For any case that doesn't fit under
 /// these harsh requirements, use CNI networking instead to be able to SSH into the microVM. However, in the case that
 /// this method of access suffices, it's preferred to use it in order to avoid having to further open up your microVM
@@ -35,23 +35,24 @@ public class VmTerminal
         _vm = vm;
     }
 
-    public async Task<TerminalCommand> StartCommand(
-        string command, string arguments,
-        uint readTimeoutSeconds = 3,
+    public async Task<TerminalCommand> StartCommandAsync(
+        string command,
+        string arguments = "",
+        uint readTimeoutSeconds = 5,
         uint writeTimeoutSeconds = 3)
     {
         var readSource = new CancellationTokenSource();
         readSource.CancelAfter(TimeSpan.FromSeconds(readTimeoutSeconds));
+        await ReadNewAsync(readSource, awaitChanges: false);
+        
         var writeSource = new CancellationTokenSource();
         writeSource.CancelAfter(TimeSpan.FromSeconds(writeTimeoutSeconds));
-
-        ReadNew(readSource);
         await WriteNewAsync(writeSource, command + " " + arguments);
 
         return new TerminalCommand(terminal: this, command, arguments);
     }
     
-    internal string ReadNew(CancellationTokenSource source)
+    internal async Task<string> ReadNewAsync(CancellationTokenSource source, bool awaitChanges = false)
     {
         if (Locked)
         {
@@ -63,16 +64,40 @@ public class VmTerminal
         Locked = true;
         
         var stringBuilder = new StringBuilder();
-        int next;
+        var previousNullAmount = 0;
 
-        while ((next = reader.Read()) != -1)
+        while (true)
         {
-            stringBuilder.Append((char)next);
-
-            if (source.IsCancellationRequested)
+            var innerBuilder = new StringBuilder();
+            var anythingFound = false;
+            try
             {
-                Locked = false;
-                throw new TerminalTimeoutException("A terminal read operation timed out");
+                while (await reader.ReadLineAsync(source.Token) is { } line)
+                {
+                    innerBuilder.AppendLine(line);
+                    Console.WriteLine(line);
+                    anythingFound = true;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
+            stringBuilder.Append(innerBuilder);
+
+            if (!awaitChanges) break;
+
+            if (!anythingFound)
+            {
+                if (previousNullAmount > 5) break;
+
+                previousNullAmount++;
+                await Task.Delay(10);
+            }
+            else
+            {
+                previousNullAmount = 0;
             }
         }
 
