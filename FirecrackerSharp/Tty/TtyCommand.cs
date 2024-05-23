@@ -25,7 +25,7 @@ public class TtyCommand
 
         while (!source.IsCancellationRequested)
         {
-            var appendix = await _tty.ReadNewAsync(new CancellationTokenSource(ReadTimeoutTimeSpan));
+            var appendix = await _tty.ReadNewAsync(new CancellationTokenSource(ReadTimeoutTimeSpan), skipFirstLine: true);
             if (appendix is null) return true;
 
             CurrentOutput += appendix;

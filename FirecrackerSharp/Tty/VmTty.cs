@@ -45,7 +45,7 @@ public class VmTty
         if (_mustRead)
         {
             var readSource = new CancellationTokenSource(TimeSpan.FromSeconds(readTimeoutSeconds));
-            await ReadNewAsync(readSource);
+            await ReadNewAsync(readSource, skipFirstLine: false);
             
             _mustRead = false;
         }
@@ -57,7 +57,7 @@ public class VmTty
         return new TtyCommand(tty: this, command, arguments, TimeSpan.FromSeconds(readTimeoutSeconds));
     }
     
-    internal async Task<string?> ReadNewAsync(CancellationTokenSource source)
+    internal async Task<string?> ReadNewAsync(CancellationTokenSource source, bool skipFirstLine)
     {
         if (Locked)
         {
@@ -70,12 +70,19 @@ public class VmTty
         var anythingFound = false;
         
         var stringBuilder = new StringBuilder();
+        var firstLine = true;
 
         try
         {
             var readSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(10));
             while (await reader.ReadLineAsync(readSource.Token) is { } line && !source.IsCancellationRequested)
             {
+                if (firstLine && skipFirstLine)
+                {
+                    firstLine = false;
+                    continue;
+                }
+                
                 stringBuilder.AppendLine(line);
                 anythingFound = true;
             }
