@@ -20,7 +20,6 @@ public class VmTerminal
     private static readonly ILogger Logger = Log.ForContext<VmTerminal>();
     
     private readonly Vm _vm;
-    private CancellationTokenSource? _currentSource;
     
     /// <summary>
     /// Whether this terminal is locked, e.g. another operation is already taking place. As this is merely a TTY,
@@ -28,9 +27,6 @@ public class VmTerminal
     ///
     /// Always check if locked before performing operations, otherwise <see cref="TerminalLockedException"/> will be
     /// thrown!
-    ///
-    /// NOTE: the lock can be "reclaimed" and your operation will be cancelled, if a microVM boot/shutdown is requested
-    /// at the same time, as those operations always take precedence.
     /// </summary>
     public bool Locked { get; private set; }
 
@@ -38,15 +34,30 @@ public class VmTerminal
     {
         _vm = vm;
     }
+
+    public async Task<TerminalCommand> StartCommand(
+        string command, string arguments,
+        uint readTimeoutSeconds = 3,
+        uint writeTimeoutSeconds = 3)
+    {
+        var readSource = new CancellationTokenSource();
+        readSource.CancelAfter(TimeSpan.FromSeconds(readTimeoutSeconds));
+        var writeSource = new CancellationTokenSource();
+        writeSource.CancelAfter(TimeSpan.FromSeconds(writeTimeoutSeconds));
+
+        ReadNew(readSource);
+        await WriteNewAsync(writeSource, command + " " + arguments);
+
+        return new TerminalCommand(terminal: this, command, arguments);
+    }
     
-    private string ReadNewAsync(CancellationTokenSource source, bool lifecycle)
+    internal string ReadNew(CancellationTokenSource source)
     {
         if (Locked)
         {
-            throw new TerminalLockedException("Attempted to perform a terminal operation when it was locked");
+            throw new TerminalLockedException("Attempted to perform a terminal read operation when it was locked");
         }
         
-        _currentSource = source;
         var reader = _vm.Process!.OutputReader;
         
         Locked = true;
@@ -57,6 +68,12 @@ public class VmTerminal
         while ((next = reader.Read()) != -1)
         {
             stringBuilder.Append((char)next);
+
+            if (source.IsCancellationRequested)
+            {
+                Locked = false;
+                throw new TerminalTimeoutException("A terminal read operation timed out");
+            }
         }
 
         Locked = false;
@@ -64,5 +81,28 @@ public class VmTerminal
         var content = stringBuilder.ToString();
 
         return content;
+    }
+
+    internal async Task WriteNewAsync(CancellationTokenSource source, string content)
+    {
+        if (Locked)
+        {
+            throw new TerminalLockedException("Attempted to perform a terminal write operation when it was locked");
+        }
+        
+        Locked = true;
+
+        try
+        {
+            await _vm.Process!.InputWriter.WriteLineAsync(new StringBuilder(content), source.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TerminalTimeoutException("A terminal write operation timed out");
+        }
+        finally
+        {
+            Locked = false;
+        }
     }
 }
