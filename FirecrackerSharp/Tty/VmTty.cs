@@ -1,9 +1,8 @@
 using System.Text;
 using FirecrackerSharp.Boot;
-using FirecrackerSharp.Host;
 using Serilog;
 
-namespace FirecrackerSharp.Terminal;
+namespace FirecrackerSharp.Tty;
 
 /// <summary>
 /// An interface to a microVM's primary TTY that is exposed by Firecracker every time it is configured through a
@@ -15,104 +14,87 @@ namespace FirecrackerSharp.Terminal;
 /// this method of access suffices, it's preferred to use it in order to avoid having to further open up your microVM
 /// to the host.
 /// </summary>
-public class VmTerminal
+public class VmTty
 {
-    private static readonly ILogger Logger = Log.ForContext<VmTerminal>();
+    private static readonly ILogger Logger = Log.ForContext<VmTty>();
     
     private readonly Vm _vm;
+    private bool _mustRead;
     
     /// <summary>
     /// Whether this terminal is locked, e.g. another operation is already taking place. As this is merely a TTY,
     /// only one operation can be executed at a time.
     ///
-    /// Always check if locked before performing operations, otherwise <see cref="TerminalLockedException"/> will be
+    /// Always check if locked before performing operations, otherwise <see cref="TtyLockedException"/> will be
     /// thrown!
     /// </summary>
     public bool Locked { get; private set; }
 
-    internal VmTerminal(Vm vm)
+    internal VmTty(Vm vm)
     {
         _vm = vm;
+        _mustRead = true;
     }
 
-    public async Task<TerminalCommand> StartCommandAsync(
+    public async Task<TtyCommand> StartCommandAsync(
         string command,
         string arguments = "",
         uint readTimeoutSeconds = 5,
         uint writeTimeoutSeconds = 3)
     {
-        var readSource = new CancellationTokenSource();
-        readSource.CancelAfter(TimeSpan.FromSeconds(readTimeoutSeconds));
-        await ReadNewAsync(readSource, awaitChanges: false);
-        
+        if (_mustRead)
+        {
+            var readSource = new CancellationTokenSource(TimeSpan.FromSeconds(readTimeoutSeconds));
+            await ReadNewAsync(readSource);
+            
+            _mustRead = false;
+        }
+
         var writeSource = new CancellationTokenSource();
         writeSource.CancelAfter(TimeSpan.FromSeconds(writeTimeoutSeconds));
         await WriteNewAsync(writeSource, command + " " + arguments);
 
-        return new TerminalCommand(terminal: this, command, arguments);
+        return new TtyCommand(tty: this, command, arguments, TimeSpan.FromSeconds(readTimeoutSeconds));
     }
     
-    internal async Task<string> ReadNewAsync(CancellationTokenSource source, bool awaitChanges = false)
+    internal async Task<string?> ReadNewAsync(CancellationTokenSource source)
     {
         if (Locked)
         {
-            throw new TerminalLockedException("Attempted to perform a terminal read operation when it was locked");
+            throw new TtyLockedException("Attempted to perform a terminal read operation when it was locked");
         }
         
         var reader = _vm.Process!.OutputReader;
         
         Locked = true;
+        var anythingFound = false;
         
         var stringBuilder = new StringBuilder();
-        var previousNullAmount = 0;
 
-        while (true)
+        try
         {
-            var innerBuilder = new StringBuilder();
-            var anythingFound = false;
-            try
+            var readSource = new CancellationTokenSource(TimeSpan.FromMilliseconds(10));
+            while (await reader.ReadLineAsync(readSource.Token) is { } line && !source.IsCancellationRequested)
             {
-                while (await reader.ReadLineAsync(source.Token) is { } line)
-                {
-                    innerBuilder.AppendLine(line);
-                    Console.WriteLine(line);
-                    anythingFound = true;
-                }
+                stringBuilder.AppendLine(line);
+                anythingFound = true;
             }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            stringBuilder.Append(innerBuilder);
-
-            if (!awaitChanges) break;
-
-            if (!anythingFound)
-            {
-                if (previousNullAmount > 5) break;
-
-                previousNullAmount++;
-                await Task.Delay(10);
-            }
-            else
-            {
-                previousNullAmount = 0;
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // silently ignore since ReadLineAsync unfortunately has a tendency to hang like this
         }
 
         Locked = false;
 
-        var content = stringBuilder.ToString();
-
-        return content;
+        return anythingFound ? stringBuilder.ToString() : null;
     }
 
     internal async Task WriteNewAsync(CancellationTokenSource source, string content)
     {
         if (Locked)
         {
-            throw new TerminalLockedException("Attempted to perform a terminal write operation when it was locked");
+            throw new TtyLockedException("Attempted to perform a terminal write operation when it was locked");
         }
         
         Locked = true;
@@ -123,7 +105,7 @@ public class VmTerminal
         }
         catch (OperationCanceledException)
         {
-            throw new TerminalTimeoutException("A terminal write operation timed out");
+            throw new TtyTimeoutException("A terminal write operation timed out");
         }
         finally
         {

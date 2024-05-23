@@ -4,7 +4,7 @@ using FirecrackerSharp.Data;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Management;
-using FirecrackerSharp.Terminal;
+using FirecrackerSharp.Tty;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -19,7 +19,7 @@ public abstract class Vm
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
-    protected readonly string VmId;
+    protected internal readonly string VmId;
     protected VmConfiguration VmConfiguration;
     
     protected internal IHostProcess? Process;
@@ -41,10 +41,10 @@ public abstract class Vm
     public readonly VmManagement Management;
 
     /// <summary>
-    /// The <see cref="VmTerminal"/> instance linked to this <see cref="Vm"/> that allows one-operation-per-time
+    /// The <see cref="VmTty"/> instance linked to this <see cref="Vm"/> that allows one-operation-per-time
     /// access to the VM's main TTY if one is started upon boot.
     /// </summary>
-    public readonly VmTerminal Terminal;
+    public readonly VmTty Tty;
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -57,7 +57,7 @@ public abstract class Vm
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
         Management = new VmManagement(this);
-        Terminal = new VmTerminal(this);
+        Tty = new VmTty(this);
     }
 
     internal abstract Task StartProcessAsync();
