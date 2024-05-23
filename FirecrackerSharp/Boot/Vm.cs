@@ -20,9 +20,9 @@ public abstract class Vm
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
-    protected readonly string VmId;
+    protected internal readonly string VmId;
 
-    protected IHostProcess? Process;
+    protected internal IHostProcess? Process;
 
     private IHostSocket? _backingSocket;
     internal IHostSocket Socket
