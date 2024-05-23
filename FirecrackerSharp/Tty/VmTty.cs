@@ -29,6 +29,8 @@ public class VmTty
     /// thrown!
     /// </summary>
     public bool Locked { get; private set; }
+    
+    public TtyCommand? CurrentCommand { get; private set; }
 
     internal VmTty(Vm vm)
     {
@@ -37,9 +39,8 @@ public class VmTty
     }
 
     public async Task<TtyCommand> StartCommandAsync(
-        string command,
-        string arguments = "",
-        uint readTimeoutSeconds = 5,
+        TtyCommandOptions ttyCommandOptions,
+        uint readTimeoutSeconds = 1,
         uint writeTimeoutSeconds = 3)
     {
         if (_mustRead)
@@ -52,9 +53,9 @@ public class VmTty
 
         var writeSource = new CancellationTokenSource();
         writeSource.CancelAfter(TimeSpan.FromSeconds(writeTimeoutSeconds));
-        await WriteNewAsync(writeSource, command + " " + arguments);
+        await WriteNewAsync(writeSource, ttyCommandOptions.ParsedCommand);
 
-        return new TtyCommand(tty: this, command, arguments, TimeSpan.FromSeconds(readTimeoutSeconds));
+        return new TtyCommand(tty: this, ttyCommandOptions);
     }
     
     internal async Task<string?> ReadNewAsync(CancellationTokenSource source, bool skipFirstLine)
@@ -97,7 +98,7 @@ public class VmTty
         return anythingFound ? stringBuilder.ToString() : null;
     }
 
-    internal async Task WriteNewAsync(CancellationTokenSource source, string content)
+    internal async Task WriteNewAsync(CancellationTokenSource source, string content, bool newline = true)
     {
         if (Locked)
         {
@@ -108,7 +109,14 @@ public class VmTty
 
         try
         {
-            await _vm.Process!.InputWriter.WriteLineAsync(new StringBuilder(content), source.Token);
+            if (newline)
+            {
+                await _vm.Process!.InputWriter.WriteLineAsync(new StringBuilder(content), source.Token);
+            }
+            else
+            {
+                await _vm.Process!.InputWriter.WriteAsync(new StringBuilder(content), source.Token);
+            }
         }
         catch (OperationCanceledException)
         {

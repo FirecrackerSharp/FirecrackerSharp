@@ -1,6 +1,7 @@
 using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Tty;
 
 namespace FirecrackerSharp.Demo;
 
@@ -19,8 +20,11 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
 
         for (var i = 0; i < 10; ++i)
         {
-            var command = await vm.Tty.StartCommandAsync("ls", "-a");
+            var command = await vm.Tty.StartCommandAsync(
+                new TtyCommandOptions("top", [], TimeSpan.FromMilliseconds(500), "q", false));
             await command.AwaitAndReadAsync(timeoutSeconds: 1);
+            Console.Write(command.CurrentOutput);
+            await command.StopAsync();
             Console.Write(command.CurrentOutput);
         }
     }

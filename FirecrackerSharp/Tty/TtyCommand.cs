@@ -3,29 +3,27 @@ namespace FirecrackerSharp.Tty;
 public class TtyCommand
 {
     private readonly VmTty _tty;
-    
-    public string Command { get; private init; }
-    public string Arguments { get; private init; }
-    public TimeSpan ReadTimeoutTimeSpan { get; }
+
+    public TtyCommandOptions Options { get; }
     public string CurrentOutput { get; private set; } = string.Empty;
     
-    internal TtyCommand(VmTty tty, string command, string arguments, TimeSpan readTimeoutTimeSpan)
+    internal TtyCommand(VmTty tty, TtyCommandOptions options)
     {
         _tty = tty;
-        
-        Command = command;
-        Arguments = arguments;
-        ReadTimeoutTimeSpan = readTimeoutTimeSpan;
+        Options = options;
     }
 
     public async Task<bool> AwaitAndReadAsync(uint timeoutSeconds = 3, uint pollMillis = 10)
     {
-        var source = new CancellationTokenSource();
-        source.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        var source = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        var skipFirstLine = true;
 
         while (!source.IsCancellationRequested)
         {
-            var appendix = await _tty.ReadNewAsync(new CancellationTokenSource(ReadTimeoutTimeSpan), skipFirstLine: true);
+            var appendix = await _tty.ReadNewAsync(new CancellationTokenSource(Options.ReadTimeoutTimeSpan), skipFirstLine);
+
+            if (skipFirstLine) skipFirstLine = false;
+            
             if (appendix is null) return true;
 
             CurrentOutput += appendix;
@@ -35,6 +33,19 @@ public class TtyCommand
         }
 
         return false;
+    }
+
+    public async Task StopAsync(uint timeoutSeconds = 1)
+    {
+        var source = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        await _tty.WriteNewAsync(source, Options.ExitSignal, Options.NewlineAfterExitSignal);
+        await ReadAsync();
+    }
+
+    public async Task ReadAsync()
+    {
+        CurrentOutput +=
+            await _tty.ReadNewAsync(new CancellationTokenSource(Options.ReadTimeoutTimeSpan), skipFirstLine: false);
     }
 
     public async Task WriteToInputAsync(string content, uint timeoutSeconds = 1)
