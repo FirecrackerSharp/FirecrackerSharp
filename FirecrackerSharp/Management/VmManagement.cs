@@ -35,7 +35,7 @@ public class VmManagement
     ///
     /// This corresponds to the "GET /vm/config" endpoint of the underlying API.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The <see cref="ManagementResponse"/> returned from this endpoint with potential content of <see cref="VmConfiguration"/></returns>
     public async Task<ManagementResponse> GetCurrentConfigurationAsync()
     {
         return await _vm.Socket.GetAsync<VmConfiguration>("/vm/config");

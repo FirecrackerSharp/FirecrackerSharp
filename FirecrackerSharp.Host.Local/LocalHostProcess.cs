@@ -4,9 +4,9 @@ namespace FirecrackerSharp.Host.Local;
 
 internal class LocalHostProcess(Process osProcess) : IHostProcess
 {
-    public Stream StandardOutput => osProcess.StandardOutput.BaseStream;
-    public Stream StandardInput => osProcess.StandardInput.BaseStream;
-    
+    public StreamReader StdoutReader => osProcess.StandardOutput;
+    public StreamWriter StdinWriter => osProcess.StandardInput;
+
     public void Kill()
     {
         osProcess.Kill();
