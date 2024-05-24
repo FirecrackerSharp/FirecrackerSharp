@@ -15,6 +15,7 @@ public class VmShell
     public async Task<VmShellCommand> StartCommandAsync(
         string commandText,
         CaptureMode captureMode = CaptureMode.None,
+        string exitSignal = "^C",
         CancellationToken writeCancellationToken = new())
     {
         string? outputFile = null;
@@ -23,7 +24,7 @@ public class VmShell
 
         if (captureMode != CaptureMode.None)
         {
-            const string stdoutDirectory = "/tmp/vm_shell_logs/";
+            const string stdoutDirectory = "/tmp/vm_shell_logs";
             outputFile = $"{stdoutDirectory}/{Id}-{commandId}";
             
             var delimiter = captureMode == CaptureMode.StdoutPlusStderr ? "&>" : ">";
@@ -32,7 +33,7 @@ public class VmShell
             await ShellManager.WriteToTtyAsync($"mkdir {stdoutDirectory}", writeCancellationToken);
         }
 
-        var command = new VmShellCommand(this, captureMode, outputFile, commandId);
+        var command = new VmShellCommand(this, captureMode, outputFile, commandId, exitSignal);
 
         await ShellManager.WriteToTtyAsync(ttyCommand, writeCancellationToken);
 

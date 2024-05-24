@@ -59,7 +59,7 @@ public class VmShellManager
         string content,
         CancellationToken cancellationToken,
         bool newline = true,
-        bool preserveOutput = false)
+        bool subsequentlyRead = true)
     {
         await _semaphore.WaitAsync(cancellationToken);
 
@@ -83,7 +83,7 @@ public class VmShellManager
             _semaphore.Release();
         }
 
-        if (!preserveOutput)
+        if (subsequentlyRead)
         {
             await ReadFromTtyAsync(cancellationToken);
         }

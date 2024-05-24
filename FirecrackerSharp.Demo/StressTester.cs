@@ -33,7 +33,8 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
     private async Task SubTask(VmShell shell)
     {
         await using var command = await shell.StartCommandAsync("ls --help", CaptureMode.StdoutPlusStderr);
-        Console.Write(await command.GetCapturedOutputAsync());
+        await command.CancelAsync();
+        Console.WriteLine(await command.CaptureOutputAsync());
     }
 
     public async Task ShutdownVms()

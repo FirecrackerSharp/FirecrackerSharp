@@ -9,26 +9,28 @@ public class VmShellCommand : IAsyncDisposable
     
     public CaptureMode CaptureMode { get; }
     public Guid Id { get; }
+    public string ExitSignal { get; }
     
     internal VmShellCommand(
         VmShell shell,
         CaptureMode captureMode,
         string? outputFile,
-        Guid id)
+        Guid id,
+        string exitSignal)
     {
         _shell = shell;
         CaptureMode = captureMode;
         _outputFile = outputFile;
         Id = id;
+        ExitSignal = exitSignal;
     }
 
-    public async Task<string?> GetCapturedOutputAsync(CancellationToken cancellationToken = new())
+    public async Task<string?> CaptureOutputAsync(CancellationToken cancellationToken = new())
     {
         if (CaptureMode == CaptureMode.None) return null;
 
         await _shell.ShellManager.ReadFromTtyAsync(cancellationToken);
-        await _shell.ShellManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken, preserveOutput: true);
-        await Task.Delay(500, cancellationToken);
+        await _shell.ShellManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken, subsequentlyRead: false);
 
         var capturedOutput = await _shell.ShellManager.ReadFromTtyAsync(cancellationToken);
         if (capturedOutput is null) return null;
@@ -46,6 +48,11 @@ public class VmShellCommand : IAsyncDisposable
         }
 
         return capturedOutputBuilder.ToString().Trim();
+    }
+
+    public async Task CancelAsync(CancellationToken cancellationToken = new())
+    {
+        await _shell.ShellManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{ExitSignal}\"", cancellationToken);
     }
 
     public async ValueTask DisposeAsync()
