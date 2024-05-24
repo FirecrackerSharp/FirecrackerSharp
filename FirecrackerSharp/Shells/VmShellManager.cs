@@ -15,7 +15,19 @@ public class VmShellManager
         _vm = vm;
     }
 
-    public async Task<string?> ReadFromTtyAsync(CancellationToken cancellationToken, bool skipFirstLine)
+    public async Task<VmShell> StartShellAsync(
+        CancellationToken readCancellationToken = new(),
+        CancellationToken writeCancellationToken = new())
+    {
+        var shell = new VmShell(this);
+        var stringId = shell.Id.ToString();
+
+        await WriteToTtyAsync($"screen -dmS {stringId}", writeCancellationToken);
+        
+        return shell;
+    }
+
+    public async Task<string?> ReadFromTtyAsync(bool skipFirstLine, CancellationToken cancellationToken)
     {
         await EnsureUnlockedAsync();
 
@@ -53,7 +65,7 @@ public class VmShellManager
         return anythingRead ? stringBuilder.ToString() : null;
     }
 
-    public async Task WriteToTtyAsync(string content, CancellationToken cancellationToken)
+    public async Task WriteToTtyAsync(string content, CancellationToken cancellationToken, bool newline = true)
     {
         await EnsureUnlockedAsync();
 
@@ -61,7 +73,14 @@ public class VmShellManager
 
         try
         {
-            await _vm.Process!.StdinWriter.WriteAsync(new StringBuilder(content), cancellationToken);
+            if (newline)
+            {
+                await _vm.Process!.StdinWriter.WriteLineAsync(new StringBuilder(content), cancellationToken);
+            }
+            else
+            {
+                await _vm.Process!.StdinWriter.WriteAsync(new StringBuilder(content), cancellationToken);
+            }
         }
         catch (OperationCanceledException)
         {
