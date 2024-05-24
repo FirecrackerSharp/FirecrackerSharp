@@ -1,6 +1,5 @@
 using System.Text;
 using FirecrackerSharp.Boot;
-using Serilog;
 
 namespace FirecrackerSharp.Shells;
 
