@@ -1,6 +1,7 @@
 using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Shells;
 
 namespace FirecrackerSharp.Demo;
 
@@ -17,13 +18,22 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
 
-        await Task.Delay(3000);
-        // await vm.ShellManager.WriteToTtyAsync("root", new CancellationToken());
-        // await vm.ShellManager.WriteToTtyAsync("", new CancellationToken());
-        
         var shell = await vm.ShellManager.StartShellAsync();
-        var command = await shell.StartCommandAsync("ls");
-        Console.Write(await vm.ShellManager.ReadFromTtyAsync(false, new CancellationToken()));
+
+        var tasks = new List<Task>();
+        for (var i = 0; i < 10; ++i)
+        {
+            tasks.Add(SubTask(shell));
+        }
+
+        await Task.WhenAll(tasks);
+        await shell.QuitAsync();
+    }
+
+    private async Task SubTask(VmShell shell)
+    {
+        await using var command = await shell.StartCommandAsync("df -h", CaptureMode.StdoutPlusStderr);
+        Console.Write(await command.GetCapturedOutputAsync());
     }
 
     public async Task ShutdownVms()

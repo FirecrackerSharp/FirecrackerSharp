@@ -1,5 +1,6 @@
 using System.Text;
 using FirecrackerSharp.Boot;
+using Serilog;
 
 namespace FirecrackerSharp.Shells;
 
@@ -9,31 +10,30 @@ public class VmShellManager
 
     private bool _locked;
     public LockStrategy LockStrategy { get; set; } = LockStrategy.Default;
+    public TimeSpan? ReceptionTimeSpan { get; set; } = TimeSpan.FromMilliseconds(100);
 
     internal VmShellManager(Vm vm)
     {
         _vm = vm;
     }
 
-    public async Task<VmShell> StartShellAsync(
-        CancellationToken readCancellationToken = new(),
-        CancellationToken writeCancellationToken = new())
+    public async Task<VmShell> StartShellAsync(CancellationToken cancellationToken = new())
     {
         var shell = new VmShell(this);
         var stringId = shell.Id.ToString();
 
-        await WriteToTtyAsync($"screen -dmS {stringId}", writeCancellationToken);
+        await WriteToTtyAsync($"screen -dmS {stringId}", cancellationToken);
         
         return shell;
     }
 
-    public async Task<string?> ReadFromTtyAsync(bool skipFirstLine, CancellationToken cancellationToken)
+    public async Task<string?> ReadFromTtyAsync(CancellationToken cancellationToken, int linesToSkip = 0)
     {
         await EnsureUnlockedAsync();
 
         _locked = true;
         var anythingRead = false;
-        var firstLine = true;
+        var lineNumber = 0;
 
         var stringBuilder = new StringBuilder();
 
@@ -43,14 +43,12 @@ public class VmShellManager
             while (await _vm.Process!.StdoutReader.ReadLineAsync(readTokenSource.Token) is { } line
                    && !cancellationToken.IsCancellationRequested)
             {
-                if (firstLine && skipFirstLine)
-                {
-                    firstLine = false;
-                    continue;
-                }
+                anythingRead = true;
+                lineNumber++;
+
+                if (lineNumber <= linesToSkip) continue;
 
                 stringBuilder.AppendLine(line);
-                anythingRead = true;
             }
         }
         catch (OperationCanceledException)
@@ -59,6 +57,11 @@ public class VmShellManager
         }
         finally
         {
+            if (ReceptionTimeSpan.HasValue)
+            {
+                await Task.Delay(ReceptionTimeSpan.Value);
+            }
+            
             _locked = false;
         }
 
@@ -68,7 +71,7 @@ public class VmShellManager
     public async Task WriteToTtyAsync(string content, CancellationToken cancellationToken, bool newline = true)
     {
         await EnsureUnlockedAsync();
-
+        
         _locked = true;
 
         try
@@ -88,6 +91,11 @@ public class VmShellManager
         }
         finally
         {
+            if (ReceptionTimeSpan.HasValue)
+            {
+                await Task.Delay(ReceptionTimeSpan.Value);
+            }
+            
             _locked = false;
         }
     }
