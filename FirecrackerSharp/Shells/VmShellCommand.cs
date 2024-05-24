@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace FirecrackerSharp.Shells;
 
 public class VmShellCommand : IAsyncDisposable
@@ -20,16 +22,30 @@ public class VmShellCommand : IAsyncDisposable
         Id = id;
     }
 
-    public async Task<string?> GetCapturedOutputAsync(
-        CancellationToken cancellationToken = new())
+    public async Task<string?> GetCapturedOutputAsync(CancellationToken cancellationToken = new())
     {
         if (CaptureMode == CaptureMode.None) return null;
 
         await _shell.ShellManager.ReadFromTtyAsync(cancellationToken);
-        await _shell.ShellManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken);
+        await _shell.ShellManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken, preserveOutput: true);
+        await Task.Delay(500, cancellationToken);
 
-        var capturedOutput = await _shell.ShellManager.ReadFromTtyAsync(cancellationToken, linesToSkip: 2);
-        return capturedOutput;
+        var capturedOutput = await _shell.ShellManager.ReadFromTtyAsync(cancellationToken);
+        if (capturedOutput is null) return null;
+        
+        var capturedOutputBuilder = new StringBuilder();
+
+        foreach (var line in capturedOutput
+                     .Split("\n")
+                     .Select(x => x.TrimEnd()))
+        {
+            if (!line.EndsWith('#') && !line.StartsWith('<'))
+            {
+                capturedOutputBuilder.AppendLine(line);
+            }
+        }
+
+        return capturedOutputBuilder.ToString().Trim();
     }
 
     public async ValueTask DisposeAsync()

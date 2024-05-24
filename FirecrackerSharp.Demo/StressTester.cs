@@ -21,7 +21,7 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
         var shell = await vm.ShellManager.StartShellAsync();
 
         var tasks = new List<Task>();
-        for (var i = 0; i < 10; ++i)
+        for (var i = 0; i < 100; ++i)
         {
             tasks.Add(SubTask(shell));
         }
@@ -32,7 +32,7 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
 
     private async Task SubTask(VmShell shell)
     {
-        await using var command = await shell.StartCommandAsync("df -h", CaptureMode.StdoutPlusStderr);
+        await using var command = await shell.StartCommandAsync("ls --help", CaptureMode.StdoutPlusStderr);
         Console.Write(await command.GetCapturedOutputAsync());
     }
 

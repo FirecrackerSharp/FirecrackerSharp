@@ -8,9 +8,7 @@ public class VmShellManager
 {
     private readonly Vm _vm;
 
-    private bool _locked;
-    public LockStrategy LockStrategy { get; set; } = LockStrategy.Default;
-    public TimeSpan? ReceptionTimeSpan { get; set; } = TimeSpan.FromMilliseconds(100);
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     internal VmShellManager(Vm vm)
     {
@@ -27,14 +25,11 @@ public class VmShellManager
         return shell;
     }
 
-    public async Task<string?> ReadFromTtyAsync(CancellationToken cancellationToken, int linesToSkip = 0)
+    public async Task<string?> ReadFromTtyAsync(CancellationToken cancellationToken)
     {
-        await EnsureUnlockedAsync();
-
-        _locked = true;
+        await _semaphore.WaitAsync(cancellationToken);
+        
         var anythingRead = false;
-        var lineNumber = 0;
-
         var stringBuilder = new StringBuilder();
 
         try
@@ -44,9 +39,6 @@ public class VmShellManager
                    && !cancellationToken.IsCancellationRequested)
             {
                 anythingRead = true;
-                lineNumber++;
-
-                if (lineNumber <= linesToSkip) continue;
 
                 stringBuilder.AppendLine(line);
             }
@@ -57,22 +49,19 @@ public class VmShellManager
         }
         finally
         {
-            if (ReceptionTimeSpan.HasValue)
-            {
-                await Task.Delay(ReceptionTimeSpan.Value);
-            }
-            
-            _locked = false;
+            _semaphore.Release();
         }
 
         return anythingRead ? stringBuilder.ToString() : null;
     }
 
-    public async Task WriteToTtyAsync(string content, CancellationToken cancellationToken, bool newline = true)
+    public async Task WriteToTtyAsync(
+        string content,
+        CancellationToken cancellationToken,
+        bool newline = true,
+        bool preserveOutput = false)
     {
-        await EnsureUnlockedAsync();
-        
-        _locked = true;
+        await _semaphore.WaitAsync(cancellationToken);
 
         try
         {
@@ -91,41 +80,12 @@ public class VmShellManager
         }
         finally
         {
-            if (ReceptionTimeSpan.HasValue)
-            {
-                await Task.Delay(ReceptionTimeSpan.Value);
-            }
-            
-            _locked = false;
-        }
-    }
-
-    private async Task EnsureUnlockedAsync()
-    {
-        if (!_locked) return;
-
-        if (LockStrategy.Type == LockStrategyType.ImmediatelyThrow)
-        {
-            throw new LockException("The VmShellManager was locked while the LockStrategyType was ImmediatelyThrow");
+            _semaphore.Release();
         }
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        
-        if (LockStrategy.Type == LockStrategyType.WaitWithTimeout)
+        if (!preserveOutput)
         {
-            if (!LockStrategy.Timeout.HasValue)
-            {
-                throw new LockException("The LockStrategyType is WaitWithTimeout but the timeout isn't set");
-            }
-            
-            cancellationTokenSource.CancelAfter(LockStrategy.Timeout!.Value);
-        }
-
-        while (!cancellationTokenSource.IsCancellationRequested)
-        {
-            if (!_locked) return;
-            
-            await Task.Delay(LockStrategy.PollFrequency, cancellationTokenSource.Token);
+            await ReadFromTtyAsync(cancellationToken);
         }
     }
 }
