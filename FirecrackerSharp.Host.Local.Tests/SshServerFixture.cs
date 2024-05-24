@@ -10,17 +10,22 @@ public class SshServerFixture : IAsyncLifetime
     private static IContainer? Container { get; set; }
     private static ConnectionInfo ConnectionInfo { get; set; } = null!;
 
-    protected static SshClient SshClient { get; set; } = null!;
-    protected static SftpClient SftpClient { get; set; } = null!;
+    protected SshClient SshClient { get; private set; } = null!;
+    protected SftpClient SftpClient { get; private set; } = null!;
     
     public async Task InitializeAsync()
     {
-        if (Container != null) return;
+        if (Container != null)
+        {
+            Connect();
+            return;
+        }
 
         var hostSshPort = Random.Shared.Next(10000, 65536);
         Container = new ContainerBuilder()
             .WithImage("ssh_server:latest")
             .WithPortBinding(hostSshPort, 22)
+            .WithAutoRemove(true)
             .Build();
 
         await Container.StartAsync();
@@ -35,7 +40,12 @@ public class SshServerFixture : IAsyncLifetime
                 SftpConnectionAmount: 2,
                 KeepAliveInterval: TimeSpan.FromSeconds(1)),
             CurlConfiguration.Default);
+        
+        Connect();
+    }
 
+    private void Connect()
+    {
         SshClient = new SshClient(ConnectionInfo);
         SshClient.Connect();
         
@@ -43,14 +53,11 @@ public class SshServerFixture : IAsyncLifetime
         SftpClient.Connect();
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        if (Container != null)
-        {
-            await Container.StopAsync();
-        }
-        
         SshClient.Disconnect();
         SftpClient.Disconnect();
+        
+        return Task.CompletedTask;
     }
 }
