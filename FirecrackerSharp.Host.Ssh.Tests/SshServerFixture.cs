@@ -3,7 +3,7 @@ using DotNet.Testcontainers.Containers;
 using FirecrackerSharp.Host.Ssh;
 using Renci.SshNet;
 
-namespace FirecrackerSharp.Host.Local.Tests;
+namespace FirecrackerSharp.Host.Ssh.Tests;
 
 public class SshServerFixture : IAsyncLifetime
 {

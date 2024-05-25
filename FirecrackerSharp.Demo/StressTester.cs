@@ -19,13 +19,13 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
         _vms.Add(vm);
 
         var shell = await vm.ShellManager.StartShellAsync();
-
+        
         var tasks = new List<Task>();
         for (var i = 0; i < 100; ++i)
         {
             tasks.Add(SubTask(shell));
         }
-
+        
         await Task.WhenAll(tasks);
         await shell.QuitAsync();
     }
