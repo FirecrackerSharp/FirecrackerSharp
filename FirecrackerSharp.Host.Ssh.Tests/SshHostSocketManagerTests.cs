@@ -1,9 +1,10 @@
 using DotNet.Testcontainers.Builders;
+using FirecrackerSharp.Management;
 using FluentAssertions;
 
 namespace FirecrackerSharp.Host.Ssh.Tests;
 
-public class SshSocketManagerTests : SshServerFixture
+public class SshHostSocketManagerTests : SshServerFixture
 {
     private const string SocketAddress = "/tmp/uds-listener.sock";
     
@@ -21,6 +22,43 @@ public class SshSocketManagerTests : SshServerFixture
         await InitializeUdsAsync(shouldRun: false);
         var action = () => IHostSocketManager.Current.Connect(SocketAddress, "http://localhost");
         action.Should().Throw<SocketDoesNotExistException>();
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnOk()
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.GetAsync<DataRecord>("get/ok");
+        response.IsError.Should().BeFalse();
+        response.TryUnwrap<DataRecord>()?
+            .Field.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnBadRequest()
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.GetAsync<DataRecord>("get/bad-request");
+        response.IsError.Should().BeTrue();
+        var (errorType, _) = response.TryUnwrapError();
+        errorType.Should().Be(ManagementResponseType.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnInternalServerError()
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.GetAsync<DataRecord>("get/error");
+        response.IsError.Should().BeTrue();
+        var (errorType, _) = response.TryUnwrapError();
+        errorType.Should().Be(ManagementResponseType.InternalError);
+    }
+
+    private async Task<IHostSocket> ConnectToUdsAsync()
+    {
+        await InitializeUdsAsync(shouldRun: true);
+        var socket = IHostSocketManager.Current.Connect(SocketAddress, "http://localhost");
+        return socket;
     }
     
     private async Task InitializeUdsAsync(bool shouldRun)
@@ -53,3 +91,6 @@ public class SshSocketManagerTests : SshServerFixture
         await Task.Delay(100); // wait for application to start up and allocate the UDS
     }
 }
+
+// ReSharper disable once ClassNeverInstantiated.Global
+public record DataRecord(int Field);

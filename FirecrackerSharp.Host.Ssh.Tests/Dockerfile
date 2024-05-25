@@ -1,6 +1,6 @@
 FROM debian:latest
 
-RUN apt-get update && apt-get install -y openssh-server
+RUN apt-get update && apt-get install -y openssh-server curl
 RUN mkdir /var/run/sshd
 RUN echo 'root:root123' | chpasswd
 RUN useradd regular

@@ -15,21 +15,21 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
-app.MapGet("/get/ok", (DataRecord record) => Results.Content(record.Field.ToString()));
+app.MapGet("/get/ok", () => new DataRecord(1));
 app.MapGet("/get/bad-request", () => Results.BadRequest());
 app.MapGet("/get/error", () =>
 {
     throw new Exception();
 });
 
-app.MapPut("/put/ok", (DataRecord record) => Results.Content(record.Field.ToString()));
+app.MapPut("/put/ok", (DataRecord record) => record);
 app.MapPut("/put/bad-request", () => Results.BadRequest());
 app.MapPut("/put/error", () =>
 {
     throw new Exception();
 });
 
-app.MapPatch("/patch/ok", (DataRecord record) => Results.Content(record.Field.ToString()));
+app.MapPatch("/patch/ok", (DataRecord record) => record);
 app.MapPatch("/patch/bad-request", () => Results.BadRequest());
 app.MapPatch("/patch/error", () =>
 {
