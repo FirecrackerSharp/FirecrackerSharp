@@ -25,7 +25,6 @@ public class SshServerFixture(string username = "root", string password = "root1
         Container = new ContainerBuilder()
             .WithImage("ssh_server:latest")
             .WithPortBinding(hostSshPort, 22)
-            .WithAutoRemove(true)
             .Build();
 
         await Container.StartAsync();

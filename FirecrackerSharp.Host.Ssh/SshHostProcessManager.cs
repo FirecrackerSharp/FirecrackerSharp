@@ -11,13 +11,8 @@ internal class SshHostProcessManager(ConnectionPool connectionPool) : IHostProce
 
     public bool IsEscalated => connectionPool.ConnectionInfo.Username == "root";
     
-    public async Task<IHostProcess> EscalateAndLaunchProcessAsync(string password, string executable, string args)
+    public Task<IHostProcess> EscalateAndLaunchProcessAsync(string password, string executable, string args)
     {
-        var ssh = connectionPool.NewUnmanagedSshConnection();
-        var command = ssh.CreateCommand("su");
-        var process = new SshHostProcess(command, ssh);
-        await process.StdinWriter.WriteLineAsync(password);
-        await process.StdinWriter.WriteLineAsync(executable + " " + args);
-        return process;
+        throw new Exception("Manual escalation is not supported on the SSH host!");
     }
 }
