@@ -18,10 +18,11 @@ internal class SshHostProcess(SshCommand sshCommand, IBaseClient sshClient) : IH
         }
     }
 
-    public void Kill()
+    public Task<string> KillAndReadAsync()
     {
-        sshCommand.CancelAsync();
+        var result = sshCommand.EndExecute(_executionResult);
         DisposeSshClient();
+        return Task.FromResult(result);
     }
 
     public async Task WaitUntilCompletionAsync(CancellationToken cancellationToken)

@@ -5,7 +5,7 @@ using Renci.SshNet;
 
 namespace FirecrackerSharp.Host.Ssh.Tests;
 
-public class SshServerFixture : IAsyncLifetime
+public class SshServerFixture(string username = "root", string password = "root123") : IAsyncLifetime
 {
     private static IContainer? Container { get; set; }
     private static ConnectionInfo ConnectionInfo { get; set; } = null!;
@@ -31,7 +31,7 @@ public class SshServerFixture : IAsyncLifetime
         await Container.StartAsync();
 
         ConnectionInfo = new ConnectionInfo(
-            "127.0.0.1", hostSshPort, "root", new PasswordAuthenticationMethod("root", "root123"));
+            "127.0.0.1", hostSshPort, username, new PasswordAuthenticationMethod(username, password));
         
         SshHost.Configure(
             new ConnectionPoolConfiguration(

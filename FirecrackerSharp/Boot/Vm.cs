@@ -100,7 +100,7 @@ public abstract class Vm
             }
             catch (Exception)
             {
-                Process.Kill();
+                await Process.KillAndReadAsync();
                 Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);
             }
         }

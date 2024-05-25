@@ -5,6 +5,6 @@ public interface IHostProcess
     public StreamReader StdoutReader { get; }
     public StreamWriter StdinWriter { get; }
 
-    public void Kill();
+    public Task<string> KillAndReadAsync();
     public Task WaitUntilCompletionAsync(CancellationToken cancellationToken);
 }
