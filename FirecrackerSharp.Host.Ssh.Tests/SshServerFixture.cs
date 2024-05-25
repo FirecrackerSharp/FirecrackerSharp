@@ -28,6 +28,8 @@ public class SshServerFixture(string username = "root", string password = "root1
             .Build();
 
         await Container.StartAsync();
+        
+        await Task.Delay(100); // wait until initialization of container
 
         ConnectionInfo = new ConnectionInfo(
             "127.0.0.1", hostSshPort, username, new PasswordAuthenticationMethod(username, password));
