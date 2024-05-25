@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Ssh",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Ssh.Tests", "FirecrackerSharp.Host.Ssh.Tests\FirecrackerSharp.Host.Ssh.Tests.csproj", "{784E6C54-B740-46D5-A4A8-063DE9724554}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.UdsListener", "FirecrackerSharp.UdsListener\FirecrackerSharp.UdsListener.csproj", "{57B23654-921B-4150-A169-DD2A1381ADF2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdsListener", "UdsListener\UdsListener.csproj", "{57B23654-921B-4150-A169-DD2A1381ADF2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
