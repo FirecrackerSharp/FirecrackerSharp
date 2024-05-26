@@ -1,11 +1,10 @@
-using System.Diagnostics;
-using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Management;
+using FirecrackerSharp.Shells;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -21,9 +20,9 @@ public abstract class Vm
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
-    protected readonly string VmId;
+    protected internal readonly string VmId;
 
-    protected IHostProcess? Process;
+    protected internal IHostProcess? Process;
 
     private IHostSocket? _backingSocket;
     internal IHostSocket Socket
@@ -41,6 +40,13 @@ public abstract class Vm
     /// </summary>
     public readonly VmManagement Management;
 
+    /// <summary>
+    /// The <see cref="VmShellManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
+    /// limited, please refer to <see cref="VmShellManager"/> documentation) access to the kernel TTY for executing
+    /// commands without a networking setup.
+    /// </summary>
+    public readonly VmShellManager ShellManager;
+
     protected Vm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
@@ -52,6 +58,7 @@ public abstract class Vm
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
         Management = new VmManagement(this);
+        ShellManager = new VmShellManager(this);
     }
 
     internal abstract Task StartProcessAsync();
@@ -90,8 +97,7 @@ public abstract class Vm
         
         try
         {
-            await Process!.StandardInput.WriteAsync(
-                new ReadOnlyMemory<byte>("reboot\n"u8.ToArray()), cancellationTokenSource.Token);
+            await Process!.StdinWriter.WriteLineAsync(new StringBuilder("reboot"), cancellationTokenSource.Token);
             try
             {
                 await Process.WaitUntilCompletionAsync(cancellationTokenSource.Token);
@@ -99,7 +105,7 @@ public abstract class Vm
             }
             catch (Exception)
             {
-                Process.Kill();
+                await Process.KillAndReadAsync();
                 Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);
             }
         }

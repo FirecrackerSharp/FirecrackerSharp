@@ -8,6 +8,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Local
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Ssh", "FirecrackerSharp.Host.Ssh\FirecrackerSharp.Host.Ssh.csproj", "{74D288A5-5BCB-4750-80F0-19CAE3DCC118}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Ssh.Tests", "FirecrackerSharp.Host.Ssh.Tests\FirecrackerSharp.Host.Ssh.Tests.csproj", "{784E6C54-B740-46D5-A4A8-063DE9724554}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdsListener", "UdsListener\UdsListener.csproj", "{57B23654-921B-4150-A169-DD2A1381ADF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +34,13 @@ Global
 		{74D288A5-5BCB-4750-80F0-19CAE3DCC118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74D288A5-5BCB-4750-80F0-19CAE3DCC118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74D288A5-5BCB-4750-80F0-19CAE3DCC118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{784E6C54-B740-46D5-A4A8-063DE9724554}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{784E6C54-B740-46D5-A4A8-063DE9724554}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{784E6C54-B740-46D5-A4A8-063DE9724554}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{784E6C54-B740-46D5-A4A8-063DE9724554}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57B23654-921B-4150-A169-DD2A1381ADF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57B23654-921B-4150-A169-DD2A1381ADF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57B23654-921B-4150-A169-DD2A1381ADF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57B23654-921B-4150-A169-DD2A1381ADF2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

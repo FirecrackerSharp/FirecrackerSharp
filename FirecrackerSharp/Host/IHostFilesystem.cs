@@ -2,7 +2,7 @@ namespace FirecrackerSharp.Host;
 
 public interface IHostFilesystem
 {
-    public static IHostFilesystem Current { internal get; set; } = null!;
+    public static IHostFilesystem Current { get; set; } = null!;
 
     public Task WriteTextFileAsync(string path, string content);
 
@@ -14,6 +14,8 @@ public interface IHostFilesystem
 
     public string GetTemporaryFilename();
 
+    void CreateTextFile(string filename);
+    
     public void CreateDirectory(string path);
 
     public IEnumerable<string> GetSubdirectories(string path);

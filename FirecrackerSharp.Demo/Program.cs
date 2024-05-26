@@ -25,7 +25,7 @@ LocalHost.Configure();
 // Console.WriteLine(inst);
 
 var testConfig = new VmConfiguration(
-    BootSource: new VmBootSource("/home/kanpov/.tmp/vmlinux-5.10.210", "console=ttyS0 reboot=k panic=1 pci=off"),
+    BootSource: new VmBootSource("/home/kanpov/.tmp/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
     MachineConfiguration: new VmMachineConfiguration(70, 1),
     Drives: [new VmDrive("rootfs", true, PathOnHost: "/home/kanpov/.tmp/ubuntu-22.04.ext4")]);
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");

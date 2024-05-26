@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace FirecrackerSharp.Host.Ssh;
 
 internal class SshHostProcessManager(ConnectionPool connectionPool) : IHostProcessManager
@@ -15,13 +13,6 @@ internal class SshHostProcessManager(ConnectionPool connectionPool) : IHostProce
     
     public Task<IHostProcess> EscalateAndLaunchProcessAsync(string password, string executable, string args)
     {
-        var ssh = connectionPool.NewUnmanagedSshConnection();
-        var command = ssh.CreateCommand("su");
-        var process = new SshHostProcess(command, ssh);
-        process.StandardInput.Write(
-            new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(password + "\n")));
-        process.StandardInput.Write(
-            new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(executable + " " + args + "\n")));
-        return Task.FromResult<IHostProcess>(process);
+        throw new Exception("Manual escalation is not supported on the SSH host!");
     }
 }

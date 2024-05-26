@@ -32,6 +32,11 @@ internal class SshHostFilesystem(ConnectionPool connectionPool) : IHostFilesyste
         return JoinPaths("/tmp", Guid.NewGuid().ToString());
     }
 
+    public void CreateTextFile(string filename)
+    {
+        connectionPool.Sftp.CreateText(filename);
+    }
+
     public void CreateDirectory(string path)
     {
         var sftp = connectionPool.Sftp;

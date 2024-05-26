@@ -4,17 +4,25 @@ namespace FirecrackerSharp.Host.Ssh;
 
 internal class SshHostProcess(SshCommand sshCommand, IBaseClient sshClient) : IHostProcess
 {
-    public Stream StandardOutput => sshCommand.OutputStream;
-    
     private Stream? _inputStream;
-    public Stream StandardInput => _inputStream ??= sshCommand.CreateInputStream();
-
     private readonly IAsyncResult _executionResult = sshCommand.BeginExecute();
 
-    public void Kill()
+    public StreamReader StdoutReader => new(sshCommand.ExtendedOutputStream);
+
+    public StreamWriter StdinWriter
     {
-        sshCommand.CancelAsync();
+        get
+        {
+            _inputStream ??= sshCommand.CreateInputStream();
+            return new StreamWriter(_inputStream);
+        }
+    }
+
+    public Task<string> KillAndReadAsync()
+    {
+        var result = sshCommand.EndExecute(_executionResult);
         DisposeSshClient();
+        return Task.FromResult(result);
     }
 
     public async Task WaitUntilCompletionAsync(CancellationToken cancellationToken)
