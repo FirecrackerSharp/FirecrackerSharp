@@ -1,3 +1,5 @@
+using FirecrackerSharp.Host;
+
 namespace FirecrackerSharp.Shells;
 
 public class VmShell
@@ -26,6 +28,7 @@ public class VmShell
         {
             const string stdoutDirectory = "/tmp/vm_shell_logs";
             outputFile = $"{stdoutDirectory}/{Id}-{commandId}";
+            IHostFilesystem.Current.CreateTextFile(outputFile);
             
             var delimiter = captureMode == CaptureMode.StdoutPlusStderr ? "&>" : ">";
             ttyCommand = $"screen -X -p 0 -S {Id} stuff \"{commandText} {delimiter} {outputFile} ^M\"";

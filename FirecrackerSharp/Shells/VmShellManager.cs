@@ -61,6 +61,7 @@ public class VmShellManager
         bool subsequentlyRead = true)
     {
         await _semaphore.WaitAsync(cancellationToken);
+        Console.WriteLine(content);
 
         try
         {

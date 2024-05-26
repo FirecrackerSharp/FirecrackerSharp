@@ -14,6 +14,8 @@ public interface IHostFilesystem
 
     public string GetTemporaryFilename();
 
+    void CreateTextFile(string filename);
+    
     public void CreateDirectory(string path);
 
     public IEnumerable<string> GetSubdirectories(string path);

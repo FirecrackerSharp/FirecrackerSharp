@@ -71,6 +71,16 @@ public class SshHostFilesystemTests : SshServerFixture
     }
 
     [Theory, AutoData]
+    public void CreateTextFile_ShouldCreateEmptyFile(Guid id)
+    {
+        var path = $"/tmp/{id}";
+        IHostFilesystem.Current.CreateTextFile(path);
+
+        SftpClient.Exists(path).Should().BeTrue();
+        SftpClient.ReadAllText(path).Should().BeEmpty();
+    }
+
+    [Theory, AutoData]
     public void GetSubdirectories_ShouldReturnOnlySubdirectories(Guid id)
     {
         var (path, subdirectories, _) = ArrangeFilesAndDirectories(id);

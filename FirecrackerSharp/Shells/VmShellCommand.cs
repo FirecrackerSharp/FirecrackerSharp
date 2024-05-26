@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace FirecrackerSharp.Shells;
@@ -49,10 +50,20 @@ public class VmShellCommand : IAsyncDisposable
 
         return capturedOutputBuilder.ToString().Trim();
     }
-
+    
+    [Experimental("firecracker_command_cancellation_is_experimental")]
     public async Task CancelAsync(CancellationToken cancellationToken = new())
     {
         await _shell.ShellManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{ExitSignal}\"", cancellationToken);
+    }
+
+    public async Task SendStdinAsync(
+        string input,
+        bool insertNewline = true,
+        CancellationToken cancellationToken = new())
+    {
+        var newlineSymbol = insertNewline ? "^M" : "";
+        await _shell.ShellManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{input}{newlineSymbol}\"", cancellationToken);
     }
 
     public async ValueTask DisposeAsync()
