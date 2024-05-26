@@ -31,7 +31,7 @@ app.MapPut("/put/error", (DataRecord _) =>
 
 app.MapPatch("/patch/ok", (DataRecord record) => record);
 app.MapPatch("/patch/bad-request", (DataRecord _) => Results.BadRequest());
-app.MapPatch("/patch/error", () =>
+app.MapPatch("/patch/error", (DataRecord _) =>
 {
     throw new Exception();
 });

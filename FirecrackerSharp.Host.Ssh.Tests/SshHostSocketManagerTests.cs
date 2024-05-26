@@ -79,6 +79,33 @@ public class SshHostSocketManagerTests : SshServerFixture
         errorType.Should().Be(ManagementResponseType.InternalError);
     }
 
+    [Theory, AutoData]
+    public async Task PutAsync_ShouldReturnOk(DataRecord dataRecord)
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.PutAsync("put/ok", dataRecord);
+        response.TryUnwrap<DataRecord>()?
+            .Field.Should().Be(1);
+    }
+
+    [Theory, AutoData]
+    public async Task PutAsync_ShouldReturnBadRequest(DataRecord dataRecord)
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.PutAsync("put/bad-request", dataRecord);
+        var (errorType, _) = response.TryUnwrapError();
+        errorType.Should().Be(ManagementResponseType.BadRequest);
+    }
+    
+    [Theory, AutoData]
+    public async Task PutAsync_ShouldReturnInternalServerError(DataRecord dataRecord)
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.PutAsync("put/error", dataRecord);
+        var (errorType, _) = response.TryUnwrapError();
+        errorType.Should().Be(ManagementResponseType.InternalError);
+    }
+
     private async Task<IHostSocket> ConnectToUdsAsync()
     {
         await RunUdsListenerAsync(shouldActuallyRun: true);
@@ -93,7 +120,6 @@ public class SshHostSocketManagerTests : SshServerFixture
             SftpClient.DeleteFile(SocketAddress);
         }
 
-        SshClient.RunCommand("pkill -f uds-listener");
         if (!shouldActuallyRun) return;
         
         const string binaryPath = "/tmp/uds-listener.bin";
