@@ -1,3 +1,4 @@
+using AutoFixture.Xunit2;
 using DotNet.Testcontainers.Builders;
 using FirecrackerSharp.Management;
 using FluentAssertions;
@@ -11,7 +12,7 @@ public class SshHostSocketManagerTests : SshServerFixture
     [Fact]
     public async Task Connect_ShouldNotThrow_ForExistingSocket()
     {
-        await InitializeUdsAsync(shouldRun: true);
+        await RunUdsListenerAsync(shouldActuallyRun: true);
         var action = () => IHostSocketManager.Current.Connect(SocketAddress, "http://localhost");
         action.Should().NotThrow();
     }
@@ -19,7 +20,7 @@ public class SshHostSocketManagerTests : SshServerFixture
     [Fact]
     public async Task Connect_ShouldThrow_ForNonExistentSocket()
     {
-        await InitializeUdsAsync(shouldRun: false);
+        await RunUdsListenerAsync(shouldActuallyRun: false);
         var action = () => IHostSocketManager.Current.Connect(SocketAddress, "http://localhost");
         action.Should().Throw<SocketDoesNotExistException>();
     }
@@ -29,7 +30,6 @@ public class SshHostSocketManagerTests : SshServerFixture
     {
         var socket = await ConnectToUdsAsync();
         var response = await socket.GetAsync<DataRecord>("get/ok");
-        response.IsError.Should().BeFalse();
         response.TryUnwrap<DataRecord>()?
             .Field.Should().Be(1);
     }
@@ -39,7 +39,6 @@ public class SshHostSocketManagerTests : SshServerFixture
     {
         var socket = await ConnectToUdsAsync();
         var response = await socket.GetAsync<DataRecord>("get/bad-request");
-        response.IsError.Should().BeTrue();
         var (errorType, _) = response.TryUnwrapError();
         errorType.Should().Be(ManagementResponseType.BadRequest);
     }
@@ -49,30 +48,53 @@ public class SshHostSocketManagerTests : SshServerFixture
     {
         var socket = await ConnectToUdsAsync();
         var response = await socket.GetAsync<DataRecord>("get/error");
-        response.IsError.Should().BeTrue();
+        var (errorType, _) = response.TryUnwrapError();
+        errorType.Should().Be(ManagementResponseType.InternalError);
+    }
+
+    [Theory, AutoData]
+    public async Task PatchAsync_ShouldReturnOk(DataRecord dataRecord)
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.PatchAsync("patch/ok", dataRecord);
+        response.TryUnwrap<DataRecord>()?
+            .Field.Should().Be(1);
+    }
+
+    [Theory, AutoData]
+    public async Task PatchAsync_ShouldReturnBadRequest(DataRecord dataRecord)
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.PatchAsync("patch/bad-request", dataRecord);
+        var (errorType, _) = response.TryUnwrapError();
+        errorType.Should().Be(ManagementResponseType.BadRequest);
+    }
+
+    [Theory, AutoData]
+    public async Task PatchAsync_ShouldReturnInternalServerError(DataRecord dataRecord)
+    {
+        var socket = await ConnectToUdsAsync();
+        var response = await socket.PatchAsync("patch/error", dataRecord);
         var (errorType, _) = response.TryUnwrapError();
         errorType.Should().Be(ManagementResponseType.InternalError);
     }
 
     private async Task<IHostSocket> ConnectToUdsAsync()
     {
-        await InitializeUdsAsync(shouldRun: true);
+        await RunUdsListenerAsync(shouldActuallyRun: true);
         var socket = IHostSocketManager.Current.Connect(SocketAddress, "http://localhost");
         return socket;
     }
     
-    private async Task InitializeUdsAsync(bool shouldRun)
+    private async Task RunUdsListenerAsync(bool shouldActuallyRun)
     {
         if (SftpClient.Exists(SocketAddress))
         {
             SftpClient.DeleteFile(SocketAddress);
         }
 
-        if (!shouldRun)
-        {
-            SshClient.RunCommand("pkill -f uds-listener");
-            return;
-        }
+        SshClient.RunCommand("pkill -f uds-listener");
+        if (!shouldActuallyRun) return;
         
         const string binaryPath = "/tmp/uds-listener.bin";
 

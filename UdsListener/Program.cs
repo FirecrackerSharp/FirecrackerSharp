@@ -23,14 +23,14 @@ app.MapGet("/get/error", () =>
 });
 
 app.MapPut("/put/ok", (DataRecord record) => record);
-app.MapPut("/put/bad-request", () => Results.BadRequest());
-app.MapPut("/put/error", () =>
+app.MapPut("/put/bad-request", (DataRecord _) => Results.BadRequest());
+app.MapPut("/put/error", (DataRecord _) =>
 {
     throw new Exception();
 });
 
 app.MapPatch("/patch/ok", (DataRecord record) => record);
-app.MapPatch("/patch/bad-request", () => Results.BadRequest());
+app.MapPatch("/patch/bad-request", (DataRecord _) => Results.BadRequest());
 app.MapPatch("/patch/error", () =>
 {
     throw new Exception();
