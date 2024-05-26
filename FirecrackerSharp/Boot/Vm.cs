@@ -40,6 +40,11 @@ public abstract class Vm
     /// </summary>
     public readonly VmManagement Management;
 
+    /// <summary>
+    /// The <see cref="VmShellManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
+    /// limited, please refer to <see cref="VmShellManager"/> documentation) access to the kernel TTY for executing
+    /// commands without a networking setup.
+    /// </summary>
     public readonly VmShellManager ShellManager;
 
     protected Vm(
