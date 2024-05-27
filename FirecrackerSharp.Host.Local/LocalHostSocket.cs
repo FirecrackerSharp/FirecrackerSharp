@@ -41,10 +41,16 @@ public class LocalHostSocket(HttpClient httpClient) : IHostSocket
     private static ManagementResponse HandleFault(HttpResponseMessage response, string json)
     {
         var badRequest = response.StatusCode == HttpStatusCode.BadRequest;
-        var faultMessage = JsonSerializer
-            .Deserialize<JsonNode>(json, FirecrackerSerialization.Options)
-            !["fault_message"]
-            !.GetValue<string>();
+        var faultMessage = "no fault message found";
+
+        try
+        {
+            faultMessage = JsonSerializer
+                .Deserialize<JsonNode>(json, FirecrackerSerialization.Options)
+                ?["fault_message"]
+                ?.GetValue<string>() ?? "no fault message found";
+        }
+        catch (JsonException) {}
 
         return badRequest ? ManagementResponse.BadRequest(faultMessage) : ManagementResponse.InternalError(faultMessage);
     }

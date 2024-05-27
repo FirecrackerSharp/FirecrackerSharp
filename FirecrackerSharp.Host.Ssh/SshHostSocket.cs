@@ -51,7 +51,8 @@ internal class SshHostSocket(
         var responseFile = $"/tmp/{Guid.NewGuid()}";
         
         const string verbatim = "%{http_code}";
-        var command = ssh.CreateCommand($"curl -X {method} --unix-socket {socketAddress} -o {responseFile} -s -w {verbatim} {args} {baseAddress}/{uri}");
+        var actualUri = (baseAddress + uri).Replace("//", "/");
+        var command = ssh.CreateCommand($"curl -X {method} --unix-socket {socketAddress} -o {responseFile} -s -w {verbatim} {args} {actualUri}");
         command.CommandTimeout = curlConfiguration.Timeout;
         var result = command.Execute();
         
