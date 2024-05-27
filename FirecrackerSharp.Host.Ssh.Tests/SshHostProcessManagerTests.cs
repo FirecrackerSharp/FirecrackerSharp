@@ -2,7 +2,7 @@ using FluentAssertions;
 
 namespace FirecrackerSharp.Host.Ssh.Tests;
 
-public class SshHostProcessManagerTests : SshServerFixture
+public class SshHostProcessManagerTests : SshHostFixture
 {
     [Fact]
     public async Task LaunchProcess_ShouldHaveCorrectOutput()

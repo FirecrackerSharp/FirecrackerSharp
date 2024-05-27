@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Ssh.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UdsListener", "UdsListener\UdsListener.csproj", "{57B23654-921B-4150-A169-DD2A1381ADF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Host.Local.Tests", "FirecrackerSharp.Host.Local.Tests\FirecrackerSharp.Host.Local.Tests.csproj", "{5D215CE0-98B5-4BE5-8A60-D5DC2C191209}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{57B23654-921B-4150-A169-DD2A1381ADF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57B23654-921B-4150-A169-DD2A1381ADF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57B23654-921B-4150-A169-DD2A1381ADF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D215CE0-98B5-4BE5-8A60-D5DC2C191209}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D215CE0-98B5-4BE5-8A60-D5DC2C191209}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D215CE0-98B5-4BE5-8A60-D5DC2C191209}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D215CE0-98B5-4BE5-8A60-D5DC2C191209}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

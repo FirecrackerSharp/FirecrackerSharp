@@ -5,7 +5,7 @@ using FluentAssertions;
 
 namespace FirecrackerSharp.Host.Ssh.Tests;
 
-public class SshHostSocketManagerTests : SshServerFixture
+public class SshHostSocketManagerTests : SshHostFixture
 {
     private const string SocketAddress = "/tmp/uds-listener.sock";
     

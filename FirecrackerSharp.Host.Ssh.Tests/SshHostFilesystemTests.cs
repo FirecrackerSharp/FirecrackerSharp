@@ -3,7 +3,7 @@ using FluentAssertions;
 
 namespace FirecrackerSharp.Host.Ssh.Tests;
 
-public class SshHostFilesystemTests : SshServerFixture
+public class SshHostFilesystemTests : SshHostFixture
 {
     [Theory, AutoData]
     public async Task WriteTextFileAsync_ShouldPersist(Guid id, string content)
