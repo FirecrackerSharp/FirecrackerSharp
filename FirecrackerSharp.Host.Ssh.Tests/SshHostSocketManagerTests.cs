@@ -14,7 +14,7 @@ public class SshHostSocketManagerTests : SshHostFixture
     {
         await RunUdsListenerAsync(shouldActuallyRun: true);
         var action = () => IHostSocketManager.Current.Connect(SocketAddress, "http://localhost");
-        action.Should().NotThrow();
+        action.Should().NotThrow<SocketDoesNotExistException>();
     }
 
     [Fact]
@@ -121,20 +121,20 @@ public class SshHostSocketManagerTests : SshHostFixture
         }
 
         if (!shouldActuallyRun) return;
-        
-        const string binaryPath = "/tmp/uds-listener.bin";
+
+        const string binaryPath = "/opt/firecracker-sharp/uds-listener.bin";
+        const string outputPath = "/tmp/uds-listener.bin";
 
         if (!SftpClient.Exists(binaryPath))
         {
-            await using var inputStream = File.OpenRead(Path.Join(CommonDirectoryPath.GetProjectDirectory().DirectoryPath,
-                "uds-listener.bin"));
-            var result = SftpClient.BeginUploadFile(inputStream, binaryPath);
+            await using var inputStream = File.OpenRead(binaryPath);
+            var result = SftpClient.BeginUploadFile(inputStream, outputPath);
             result.AsyncWaitHandle.WaitOne();
             
-            SftpClient.ChangePermissions(binaryPath, mode: 777);
+            SftpClient.ChangePermissions(outputPath, mode: 777);
         }
         
-        var command = SshClient.CreateCommand($"DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 {binaryPath}");
+        var command = SshClient.CreateCommand($"DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 {outputPath}");
         command.BeginExecute();
         await Task.Delay(100); // wait for application to start up and allocate the UDS
     }

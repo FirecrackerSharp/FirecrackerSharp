@@ -8,5 +8,8 @@
     &lt;TestId&gt;xUnit::5D215CE0-98B5-4BE5-8A60-D5DC2C191209::net8.0::FirecrackerSharp.Host.Local.Tests.LocalHostFilesystemTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::5D215CE0-98B5-4BE5-8A60-D5DC2C191209::net8.0::FirecrackerSharp.Host.Local.Tests.LocalHostProcessManagerTests.IsEscalated_ShouldCorrespondToUsername&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::5D215CE0-98B5-4BE5-8A60-D5DC2C191209::net8.0::FirecrackerSharp.Host.Local.Tests.LocalHostProcessManagerTests.LaunchProcess_ShouldHaveCorrectOutput&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::5D215CE0-98B5-4BE5-8A60-D5DC2C191209::net8.0::FirecrackerSharp.Host.Local.Tests.LocalHostSocketManagerTests.Connect_ShouldNotThrow_ForExistingSocket&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::5D215CE0-98B5-4BE5-8A60-D5DC2C191209::net8.0::FirecrackerSharp.Host.Local.Tests.LocalHostSocketManagerTests.Connect_ShouldThrow_ForNonExistentSocket&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::5D215CE0-98B5-4BE5-8A60-D5DC2C191209::net8.0::FirecrackerSharp.Host.Local.Tests.LocalHostSocketManagerTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

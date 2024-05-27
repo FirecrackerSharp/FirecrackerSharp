@@ -6,6 +6,11 @@ public class LocalHostSocketManager : IHostSocketManager
 {
     public IHostSocket Connect(string socketAddress, string baseAddress)
     {
+        if (!File.Exists(socketAddress))
+        {
+            throw new SocketDoesNotExistException($"The socket at \"{socketAddress}\" does not exist");
+        }
+        
         var httpClient = new HttpClient(new SocketsHttpHandler
         {
             ConnectCallback = async (_, token) =>
