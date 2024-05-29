@@ -1,4 +1,5 @@
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using Serilog;
