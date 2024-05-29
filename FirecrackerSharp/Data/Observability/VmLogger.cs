@@ -5,4 +5,4 @@ public record VmLogger(
     VmLogLevel Level = VmLogLevel.Info,
     bool ShowLevel = false,
     bool ShowLogOrigin = false,
-    string? Module = "null");
+    string? Module = null);
