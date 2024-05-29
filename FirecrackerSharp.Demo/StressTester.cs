@@ -1,7 +1,7 @@
 using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Installation;
-using FirecrackerSharp.Shells;
+using FirecrackerSharp.Tty;
 
 namespace FirecrackerSharp.Demo;
 
@@ -18,6 +18,12 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
 
+        var shell = await vm.TtyShellManager.StartShellAsync();
+        await shell.StartCommandAsync("rm /opt/ga/ga.sock");
+        await using var command = await shell.StartCommandAsync("/opt/ga/ga-bin", CaptureMode.StdoutPlusStderr);
+        await Task.Delay(1000);
+        Console.WriteLine(await command.CaptureOutputAsync());
+
         // var shell = await vm.ShellManager.StartShellAsync();
         //
         // var tasks = new List<Task>();
@@ -30,7 +36,7 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
         // await shell.QuitAsync();
     }
 
-    private async Task SubTask(VmShell shell)
+    private async Task SubTask(TtyShell shell)
     {
         await using var command = await shell.StartCommandAsync("echo \"yay\"", CaptureMode.StdoutPlusStderr);
         Console.WriteLine(await command.CaptureOutputAsync());

@@ -16,7 +16,7 @@ public static class FirecrackerSerialization
     /// </summary>
     public static readonly JsonSerializerOptions Options = new()
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         WriteIndented = false,
         Converters =

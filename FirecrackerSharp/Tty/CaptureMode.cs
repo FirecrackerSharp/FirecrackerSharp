@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Shells;
+namespace FirecrackerSharp.Tty;
 
 /// <summary>
 /// The mode of capturing (piping out) output streams of shell commands.

@@ -1,7 +1,7 @@
 using System.Text;
 using FirecrackerSharp.Boot;
 
-namespace FirecrackerSharp.Shells;
+namespace FirecrackerSharp.Tty;
 
 /// <summary>
 /// Allows CLI communication with a microVM <b>without any networking setup</b> (most commonly, for SSH).
@@ -15,25 +15,25 @@ namespace FirecrackerSharp.Shells;
 /// impossible due to technical limitations of Firecracker), the GNU screen multiplexer is used. <b>Thus, screen needs
 /// to be installed inside the microVM (preferably simply during the setup of the rootfs) for this system to work.</b>
 /// </summary>
-public class VmShellManager
+public class VmTtyShellManager
 {
     private readonly Vm _vm;
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    internal VmShellManager(Vm vm)
+    internal VmTtyShellManager(Vm vm)
     {
         _vm = vm;
     }
 
     /// <summary>
-    /// Start up a new <see cref="VmShell"/> and return it.
+    /// Start up a new <see cref="TtyShell"/> and return it.
     /// </summary>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> for this operation</param>
-    /// <returns>The started <see cref="VmShell"/></returns>
-    public async Task<VmShell> StartShellAsync(CancellationToken cancellationToken = new())
+    /// <returns>The started <see cref="TtyShell"/></returns>
+    public async Task<TtyShell> StartShellAsync(CancellationToken cancellationToken = new())
     {
-        var shell = new VmShell(this);
+        var shell = new TtyShell(this);
         var stringId = shell.Id.ToString();
 
         await WriteToTtyAsync($"screen -dmS {stringId}", cancellationToken);

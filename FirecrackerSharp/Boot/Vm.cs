@@ -4,7 +4,7 @@ using FirecrackerSharp.Data;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Management;
-using FirecrackerSharp.Shells;
+using FirecrackerSharp.Tty;
 using Serilog;
 
 namespace FirecrackerSharp.Boot;
@@ -41,11 +41,11 @@ public abstract class Vm
     public readonly VmManagement Management;
 
     /// <summary>
-    /// The <see cref="VmShellManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
-    /// limited, please refer to <see cref="VmShellManager"/> documentation) access to the kernel TTY for executing
+    /// The <see cref="VmTtyShellManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
+    /// limited, please refer to <see cref="VmTtyShellManager"/> documentation) access to the kernel TTY for executing
     /// commands without a networking setup.
     /// </summary>
-    public readonly VmShellManager ShellManager;
+    public readonly VmTtyShellManager TtyShellManager;
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -58,7 +58,7 @@ public abstract class Vm
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
         Management = new VmManagement(this);
-        ShellManager = new VmShellManager(this);
+        TtyShellManager = new VmTtyShellManager(this);
     }
 
     internal abstract Task StartProcessAsync();

@@ -1,20 +1,20 @@
 using FirecrackerSharp.Host;
 
-namespace FirecrackerSharp.Shells;
+namespace FirecrackerSharp.Tty;
 
 /// <summary>
 /// A (bash) shell of a microVM. Multiple shells can coexist despite the limitation of only one TTY due to the fact
 /// that GNU screen is used internally as a terminal multiplexer.
 /// </summary>
-public class VmShell
+public class TtyShell
 {
     public Guid Id { get; }
     
-    internal readonly VmShellManager ShellManager;
+    internal readonly VmTtyShellManager TtyShellManager;
     
-    internal VmShell(VmShellManager shellManager)
+    internal TtyShell(VmTtyShellManager ttyShellManager)
     {
-        ShellManager = shellManager;
+        TtyShellManager = ttyShellManager;
         Id = Guid.NewGuid();
     }
 
@@ -26,8 +26,8 @@ public class VmShell
     /// <param name="exitSignal">The text that should be sent to the command for it to exit, "^C" (Ctrl+C) by default</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for write operations when initializing
     /// the command</param>
-    /// <returns>The created and started <see cref="VmShellCommand"/></returns>
-    public async Task<VmShellCommand> StartCommandAsync(
+    /// <returns>The created and started <see cref="TtyShellCommand"/></returns>
+    public async Task<TtyShellCommand> StartCommandAsync(
         string commandText,
         CaptureMode captureMode = CaptureMode.None,
         string exitSignal = "^C",
@@ -46,12 +46,12 @@ public class VmShell
             var delimiter = captureMode == CaptureMode.StdoutPlusStderr ? "&>" : ">";
             ttyCommand = $"screen -X -p 0 -S {Id} stuff \"{commandText} {delimiter} {outputFile} ^M\"";
             
-            await ShellManager.WriteToTtyAsync($"mkdir {stdoutDirectory}", cancellationToken);
+            await TtyShellManager.WriteToTtyAsync($"mkdir {stdoutDirectory}", cancellationToken);
         }
 
-        var command = new VmShellCommand(this, captureMode, outputFile, commandId, exitSignal);
+        var command = new TtyShellCommand(this, captureMode, outputFile, commandId, exitSignal);
 
-        await ShellManager.WriteToTtyAsync(ttyCommand, cancellationToken);
+        await TtyShellManager.WriteToTtyAsync(ttyCommand, cancellationToken);
 
         return command;
     }
@@ -62,6 +62,6 @@ public class VmShell
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> for this operation</param>
     public async Task QuitAsync(CancellationToken cancellationToken = new())
     {
-        await ShellManager.WriteToTtyAsync($"screen -XS {Id} quit", cancellationToken);
+        await TtyShellManager.WriteToTtyAsync($"screen -XS {Id} quit", cancellationToken);
     }
 }
