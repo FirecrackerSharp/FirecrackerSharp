@@ -22,7 +22,7 @@ public class VmManagement
     /// <summary>
     /// Gets the information (state) of this microVM (<see cref="VmInfo"/>).
     ///
-    /// This corresponds to the "GET /" endpoint of the underlying API.
+    /// Endpoint: "GET /".
     /// </summary>
     /// <returns>The <see cref="ManagementResponse"/> returned from this endpoint with potential content of <see cref="VmInfo"/></returns>
     public async Task<ManagementResponse> GetInfoAsync()
@@ -33,11 +33,47 @@ public class VmManagement
     /// <summary>
     /// Gets the entirety of this microVM's <see cref="VmConfiguration"/> that takes all post-boot modifications into account.
     ///
-    /// This corresponds to the "GET /vm/config" endpoint of the underlying API.
+    /// Endpoint: "GET /vm/config".
     /// </summary>
     /// <returns>The <see cref="ManagementResponse"/> returned from this endpoint with potential content of <see cref="VmConfiguration"/></returns>
     public async Task<ManagementResponse> GetCurrentConfigurationAsync()
     {
         return await _vm.Socket.GetAsync<VmConfiguration>("/vm/config");
+    }
+
+    /// <summary>
+    /// Sends a <see cref="VmAction"/> to this microVM.
+    ///
+    /// Endpoint: "PUT /actions".
+    /// </summary>
+    /// <param name="action">The <see cref="VmAction"/> to be performed</param>
+    /// <returns>The <see cref="ManagementResponse"/> returned that contains no content if successful</returns>
+    public async Task<ManagementResponse> PerformActionAsync(VmAction action)
+    {
+        return await _vm.Socket.PutAsync("/actions", action);
+    }
+
+    /// <summary>
+    /// Gets the current state of the configured <see cref="VmBalloon"/>, or returns a bad request response if no
+    /// balloon was configured pre-boot of the microVM.
+    ///
+    /// Endpoint: "GET /balloon".
+    /// </summary>
+    /// <returns>The <see cref="ManagementResponse"/> returned containing a <see cref="VmBalloon"/> upon success</returns>
+    public async Task<ManagementResponse> GetBalloonAsync()
+    {
+        return await _vm.Socket.GetAsync<VmBalloon>("/balloon");
+    }
+
+    /// <summary>
+    /// Updates the configured <see cref="VmBalloon"/> with a <see cref="VmBalloonUpdate"/>.
+    ///
+    /// Endpoint: "PATCH /balloon".
+    /// </summary>
+    /// <param name="balloonUpdate">The <see cref="VmBalloonUpdate"/> to be performed.</param>
+    /// <returns>A no-content <see cref="ManagementResponse"/> if successful</returns>
+    public async Task<ManagementResponse> UpdateBalloonAsync(VmBalloonUpdate balloonUpdate)
+    {
+        return await _vm.Socket.PatchAsync("/balloon", balloonUpdate);
     }
 }

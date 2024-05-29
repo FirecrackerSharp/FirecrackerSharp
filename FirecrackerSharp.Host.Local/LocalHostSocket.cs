@@ -19,18 +19,20 @@ public class LocalHostSocket(HttpClient httpClient) : IHostSocket
 
     public async Task<ManagementResponse> PutAsync<T>(string uri, T content)
     {
-        var response = await httpClient.PutAsJsonAsync(uri, content, FirecrackerSerialization.Options);
+        var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
+        var response = await httpClient.PutAsync(uri, new StringContent(requestJson));
         if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
-        var json = await response.Content.ReadAsStringAsync();
-        return HandleFault(response, json);
+        var responseJson = await response.Content.ReadAsStringAsync();
+        return HandleFault(response, responseJson);
     }
 
     public async Task<ManagementResponse> PatchAsync<T>(string uri, T content)
     {
-        var response = await httpClient.PatchAsJsonAsync(uri, content, FirecrackerSerialization.Options);
+        var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
+        var response = await httpClient.PatchAsync(uri, new StringContent(requestJson));
         if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
-        var json = await response.Content.ReadAsStringAsync();
-        return HandleFault(response, json);
+        var responseJson = await response.Content.ReadAsStringAsync();
+        return HandleFault(response, responseJson);
     }
 
     public void Dispose()

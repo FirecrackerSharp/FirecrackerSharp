@@ -18,21 +18,29 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
 
-        var shell = await vm.ShellManager.StartShellAsync();
+        var getResp = await vm.Management.GetBalloonAsync();
+        Console.WriteLine(getResp.TryUnwrap<VmBalloon>());
+
+        var patchResp = await vm.Management.UpdateBalloonAsync(new VmBalloonUpdate(512));
         
-        var tasks = new List<Task>();
-        for (var i = 0; i < 1; ++i)
-        {
-            tasks.Add(SubTask(shell));
-        }
-        
-        await Task.WhenAll(tasks);
-        await shell.QuitAsync();
+        var getResp2 = await vm.Management.GetBalloonAsync();
+        Console.WriteLine(getResp2.TryUnwrap<VmBalloon>());
+
+        // var shell = await vm.ShellManager.StartShellAsync();
+        //
+        // var tasks = new List<Task>();
+        // for (var i = 0; i < 1; ++i)
+        // {
+        //     tasks.Add(SubTask(shell));
+        // }
+        //
+        // await Task.WhenAll(tasks);
+        // await shell.QuitAsync();
     }
 
     private async Task SubTask(VmShell shell)
     {
-        await using var command = await shell.StartCommandAsync("cat --help", CaptureMode.StdoutPlusStderr);
+        await using var command = await shell.StartCommandAsync("echo \"yay\"", CaptureMode.StdoutPlusStderr);
         Console.WriteLine(await command.CaptureOutputAsync());
     }
 

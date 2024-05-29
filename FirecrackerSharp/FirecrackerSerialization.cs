@@ -18,7 +18,7 @@ public static class FirecrackerSerialization
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        WriteIndented = true,
+        WriteIndented = false,
         Converters =
         {
             new JsonStringEnumConverter()

@@ -7,4 +7,7 @@ public record VmConfiguration(
     VmBootSource BootSource,
     [property: JsonPropertyName("machine-config")]
     VmMachineConfiguration MachineConfiguration,
-    [property: JsonPropertyName("drives")] IEnumerable<VmDrive> Drives);
+    [property: JsonPropertyName("drives")]
+    IEnumerable<VmDrive> Drives,
+    [property: JsonPropertyName("balloon")]
+    VmBalloon? Balloon = null);
