@@ -36,7 +36,7 @@ var testConfig = new VmConfiguration(
     MachineConfiguration: new VmMachineConfiguration(1024, 1),
     Drives: [new VmDrive("rootfs", true, PathOnHost: "/home/kanpov/.tmp/ubuntu-22.04.ext4")],
     Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: true, StatsPollingIntervalS: 2),
-    Logger: new VmLogger(logFilename, VmLogLevel.Trace));
+    Metrics: new VmMetrics(logFilename));
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
 var install = await im.GetFromIndexAsync("v1.7.0");
 var str = new StressTester(install!, testConfig);

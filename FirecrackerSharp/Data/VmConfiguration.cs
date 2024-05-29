@@ -15,4 +15,12 @@ public record VmConfiguration(
     [property: JsonPropertyName("balloon")]
     VmBalloon? Balloon = null,
     [property: JsonPropertyName("logger")]
-    VmLogger? Logger = null);
+    VmLogger? Logger = null,
+    [property: JsonPropertyName("metrics")]
+    VmMetrics? Metrics = null,
+    [property: JsonPropertyName("entropy")]
+    VmEntropyDevice? EntropyDevice = null,
+    [property: JsonPropertyName("network-interfaces")]
+    IEnumerable<VmNetworkInterface>? NetworkInterfaces = null,
+    [property: JsonPropertyName("vsock")]
+    VmVsock? Vsock = null);
