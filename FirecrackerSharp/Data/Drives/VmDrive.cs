@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Data;
+namespace FirecrackerSharp.Data.Drives;
 
 public record VmDrive(
     string DriveId,

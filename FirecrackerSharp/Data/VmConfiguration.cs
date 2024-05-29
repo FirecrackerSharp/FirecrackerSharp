@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using FirecrackerSharp.Data.Ballooning;
+using FirecrackerSharp.Data.Drives;
 
 namespace FirecrackerSharp.Data;
 

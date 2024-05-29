@@ -1,4 +1,6 @@
 ﻿using FirecrackerSharp.Data;
+using FirecrackerSharp.Data.Ballooning;
+using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Demo;
 using FirecrackerSharp.Host.Local;
 using FirecrackerSharp.Installation;
@@ -28,7 +30,7 @@ var testConfig = new VmConfiguration(
     BootSource: new VmBootSource("/home/kanpov/.tmp/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
     MachineConfiguration: new VmMachineConfiguration(1024, 1),
     Drives: [new VmDrive("rootfs", true, PathOnHost: "/home/kanpov/.tmp/ubuntu-22.04.ext4")],
-    Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: true));
+    Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: true, StatsPollingIntervalS: 2));
 var im = new FirecrackerInstallManager("/home/kanpov/Documents/firecracker");
 var install = await im.GetFromIndexAsync("v1.7.0");
 var str = new StressTester(install!, testConfig);
