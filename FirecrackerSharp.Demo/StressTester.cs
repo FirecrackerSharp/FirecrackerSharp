@@ -1,6 +1,5 @@
 using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
-using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Shells;
 
@@ -18,19 +17,6 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             //new JailerOptions(1000, 1000, "495762"),
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
-
-        var getResp = await vm.Management.GetBalloonAsync();
-        Console.WriteLine(getResp.TryUnwrap<VmBalloon>());
-
-        var patchResp = await vm.Management.UpdateBalloonAsync(new VmBalloonUpdate(512));
-        
-        var getResp2 = await vm.Management.GetBalloonAsync();
-        Console.WriteLine(getResp2.TryUnwrap<VmBalloon>());
-        
-        await vm.Management.UpdateBalloonStatisticsAsync(new VmBalloonStatisticsUpdate(1));
-        
-        var getResp3 = await vm.Management.GetBalloonStatisticsAsync();
-        Console.WriteLine(getResp3.TryUnwrap<VmBalloonStatistics>());
 
         // var shell = await vm.ShellManager.StartShellAsync();
         //
