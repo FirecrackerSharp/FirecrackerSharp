@@ -87,13 +87,18 @@ public abstract class Vm
     /// The shutdown process can either succeed after a graceful shutdown, or fail if the microVM process had been
     /// killed before <see cref="ShutdownAsync"/> was called or if the microVM didn't respond to the TTY exit command
     /// ("reboot") and thus had the process was terminated.
+    /// <returns>Whether the shutdown was graceful</returns>
     /// </summary>
-    public async Task ShutdownAsync()
+    public async Task<bool> ShutdownAsync()
     {
-        Socket.Dispose();
-        
+        if (_backingSocket != null)
+        {
+            Socket.Dispose();
+        }
+
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+        var gracefulShutdown = false;
         
         try
         {
@@ -102,6 +107,7 @@ public abstract class Vm
             {
                 await Process.WaitUntilCompletionAsync(cancellationTokenSource.Token);
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
+                gracefulShutdown = true;
             }
             catch (Exception)
             {
@@ -116,5 +122,7 @@ public abstract class Vm
         
         CleanupAfterShutdown();
         Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
+
+        return gracefulShutdown;
     }
 }
