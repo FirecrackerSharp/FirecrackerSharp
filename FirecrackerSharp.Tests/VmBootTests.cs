@@ -1,9 +1,10 @@
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 
 namespace FirecrackerSharp.Tests;
 
-public class VmBootTests : GenericFixture
+public class VmBootTests : MinimalFixture
 {
     [Theory]
     [InlineData(VmConfigurationApplicationMode.ThroughJsonConfiguration)]

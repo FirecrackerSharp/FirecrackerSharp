@@ -1,8 +1,8 @@
 using FirecrackerSharp.Host.Local;
 
-namespace FirecrackerSharp.Tests;
+namespace FirecrackerSharp.Tests.Helpers;
 
-public class GenericFixture : IAsyncLifetime
+public class MinimalFixture : IAsyncLifetime
 {
     public Task InitializeAsync()
     {

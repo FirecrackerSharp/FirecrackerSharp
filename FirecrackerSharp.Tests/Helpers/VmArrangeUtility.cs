@@ -3,7 +3,7 @@ using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Installation;
 
-namespace FirecrackerSharp.Tests;
+namespace FirecrackerSharp.Tests.Helpers;
 
 public static class VmArrangeUtility
 {
