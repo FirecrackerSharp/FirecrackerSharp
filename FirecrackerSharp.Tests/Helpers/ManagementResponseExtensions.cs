@@ -10,14 +10,16 @@ public static class ManagementResponseExtensions
         managementResponse.IsSuccessful.Should().BeTrue();
         
         (managementResponse == ManagementResponse.NoContent).Should()
-            .BeTrue("THe management response contains content despite no content being expected");
+            .BeTrue("the management response contains content despite no content being expected");
     }
 
-    public static void ShouldSucceedWith<T>(this ManagementResponse managementResponse) where T : class
+    public static T ShouldSucceedWith<T>(this ManagementResponse managementResponse) where T : class
     {
         var containedObject = managementResponse.TryUnwrap<T>();
         
         managementResponse.IsSuccessful.Should().BeTrue();
-        containedObject.Should().NotBeNull("The management response doesn't contain expected content");
+        containedObject.Should().NotBeNull("the management response doesn't contain expected content");
+
+        return containedObject!;
 ;    }
 }

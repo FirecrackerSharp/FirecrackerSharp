@@ -1,5 +1,6 @@
 using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Installation;
 
@@ -10,7 +11,8 @@ public static class VmArrange
     private static readonly VmConfiguration VmConfiguration = new(
         new VmBootSource("/opt/firecracker-sharp/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
         new VmMachineConfiguration(256, 1),
-        Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "/opt/firecracker-sharp/ubuntu-22.04.ext4")]);
+        Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "/opt/firecracker-sharp/ubuntu-22.04.ext4")],
+        Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: false, StatsPollingIntervalS: 1));
 
     private static FirecrackerOptions FirecrackerOptions => new(
         Guid.NewGuid().ToString());
