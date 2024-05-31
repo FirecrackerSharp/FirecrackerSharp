@@ -40,13 +40,15 @@ public class JailedVm : Vm
         VmConfiguration = await MoveAllToJailAsync(_jailPath);
         Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
 
+        string? internalConfigPath = null;
         if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughJsonConfiguration)
         {
-            var configPath = IHostFilesystem.Current.JoinPaths(_jailPath, "vm_config.json");
-            await SerializeConfigToFileAsync(configPath);
+            internalConfigPath = "vm_config.json";
+            var externalConfigPath = IHostFilesystem.Current.JoinPaths(_jailPath, "vm_config.json");
+            await SerializeConfigToFileAsync(externalConfigPath);
         }
 
-        var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", _socketPathInJail);
+        var firecrackerArgs = FirecrackerOptions.FormatToArguments(internalConfigPath, _socketPathInJail);
         var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary, VmId);
         var args = $"{jailerArgs} -- {firecrackerArgs}";
         Logger.Debug("Launch arguments for microVM {vmId} (jailed) are: {args}", VmId, args);
@@ -61,7 +63,7 @@ public class JailedVm : Vm
                 throw new ArgumentNullException(nameof(_jailerOptions.SudoPassword));
             
             Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
-                FirecrackerInstall.JailerBinary, args + " &> /tmp/fclog.txt");
+                FirecrackerInstall.JailerBinary, args);
         }
         
         await HandlePostBootAsync();

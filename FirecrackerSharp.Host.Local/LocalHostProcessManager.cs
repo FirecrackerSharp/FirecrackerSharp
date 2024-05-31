@@ -35,13 +35,14 @@ internal class LocalHostProcessManager : IHostProcessManager
 
     public async Task<IHostProcess> EscalateAndLaunchProcessAsync(string password, string executable, string args)
     {
-        var suBinary = File.Exists("/usr/bin/su") ? "/usr/bin/su" : "/bin/su";
+        var sudoBinary = File.Exists("/usr/bin/sudo") ? "/usr/bin/sudo" : "/bin/sudo";
+        
         var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = suBinary,
-                Arguments = "",
+                FileName = sudoBinary,
+                Arguments = $"{executable} {args}",
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,
@@ -51,11 +52,14 @@ internal class LocalHostProcessManager : IHostProcessManager
         };
         process.Start();
 
-        await Task.Delay(2000);
-        await process.StandardInput.WriteLineAsync(password);
-        await Task.Delay(2000);
-        await process.StandardInput.WriteLineAsync(executable + " " + args);
+        while (true)
+        {
+            var l = await process.StandardOutput.ReadLineAsync();
+            if (l is null) continue;
 
+            break;
+        }
+        
         return new LocalHostProcess(process);
     }
 }
