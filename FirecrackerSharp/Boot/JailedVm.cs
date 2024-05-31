@@ -65,6 +65,8 @@ public class JailedVm : Vm
             Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
                 FirecrackerInstall.JailerBinary, args);
         }
+
+        await Task.Delay(TimeSpan.FromMilliseconds(_jailerOptions.WaitMillisAfterJailing));
         
         await HandlePostBootAsync();
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
@@ -72,7 +74,7 @@ public class JailedVm : Vm
 
     protected override void CleanupAfterShutdown()
     {
-        IHostFilesystem.Current.DeleteDirectoryRecursively(_jailPath);
+        IHostFilesystem.Current.DeleteDirectoryRecursively(Directory.GetParent(_jailPath)!.FullName);
     }
 
     private async Task<VmConfiguration> MoveAllToJailAsync(string jailPath)

@@ -82,10 +82,7 @@ public abstract class Vm
             await Management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
         }
         
-        if (FirecrackerOptions.WaitSecondsAfterBoot.HasValue)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(FirecrackerOptions.WaitSecondsAfterBoot.Value));
-        }
+        await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
         
         await AuthenticateTtyAsync();
     }

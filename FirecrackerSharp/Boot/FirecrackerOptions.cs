@@ -8,14 +8,14 @@ namespace FirecrackerSharp.Boot;
 /// of a <see cref="JailedVm"/>) of the UDS, through which communication to the Management API will occur</param>
 /// <param name="ExtraArguments">Any extra CLI arguments to pass to the firecracker binary. Refer to Firecracker's
 /// documentation as to which are possible</param>
-/// <param name="WaitSecondsAfterBoot">How many seconds to wait after instantiating the firecracker/jailer process
+/// <param name="WaitMillisAfterBoot">How many milliseconds to wait after instantiating the firecracker/jailer process
 /// in order for the microVM to boot through the init system (openrc, systemd, runc etc.), or null if no waiting
 /// should occur (not recommended to avoid prematurely contacting the microVM)</param>
 public record FirecrackerOptions(
     string SocketFilename,
     string SocketDirectory = "/tmp/firecracker",
     string ExtraArguments = "",
-    int? WaitSecondsAfterBoot = 2)
+    uint WaitMillisAfterBoot = 1500)
 {
     internal string FormatToArguments(string? configPath, string? socketPath)
     {
