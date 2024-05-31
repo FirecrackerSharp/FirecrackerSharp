@@ -62,9 +62,6 @@ public class JailedVm : Vm
                 FirecrackerInstall.JailerBinary, args + " &> /tmp/fclog.txt");
         }
         
-        var read = await TtyManager.ReadFromTtyAsync(new CancellationToken());
-        Console.WriteLine(read);
-
         await HandlePostBootAsync();
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
     }

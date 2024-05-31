@@ -97,4 +97,10 @@ public class VmManagement
     {
         return await _vm.Socket.PatchAsync("/balloon/statistics", balloonStatisticsUpdate);
     }
+
+    public async Task<ManagementResponse> UpdateNetworkInterfaceAsync(VmNetworkInterfaceUpdate networkInterfaceUpdate)
+    {
+        return await _vm.Socket.PatchAsync($"/network-interfaces/{networkInterfaceUpdate.IfaceId}",
+            networkInterfaceUpdate);
+    }
 }

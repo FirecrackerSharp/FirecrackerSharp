@@ -11,10 +11,10 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
     
     public async Task StartVm()
     {
-        var vm = await UnrestrictedVm.StartAsync(
+        var vm = await JailedVm.StartAsync(
             testConfig, firecrackerInstall,
             new FirecrackerOptions(Guid.NewGuid().ToString()),
-            //new JailerOptions(1000, 1000, "495762"),
+            new JailerOptions(1000, 1000, "495762"),
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
 
