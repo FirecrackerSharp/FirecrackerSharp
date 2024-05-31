@@ -11,7 +11,7 @@ public class VmBootTests : MinimalFixture
     [InlineData(VmConfigurationApplicationMode.ThroughApiCalls)]
     public async Task UnrestrictedVm_ShouldBootAndExitGracefully(VmConfigurationApplicationMode configurationApplicationMode)
     {
-        var vm = await VmArrangeUtility.StartUnrestrictedVm(configurationApplicationMode);
+        var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
         var gracefulShutdown = await vm.ShutdownAsync();
         gracefulShutdown.Should().BeTrue();
@@ -22,7 +22,7 @@ public class VmBootTests : MinimalFixture
     [InlineData(VmConfigurationApplicationMode.ThroughApiCalls)]
     public async Task JailedVm_ShouldBootAndExitGracefully(VmConfigurationApplicationMode configurationApplicationMode)
     {
-        var vm = await VmArrangeUtility.StartJailedVm(configurationApplicationMode);
+        var vm = await VmArrange.StartJailedVm(configurationApplicationMode);
         
         var gracefulShutdown = await vm.ShutdownAsync();
         gracefulShutdown.Should().BeTrue();

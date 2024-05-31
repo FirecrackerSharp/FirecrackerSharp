@@ -4,7 +4,7 @@ using FirecrackerSharp.Tests.Helpers;
 
 namespace FirecrackerSharp.Tests;
 
-public class VmManagementTests(SingleVmTestFactory testFactory) : SingleVmTest(testFactory)
+public class VmManagementTests : SingleVmFixture
 {
     [Fact]
     public async Task GetInfoAsync_ShouldSucceed()

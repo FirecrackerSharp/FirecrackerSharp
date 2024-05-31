@@ -5,7 +5,7 @@ using FirecrackerSharp.Installation;
 
 namespace FirecrackerSharp.Tests.Helpers;
 
-public static class VmArrangeUtility
+public static class VmArrange
 {
     private static readonly VmConfiguration VmConfiguration = new(
         new VmBootSource("/opt/firecracker-sharp/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
@@ -26,7 +26,7 @@ public static class VmArrangeUtility
     private static string VmId => Random.Shared.NextInt64(100000).ToString();
 
     public static async Task<Vm> StartUnrestrictedVm(VmConfigurationApplicationMode configurationApplicationMode
-        = VmConfigurationApplicationMode.ThroughApiCalls)
+        = VmConfigurationApplicationMode.ThroughJsonConfiguration)
     {
         return await UnrestrictedVm.StartAsync(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
@@ -36,7 +36,7 @@ public static class VmArrangeUtility
     }
 
     public static async Task<Vm> StartJailedVm(VmConfigurationApplicationMode configurationApplicationMode
-        = VmConfigurationApplicationMode.ThroughApiCalls)
+        = VmConfigurationApplicationMode.ThroughJsonConfiguration)
     {
         return await JailedVm.StartAsync(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
