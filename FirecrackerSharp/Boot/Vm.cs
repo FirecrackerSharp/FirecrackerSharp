@@ -121,8 +121,8 @@ public abstract class Vm
     /// The shutdown process can either succeed after a graceful shutdown, or fail if the microVM process had been
     /// killed before <see cref="ShutdownAsync"/> was called or if the microVM didn't respond to the TTY exit command
     /// ("reboot") and thus had the process was terminated.
-    /// <returns>Whether the shutdown was graceful</returns>
     /// </summary>
+    /// <returns>Whether the shutdown was graceful</returns>
     public async Task<bool> ShutdownAsync()
     {
         if (_backingSocket != null)

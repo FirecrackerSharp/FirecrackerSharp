@@ -63,8 +63,8 @@ public class UnrestrictedVm : Vm
     /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to be passed into the firecracker binary</param>
     /// <param name="vmId">A unique microVM identifier that must not be repeated for multiple VMs. A <see cref="Guid"/>
     /// can't be used due to length restrictions imposed by Firecracker (up to 50 characters)!</param>
-    /// <returns>The booted <see cref="UnrestrictedVm"/></returns>
-    public static async Task<UnrestrictedVm> StartAsync(
+    /// <returns>The booted <see cref="Vm"/></returns>
+    public static async Task<Vm> StartAsync(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,

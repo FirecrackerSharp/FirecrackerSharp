@@ -132,8 +132,8 @@ public class JailedVm : Vm
     /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to be passed into the firecracker binary</param>
     /// <param name="jailerOptions">The <see cref="JailerOptions"/> to be passed into the jailer binary</param>
     /// <param name="vmId">A unique microVM identifier that must not be repeated for multiple VMs.</param>
-    /// <returns></returns>
-    public static async Task<JailedVm> StartAsync(
+    /// <returns>The booted <see cref="Vm"/></returns>
+    public static async Task<Vm> StartAsync(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
