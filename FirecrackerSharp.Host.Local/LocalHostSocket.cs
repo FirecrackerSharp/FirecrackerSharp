@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FirecrackerSharp.Management;
@@ -19,7 +20,7 @@ public class LocalHostSocket(HttpClient httpClient) : IHostSocket
     public async Task<ManagementResponse> PutAsync<T>(string uri, T content)
     {
         var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
-        var response = await httpClient.PutAsync(uri, new StringContent(requestJson));
+        var response = await httpClient.PutAsync(uri, new StringContent(requestJson, MediaTypeHeaderValue.Parse("application/json")));
         if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
         var responseJson = await response.Content.ReadAsStringAsync();
         return HandleFault(response, responseJson);
@@ -28,7 +29,7 @@ public class LocalHostSocket(HttpClient httpClient) : IHostSocket
     public async Task<ManagementResponse> PatchAsync<T>(string uri, T content)
     {
         var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
-        var response = await httpClient.PatchAsync(uri, new StringContent(requestJson));
+        var response = await httpClient.PatchAsync(uri, new StringContent(requestJson, MediaTypeHeaderValue.Parse("application/json")));
         if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
         var responseJson = await response.Content.ReadAsStringAsync();
         return HandleFault(response, responseJson);

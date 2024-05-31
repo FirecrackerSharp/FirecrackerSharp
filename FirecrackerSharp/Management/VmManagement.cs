@@ -2,6 +2,7 @@ using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Actions;
 using FirecrackerSharp.Data.Ballooning;
+using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Data.State;
 
 namespace FirecrackerSharp.Management;
@@ -103,6 +104,7 @@ public class VmManagement
     /// Updates a <see cref="VmNetworkInterface"/>'s <see cref="VmRateLimiter"/>s according to the <see cref="VmNetworkInterfaceUpdate"/>
     /// 's data. <see cref="VmNetworkInterfaceUpdate.IfaceId"/> is used to determine which <see cref="VmNetworkInterface"/>
     /// needs to be updated.
+    /// Endpoint: "PATCH /network-interfaces/{iface-id}".
     /// </summary>
     /// <param name="networkInterfaceUpdate">The <see cref="VmNetworkInterfaceUpdate"/> to be applied</param>
     /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
@@ -114,12 +116,24 @@ public class VmManagement
 
     /// <summary>
     /// Updates the microVM's <see cref="VmState"/> to one that's specified in the <see cref="VmStateUpdate"/>.
+    /// Endpoint: "PATCH /vm".
     /// </summary>
     /// <param name="stateUpdate">The <see cref="VmStateUpdate"/> to be applied</param>
     /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
     public async Task<ManagementResponse> UpdateStateAsync(VmStateUpdate stateUpdate)
     {
         return await _vm.Socket.PatchAsync("/vm", stateUpdate);
+    }
+
+    /// <summary>
+    /// Updates a <see cref="VmDrive"/> according to the <see cref="VmDriveUpdate"/>'s data.
+    /// Endpoint: "PATCH /drives/{drive-id}".
+    /// </summary>
+    /// <param name="driveUpdate">The <see cref="VmDriveUpdate"/> to be applied</param>
+    /// <returns>The <see cref="ManagementResponse"/> containing no content if successful</returns>
+    public async Task<ManagementResponse> UpdateDriveAsync(VmDriveUpdate driveUpdate)
+    {
+        return await _vm.Socket.PatchAsync($"/drives/{driveUpdate.DriveId}", driveUpdate);
     }
 
     internal async Task ApplyVmConfigurationAsync()
