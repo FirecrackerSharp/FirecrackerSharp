@@ -18,9 +18,9 @@ public class StressTester(FirecrackerInstall firecrackerInstall, VmConfiguration
             vmId: Random.Shared.NextInt64(100000).ToString());
         _vms.Add(vm);
 
-        var shell = await vm.TtyShellManager.StartShellAsync();
+        var shell = await vm.TtyManager.StartShellAsync();
         await shell.StartCommandAsync("rm /opt/ga/ga.sock");
-        await using var command = await shell.StartCommandAsync("/opt/ga/ga-bin", CaptureMode.StdoutPlusStderr);
+        await using var command = await shell.StartCommandAsync("/opt/ga/ga", CaptureMode.StdoutPlusStderr);
         await Task.Delay(1000);
         Console.WriteLine(await command.CaptureOutputAsync());
 

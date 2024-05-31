@@ -41,11 +41,11 @@ public abstract class Vm
     public readonly VmManagement Management;
 
     /// <summary>
-    /// The <see cref="VmTtyShellManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
-    /// limited, please refer to <see cref="VmTtyShellManager"/> documentation) access to the kernel TTY for executing
+    /// The <see cref="VmTtyManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
+    /// limited, please refer to <see cref="VmTtyManager"/> documentation) access to the kernel TTY for executing
     /// commands without a networking setup.
     /// </summary>
-    public readonly VmTtyShellManager TtyShellManager;
+    public readonly VmTtyManager TtyManager;
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -58,7 +58,7 @@ public abstract class Vm
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
         Management = new VmManagement(this);
-        TtyShellManager = new VmTtyShellManager(this);
+        TtyManager = new VmTtyManager(this);
     }
 
     internal abstract Task StartProcessAsync();
@@ -73,11 +73,37 @@ public abstract class Vm
         Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
     }
 
-    protected async Task WaitForBootAsync()
+    protected async Task HandlePostBootAsync()
     {
+        if (VmConfiguration.TtyAuthentication != null)
+        {
+            try
+            {
+                var ttyAuthenticationTokenSource = new CancellationTokenSource(
+                    TimeSpan.FromSeconds(VmConfiguration.TtyAuthentication.TimeoutSeconds));
+
+                if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
+                {
+                    await TtyManager.WriteToTtyAsync(
+                        VmConfiguration.TtyAuthentication.Username,
+                        ttyAuthenticationTokenSource.Token,
+                        subsequentlyRead: false);
+                }
+
+                await TtyManager.WriteToTtyAsync(
+                    VmConfiguration.TtyAuthentication.Password,
+                    ttyAuthenticationTokenSource.Token);
+            }
+            catch (TtyException)
+            {
+                Logger.Error("TTY authentication failed for microVM {vmId}, likely due to a" +
+                             " misconfiguration. A graceful shutdown may not be possible", VmId);
+            }
+        }
+        
         if (FirecrackerOptions.WaitSecondsAfterBoot.HasValue)
         {
-            await Task.Delay(FirecrackerOptions.WaitSecondsAfterBoot.Value * 1000);
+            await Task.Delay(TimeSpan.FromSeconds(FirecrackerOptions.WaitSecondsAfterBoot.Value));
         }
     }
 

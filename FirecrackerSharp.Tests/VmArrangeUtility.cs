@@ -8,9 +8,9 @@ namespace FirecrackerSharp.Tests;
 public static class VmArrangeUtility
 {
     public static readonly VmConfiguration VmConfiguration = new(
-        new VmBootSource("/opt/firecracker-sharp/kernel", "console=ttyS0 reboot=k panic=1 pci=off"),
+        new VmBootSource("/opt/firecracker-sharp/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
         new VmMachineConfiguration(256, 1),
-        Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "/opt/firecracker-sharp/rootfs.ext4")]);
+        Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "/opt/firecracker-sharp/ubuntu-22.04.ext4")]);
 
     public static FirecrackerOptions FirecrackerOptions => new(
         Guid.NewGuid().ToString());

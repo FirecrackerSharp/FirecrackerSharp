@@ -42,7 +42,7 @@ public class UnrestrictedVm : Vm
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);
         Process = IHostProcessManager.Current.LaunchProcess(FirecrackerInstall.FirecrackerBinary, args);
 
-        await WaitForBootAsync();
+        await HandlePostBootAsync();
         Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);
     }
 

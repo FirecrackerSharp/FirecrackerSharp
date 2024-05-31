@@ -15,13 +15,13 @@ namespace FirecrackerSharp.Tty;
 /// impossible due to technical limitations of Firecracker), the GNU screen multiplexer is used. <b>Thus, screen needs
 /// to be installed inside the microVM (preferably simply during the setup of the rootfs) for this system to work.</b>
 /// </summary>
-public class VmTtyShellManager
+public class VmTtyManager
 {
     private readonly Vm _vm;
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    internal VmTtyShellManager(Vm vm)
+    internal VmTtyManager(Vm vm)
     {
         _vm = vm;
     }

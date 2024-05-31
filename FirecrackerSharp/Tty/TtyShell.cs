@@ -10,11 +10,11 @@ public class TtyShell
 {
     public Guid Id { get; }
     
-    internal readonly VmTtyShellManager TtyShellManager;
+    internal readonly VmTtyManager TtyManager;
     
-    internal TtyShell(VmTtyShellManager ttyShellManager)
+    internal TtyShell(VmTtyManager ttyManager)
     {
-        TtyShellManager = ttyShellManager;
+        TtyManager = ttyManager;
         Id = Guid.NewGuid();
     }
 
@@ -46,12 +46,12 @@ public class TtyShell
             var delimiter = captureMode == CaptureMode.StdoutPlusStderr ? "&>" : ">";
             ttyCommand = $"screen -X -p 0 -S {Id} stuff \"{commandText} {delimiter} {outputFile} ^M\"";
             
-            await TtyShellManager.WriteToTtyAsync($"mkdir {stdoutDirectory}", cancellationToken);
+            await TtyManager.WriteToTtyAsync($"mkdir {stdoutDirectory}", cancellationToken);
         }
 
         var command = new TtyShellCommand(this, captureMode, outputFile, commandId, exitSignal);
 
-        await TtyShellManager.WriteToTtyAsync(ttyCommand, cancellationToken);
+        await TtyManager.WriteToTtyAsync(ttyCommand, cancellationToken);
 
         return command;
     }
@@ -62,6 +62,6 @@ public class TtyShell
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> for this operation</param>
     public async Task QuitAsync(CancellationToken cancellationToken = new())
     {
-        await TtyShellManager.WriteToTtyAsync($"screen -XS {Id} quit", cancellationToken);
+        await TtyManager.WriteToTtyAsync($"screen -XS {Id} quit", cancellationToken);
     }
 }

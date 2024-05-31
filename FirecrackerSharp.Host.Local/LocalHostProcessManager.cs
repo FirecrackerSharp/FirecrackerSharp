@@ -50,7 +50,10 @@ internal class LocalHostProcessManager : IHostProcessManager
             }
         };
         process.Start();
+
+        await Task.Delay(2000);
         await process.StandardInput.WriteLineAsync(password);
+        await Task.Delay(2000);
         await process.StandardInput.WriteLineAsync(executable + " " + args);
 
         return new LocalHostProcess(process);

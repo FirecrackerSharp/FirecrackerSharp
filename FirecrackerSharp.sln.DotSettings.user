@@ -1,4 +1,9 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=96e43214_002Dd397_002D4d27_002Da123_002Db2b6808bd29c/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="JailedVm_ShouldBootAndExitGracefully" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;TestAncestor&gt;
+    &lt;TestId&gt;xUnit::63086CB2-8C83-4435-87CA-5C8F63493940::net8.0::FirecrackerSharp.Tests.VmBootTests.JailedVm_ShouldBootAndExitGracefully&lt;/TestId&gt;
+  &lt;/TestAncestor&gt;
+&lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c4a5b06b_002D0191_002D41b7_002Da59b_002D8a36324da036/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="PutAsync_ShouldReturnOk" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::784E6C54-B740-46D5-A4A8-063DE9724554::net8.0::FirecrackerSharp.Host.Ssh.Tests.SshHostSocketManagerTests&lt;/TestId&gt;

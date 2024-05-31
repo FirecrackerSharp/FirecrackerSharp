@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Data.Observability;
+using FirecrackerSharp.Tty;
 
 namespace FirecrackerSharp.Data;
 
@@ -23,4 +24,6 @@ public record VmConfiguration(
     [property: JsonPropertyName("network-interfaces")]
     IEnumerable<VmNetworkInterface>? NetworkInterfaces = null,
     [property: JsonPropertyName("vsock")]
-    VmVsock? Vsock = null);
+    VmVsock? Vsock = null,
+    [property: JsonIgnore]
+    TtyAuthentication? TtyAuthentication = null);

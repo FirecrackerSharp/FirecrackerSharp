@@ -59,10 +59,13 @@ public class JailedVm : Vm
                 throw new ArgumentNullException(nameof(_jailerOptions.SudoPassword));
             
             Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
-                FirecrackerInstall.JailerBinary, args);
+                FirecrackerInstall.JailerBinary, args + " &> /tmp/fclog.txt");
         }
+        
+        var read = await TtyManager.ReadFromTtyAsync(new CancellationToken());
+        Console.WriteLine(read);
 
-        await WaitForBootAsync();
+        await HandlePostBootAsync();
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
     }
 

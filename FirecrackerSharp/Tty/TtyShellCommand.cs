@@ -50,10 +50,10 @@ public class TtyShellCommand : IAsyncDisposable
     {
         if (CaptureMode == CaptureMode.None) return null;
 
-        await _shell.TtyShellManager.ReadFromTtyAsync(cancellationToken);
-        await _shell.TtyShellManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken, subsequentlyRead: false);
+        await _shell.TtyManager.ReadFromTtyAsync(cancellationToken);
+        await _shell.TtyManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken, subsequentlyRead: false);
 
-        var capturedOutput = await _shell.TtyShellManager.ReadFromTtyAsync(cancellationToken);
+        var capturedOutput = await _shell.TtyManager.ReadFromTtyAsync(cancellationToken);
         if (capturedOutput is null) return null;
         
         var capturedOutputBuilder = new StringBuilder();
@@ -82,7 +82,7 @@ public class TtyShellCommand : IAsyncDisposable
     [Experimental("firecracker_command_cancellation_is_experimental")]
     public async Task CancelAsync(CancellationToken cancellationToken = new())
     {
-        await _shell.TtyShellManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{ExitSignal}\"", cancellationToken);
+        await _shell.TtyManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{ExitSignal}\"", cancellationToken);
     }
 
     /// <summary>
@@ -97,7 +97,7 @@ public class TtyShellCommand : IAsyncDisposable
         CancellationToken cancellationToken = new())
     {
         var newlineSymbol = insertNewline ? "^M" : "";
-        await _shell.TtyShellManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{input}{newlineSymbol}\"", cancellationToken);
+        await _shell.TtyManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{input}{newlineSymbol}\"", cancellationToken);
     }
 
     /// <summary>
@@ -109,7 +109,7 @@ public class TtyShellCommand : IAsyncDisposable
         if (_outputFile != null)
         {
             var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-            await _shell.TtyShellManager.WriteToTtyAsync($"rm {_outputFile}", tokenSource.Token);
+            await _shell.TtyManager.WriteToTtyAsync($"rm {_outputFile}", tokenSource.Token);
         }
     }
 }
