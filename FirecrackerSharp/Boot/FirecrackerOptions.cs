@@ -17,12 +17,17 @@ public record FirecrackerOptions(
     string ExtraArguments = "",
     int? WaitSecondsAfterBoot = 2)
 {
-    internal string FormatToArguments(string configPath, string? socketPath)
+    internal string FormatToArguments(string? configPath, string? socketPath)
     {
-        var output = $"--config-file {configPath} {ExtraArguments}";
+        var output = ExtraArguments;
         if (socketPath != null)
         {
             output += $" --api-sock {socketPath}";
+        }
+
+        if (configPath != null)
+        {
+            output += $" --config-file {configPath}";
         }
 
         return output;

@@ -35,8 +35,12 @@ public class UnrestrictedVm : Vm
     
     internal override async Task StartProcessAsync()
     {
-        var configPath = IHostFilesystem.Current.GetTemporaryFilename();
-        await SerializeConfigToFileAsync(configPath);
+        string? configPath = null;
+        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughJsonConfiguration)
+        {
+            configPath = IHostFilesystem.Current.GetTemporaryFilename();
+            await SerializeConfigToFileAsync(configPath);
+        }
 
         var args = FirecrackerOptions.FormatToArguments(configPath, SocketPath);
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);

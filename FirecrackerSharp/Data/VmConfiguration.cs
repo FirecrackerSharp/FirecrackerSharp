@@ -26,4 +26,6 @@ public record VmConfiguration(
     [property: JsonPropertyName("vsock")]
     VmVsock? Vsock = null,
     [property: JsonIgnore]
-    TtyAuthentication? TtyAuthentication = null);
+    TtyAuthentication? TtyAuthentication = null,
+    [property: JsonIgnore]
+    VmConfigurationApplicationMode ApplicationMode = VmConfigurationApplicationMode.ThroughJsonConfiguration);

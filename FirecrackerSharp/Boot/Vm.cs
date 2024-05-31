@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Data.Actions;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Management;
@@ -16,7 +17,7 @@ public abstract class Vm
 {
     private static readonly ILogger Logger = Log.ForContext<Vm>();
     
-    protected VmConfiguration VmConfiguration;
+    protected internal VmConfiguration VmConfiguration;
     protected readonly FirecrackerInstall FirecrackerInstall;
     protected readonly FirecrackerOptions FirecrackerOptions;
     protected string? SocketPath;
@@ -75,35 +76,45 @@ public abstract class Vm
 
     protected async Task HandlePostBootAsync()
     {
-        if (VmConfiguration.TtyAuthentication != null)
+        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughApiCalls)
         {
-            try
-            {
-                var ttyAuthenticationTokenSource = new CancellationTokenSource(
-                    TimeSpan.FromSeconds(VmConfiguration.TtyAuthentication.TimeoutSeconds));
-
-                if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
-                {
-                    await TtyManager.WriteToTtyAsync(
-                        VmConfiguration.TtyAuthentication.Username,
-                        ttyAuthenticationTokenSource.Token,
-                        subsequentlyRead: false);
-                }
-
-                await TtyManager.WriteToTtyAsync(
-                    VmConfiguration.TtyAuthentication.Password,
-                    ttyAuthenticationTokenSource.Token);
-            }
-            catch (TtyException)
-            {
-                Logger.Error("TTY authentication failed for microVM {vmId}, likely due to a" +
-                             " misconfiguration. A graceful shutdown may not be possible", VmId);
-            }
+            await Management.ApplyVmConfigurationAsync();
+            await Management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
         }
         
         if (FirecrackerOptions.WaitSecondsAfterBoot.HasValue)
         {
             await Task.Delay(TimeSpan.FromSeconds(FirecrackerOptions.WaitSecondsAfterBoot.Value));
+        }
+        
+        await AuthenticateTtyAsync();
+    }
+
+    private async Task AuthenticateTtyAsync()
+    {
+        if (VmConfiguration.TtyAuthentication is null) return;
+        
+        try
+        {
+            var ttyAuthenticationTokenSource = new CancellationTokenSource(
+                TimeSpan.FromSeconds(VmConfiguration.TtyAuthentication.TimeoutSeconds));
+
+            if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
+            {
+                await TtyManager.WriteToTtyAsync(
+                    VmConfiguration.TtyAuthentication.Username,
+                    ttyAuthenticationTokenSource.Token,
+                    subsequentlyRead: false);
+            }
+
+            await TtyManager.WriteToTtyAsync(
+                VmConfiguration.TtyAuthentication.Password,
+                ttyAuthenticationTokenSource.Token);
+        }
+        catch (TtyException)
+        {
+            Logger.Error("TTY authentication failed for microVM {vmId}, likely due to a" +
+                         " misconfiguration. A graceful shutdown may not be possible", VmId);
         }
     }
 

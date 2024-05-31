@@ -37,13 +37,15 @@ public class JailedVm : Vm
 
     internal override async Task StartProcessAsync()
     {
-        // create and move all to jail
         VmConfiguration = await MoveAllToJailAsync(_jailPath);
         Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
-        // move config
-        var configPath = IHostFilesystem.Current.JoinPaths(_jailPath, "vm_config.json");
-        await SerializeConfigToFileAsync(configPath);
-        
+
+        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughJsonConfiguration)
+        {
+            var configPath = IHostFilesystem.Current.JoinPaths(_jailPath, "vm_config.json");
+            await SerializeConfigToFileAsync(configPath);
+        }
+
         var firecrackerArgs = FirecrackerOptions.FormatToArguments("vm_config.json", _socketPathInJail);
         var jailerArgs = _jailerOptions.FormatToArguments(FirecrackerInstall.FirecrackerBinary, VmId);
         var args = $"{jailerArgs} -- {firecrackerArgs}";
