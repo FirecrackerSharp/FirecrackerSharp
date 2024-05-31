@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Data;
+namespace FirecrackerSharp.Data.State;
 
 public enum VmState
 {

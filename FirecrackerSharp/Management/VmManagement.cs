@@ -2,6 +2,7 @@ using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Actions;
 using FirecrackerSharp.Data.Ballooning;
+using FirecrackerSharp.Data.State;
 
 namespace FirecrackerSharp.Management;
 
@@ -98,9 +99,26 @@ public class VmManagement
         return await _vm.Socket.PatchAsync("/balloon/statistics", balloonStatisticsUpdate);
     }
 
+    /// <summary>
+    /// Updates a <see cref="VmNetworkInterface"/>'s <see cref="VmRateLimiter"/>s according to the <see cref="VmNetworkInterfaceUpdate"/>
+    /// 's data. <see cref="VmNetworkInterfaceUpdate.IfaceId"/> is used to determine which <see cref="VmNetworkInterface"/>
+    /// needs to be updated.
+    /// </summary>
+    /// <param name="networkInterfaceUpdate">The <see cref="VmNetworkInterfaceUpdate"/> to be applied</param>
+    /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
     public async Task<ManagementResponse> UpdateNetworkInterfaceAsync(VmNetworkInterfaceUpdate networkInterfaceUpdate)
     {
         return await _vm.Socket.PatchAsync($"/network-interfaces/{networkInterfaceUpdate.IfaceId}",
             networkInterfaceUpdate);
+    }
+
+    /// <summary>
+    /// Updates the microVM's <see cref="VmState"/> to one that's specified in the <see cref="VmStateUpdate"/>.
+    /// </summary>
+    /// <param name="stateUpdate">The <see cref="VmStateUpdate"/> to be applied</param>
+    /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
+    public async Task<ManagementResponse> UpdateStateAsync(VmStateUpdate stateUpdate)
+    {
+        return await _vm.Socket.PatchAsync("/vm", stateUpdate);
     }
 }
