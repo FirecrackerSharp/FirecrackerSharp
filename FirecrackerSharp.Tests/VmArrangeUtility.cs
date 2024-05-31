@@ -25,15 +25,24 @@ public static class VmArrangeUtility
     
     public static string VmId => Random.Shared.NextInt64(100000).ToString();
 
-    public static async Task<Vm> StartUnrestrictedVm()
+    public static async Task<Vm> StartUnrestrictedVm(VmConfigurationApplicationMode configurationApplicationMode
+        = VmConfigurationApplicationMode.ThroughApiCalls)
     {
         return await UnrestrictedVm.StartAsync(
-            VmConfiguration, FirecrackerInstall, FirecrackerOptions, VmId);
+            VmConfiguration with { ApplicationMode = configurationApplicationMode },
+            FirecrackerInstall,
+            FirecrackerOptions,
+            VmId);
     }
 
-    public static async Task<Vm> StartJailedVm()
+    public static async Task<Vm> StartJailedVm(VmConfigurationApplicationMode configurationApplicationMode
+        = VmConfigurationApplicationMode.ThroughApiCalls)
     {
         return await JailedVm.StartAsync(
-            VmConfiguration, FirecrackerInstall, FirecrackerOptions, JailerOptions, VmId);
+            VmConfiguration with { ApplicationMode = configurationApplicationMode },
+            FirecrackerInstall,
+            FirecrackerOptions,
+            JailerOptions,
+            VmId);
     }
 }
