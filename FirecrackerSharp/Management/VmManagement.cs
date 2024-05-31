@@ -136,47 +136,58 @@ public class VmManagement
         return await _vm.Socket.PatchAsync($"/drives/{driveUpdate.DriveId}", driveUpdate);
     }
 
-    internal async Task ApplyVmConfigurationAsync()
+    internal async Task ApplyVmConfigurationAsync(bool parallelize)
     {
-        await _vm.Socket.PutAsync("/boot-source", _vm.VmConfiguration.BootSource);
-        await _vm.Socket.PutAsync("/machine-config", _vm.VmConfiguration.MachineConfiguration);
-
-        foreach (var drive in _vm.VmConfiguration.Drives)
+        var tasks = new List<Task>
         {
-            await _vm.Socket.PutAsync($"/drives/{drive.DriveId}", drive);
-        }
+            _vm.Socket.PutAsync("/boot-source", _vm.VmConfiguration.BootSource),
+            _vm.Socket.PutAsync("/machine-config", _vm.VmConfiguration.MachineConfiguration)
+        };
+
+        tasks.AddRange(_vm.VmConfiguration.Drives
+            .Select(drive => _vm.Socket.PutAsync($"/drives/{drive.DriveId}", drive)));
 
         if (_vm.VmConfiguration.NetworkInterfaces is not null)
         {
-            foreach (var networkInterface in _vm.VmConfiguration.NetworkInterfaces)
-            {
-                await _vm.Socket.PutAsync($"/network-interfaces/{networkInterface.IfaceId}", networkInterface);
-            }
+            tasks.AddRange(_vm.VmConfiguration.NetworkInterfaces
+                .Select(networkInterface => _vm.Socket.PutAsync($"/network-interfaces/{networkInterface.IfaceId}", networkInterface)));
         }
 
         if (_vm.VmConfiguration.Balloon is not null)
         {
-            await _vm.Socket.PutAsync("/balloon", _vm.VmConfiguration.Balloon);
+            tasks.Add(_vm.Socket.PutAsync("/balloon", _vm.VmConfiguration.Balloon));
         }
 
         if (_vm.VmConfiguration.Logger is not null)
         {
-            await _vm.Socket.PutAsync("/logger", _vm.VmConfiguration.Logger);
+            tasks.Add(_vm.Socket.PutAsync("/logger", _vm.VmConfiguration.Logger));
         }
 
         if (_vm.VmConfiguration.Metrics is not null)
         {
-            await _vm.Socket.PutAsync("/metrics", _vm.VmConfiguration.Metrics);
+            tasks.Add(_vm.Socket.PutAsync("/metrics", _vm.VmConfiguration.Metrics));
         }
 
         if (_vm.VmConfiguration.EntropyDevice is not null)
         {
-            await _vm.Socket.PutAsync("/entropy", _vm.VmConfiguration.EntropyDevice);
+            tasks.Add(_vm.Socket.PutAsync("/entropy", _vm.VmConfiguration.EntropyDevice));
         }
 
         if (_vm.VmConfiguration.Vsock is not null)
         {
-            await _vm.Socket.PutAsync("/vsock", _vm.VmConfiguration.Vsock);
+            tasks.Add(_vm.Socket.PutAsync("/vsock", _vm.VmConfiguration.Vsock));
+        }
+
+        if (parallelize)
+        {
+            await Task.WhenAll(tasks);
+        }
+        else
+        {
+            foreach (var task in tasks)
+            {
+                await task;
+            }
         }
     }
 }

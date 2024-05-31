@@ -10,15 +10,12 @@ namespace FirecrackerSharp.Boot;
 /// <param name="ChrootBaseDirectory">The base directory for chroot jails</param>
 /// <param name="ExtraArguments">Any extra CLI arguments to pass into the jailer binary. Refer to Firecracker's
 /// documentation as to which are possible</param>
-/// <param name="WaitMillisAfterJailing">The amount of milliseconds to wait for the jail to start up the underlying
-/// Firecracker process</param>
 public record JailerOptions(
     ulong LinuxGid,
     ulong LinuxUid,
     string? SudoPassword = null,
     string ChrootBaseDirectory = "/srv/jailer",
-    string ExtraArguments = "",
-    uint WaitMillisAfterJailing = 200)
+    string ExtraArguments = "")
 {
     internal string FormatToArguments(string firecrackerBinary, string vmId)
     {

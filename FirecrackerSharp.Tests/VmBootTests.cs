@@ -7,8 +7,9 @@ namespace FirecrackerSharp.Tests;
 public class VmBootTests : MinimalFixture
 {
     [Theory]
-    [InlineData(VmConfigurationApplicationMode.ThroughJsonConfiguration)]
-    [InlineData(VmConfigurationApplicationMode.ThroughApiCalls)]
+    [InlineData(VmConfigurationApplicationMode.JsonConfiguration)]
+    [InlineData(VmConfigurationApplicationMode.SequentialApiCalls)]
+    [InlineData(VmConfigurationApplicationMode.ParallelizedApiCalls)]
     public async Task UnrestrictedVm_ShouldBootAndExitGracefully(VmConfigurationApplicationMode configurationApplicationMode)
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
@@ -18,8 +19,9 @@ public class VmBootTests : MinimalFixture
     }
 
     [Theory]
-    [InlineData(VmConfigurationApplicationMode.ThroughJsonConfiguration)]
-    [InlineData(VmConfigurationApplicationMode.ThroughApiCalls)]
+    [InlineData(VmConfigurationApplicationMode.JsonConfiguration)]
+    [InlineData(VmConfigurationApplicationMode.SequentialApiCalls)]
+    [InlineData(VmConfigurationApplicationMode.ParallelizedApiCalls)]
     public async Task JailedVm_ShouldBootAndExitGracefully(VmConfigurationApplicationMode configurationApplicationMode)
     {
         var vm = await VmArrange.StartJailedVm(configurationApplicationMode);

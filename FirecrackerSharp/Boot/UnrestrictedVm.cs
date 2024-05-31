@@ -36,7 +36,7 @@ public class UnrestrictedVm : Vm
     internal override async Task StartProcessAsync()
     {
         string? configPath = null;
-        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughJsonConfiguration)
+        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.JsonConfiguration)
         {
             configPath = IHostFilesystem.Current.GetTemporaryFilename();
             await SerializeConfigToFileAsync(configPath);

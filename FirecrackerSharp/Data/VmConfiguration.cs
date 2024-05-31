@@ -28,4 +28,4 @@ public record VmConfiguration(
     [property: JsonIgnore]
     TtyAuthentication? TtyAuthentication = null,
     [property: JsonIgnore]
-    VmConfigurationApplicationMode ApplicationMode = VmConfigurationApplicationMode.ThroughJsonConfiguration);
+    VmConfigurationApplicationMode ApplicationMode = VmConfigurationApplicationMode.JsonConfiguration);

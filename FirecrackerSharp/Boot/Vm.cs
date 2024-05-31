@@ -76,9 +76,13 @@ public abstract class Vm
 
     protected async Task HandlePostBootAsync()
     {
-        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughApiCalls)
+        if (VmConfiguration.ApplicationMode != VmConfigurationApplicationMode.JsonConfiguration)
         {
-            await Management.ApplyVmConfigurationAsync();
+            await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisForSocketInitialization));
+            
+            await Management.ApplyVmConfigurationAsync(
+                parallelize: VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ParallelizedApiCalls);
+            
             await Management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
         }
         

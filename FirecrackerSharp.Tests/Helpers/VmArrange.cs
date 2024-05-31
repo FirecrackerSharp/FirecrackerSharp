@@ -28,7 +28,7 @@ public static class VmArrange
     private static string VmId => Random.Shared.NextInt64(100000).ToString();
 
     public static async Task<Vm> StartUnrestrictedVm(VmConfigurationApplicationMode configurationApplicationMode
-        = VmConfigurationApplicationMode.ThroughJsonConfiguration)
+        = VmConfigurationApplicationMode.JsonConfiguration)
     {
         return await UnrestrictedVm.StartAsync(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
@@ -38,7 +38,7 @@ public static class VmArrange
     }
 
     public static async Task<Vm> StartJailedVm(VmConfigurationApplicationMode configurationApplicationMode
-        = VmConfigurationApplicationMode.ThroughJsonConfiguration)
+        = VmConfigurationApplicationMode.JsonConfiguration)
     {
         return await JailedVm.StartAsync(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },

@@ -41,7 +41,7 @@ public class JailedVm : Vm
         Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
 
         string? internalConfigPath = null;
-        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ThroughJsonConfiguration)
+        if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.JsonConfiguration)
         {
             internalConfigPath = "vm_config.json";
             var externalConfigPath = IHostFilesystem.Current.JoinPaths(_jailPath, "vm_config.json");
@@ -65,8 +65,6 @@ public class JailedVm : Vm
             Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
                 FirecrackerInstall.JailerBinary, args);
         }
-
-        await Task.Delay(TimeSpan.FromMilliseconds(_jailerOptions.WaitMillisAfterJailing));
         
         await HandlePostBootAsync();
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
