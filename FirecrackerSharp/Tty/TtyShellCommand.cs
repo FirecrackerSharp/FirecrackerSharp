@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace FirecrackerSharp.Tty;
@@ -75,11 +74,10 @@ public class TtyShellCommand : IAsyncDisposable
     /// Cancel this <see cref="TtyShellCommand"/> by sending it its <see cref="ExitSignal"/>.
     ///
     /// While this works fine for various cases, in a more parallelized scenario (dozens of shells and commands in each
-    /// shell) this may cause slight alteration of captured output, which is why it's marked as experimental for the
+    /// shell) this may cause slight alteration of captured output, which is why it's not yet stable for the
     /// time being.
     /// </summary>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> for this operation</param>
-    [Experimental("firecracker_command_cancellation_is_experimental")]
     public async Task CancelAsync(CancellationToken cancellationToken = new())
     {
         await _shell.TtyManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{ExitSignal}\"", cancellationToken);
@@ -97,7 +95,8 @@ public class TtyShellCommand : IAsyncDisposable
         CancellationToken cancellationToken = new())
     {
         var newlineSymbol = insertNewline ? "^M" : "";
-        await _shell.TtyManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{input}{newlineSymbol}\"", cancellationToken);
+        await _shell.TtyManager.WriteToTtyAsync(
+            $"screen -X -p 0 -S {_shell.Id} stuff \"{input}{newlineSymbol}\"", cancellationToken, subsequentlyRead: false);
     }
 
     /// <summary>

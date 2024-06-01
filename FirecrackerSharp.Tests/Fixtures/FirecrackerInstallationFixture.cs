@@ -1,7 +1,7 @@
 using FirecrackerSharp.Host.Local;
 using FirecrackerSharp.Installation;
 
-namespace FirecrackerSharp.Tests.Helpers;
+namespace FirecrackerSharp.Tests.Fixtures;
 
 public class FirecrackerInstallationFixture : IAsyncLifetime
 {

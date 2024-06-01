@@ -1,6 +1,6 @@
 using FirecrackerSharp.Host.Local;
 
-namespace FirecrackerSharp.Tests.Helpers;
+namespace FirecrackerSharp.Tests.Fixtures;
 
 public class MinimalFixture : IAsyncLifetime
 {

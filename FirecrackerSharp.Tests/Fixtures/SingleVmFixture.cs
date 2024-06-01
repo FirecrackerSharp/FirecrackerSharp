@@ -1,7 +1,8 @@
 using FirecrackerSharp.Boot;
 using FirecrackerSharp.Host.Local;
+using FirecrackerSharp.Tests.Helpers;
 
-namespace FirecrackerSharp.Tests.Helpers;
+namespace FirecrackerSharp.Tests.Fixtures;
 
 public class SingleVmFixture : IAsyncLifetime
 {

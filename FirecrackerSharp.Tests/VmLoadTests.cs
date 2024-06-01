@@ -1,4 +1,5 @@
 using FirecrackerSharp.Boot;
+using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 
