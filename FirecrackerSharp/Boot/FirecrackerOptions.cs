@@ -19,7 +19,7 @@ public record FirecrackerOptions(
     string SocketFilename,
     string SocketDirectory = "/tmp/firecracker",
     string ExtraArguments = "",
-    uint WaitMillisForSocketInitialization = 100,
+    uint WaitMillisForSocketInitialization = 200,
     uint WaitMillisAfterBoot = 1500)
 {
     internal string FormatToArguments(string? configPath, string? socketPath)
