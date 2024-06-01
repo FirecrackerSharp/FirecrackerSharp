@@ -4,6 +4,17 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <PackageId>FirecrackerSharp.Host.Ssh</PackageId>
+        <Version>1.0.0-rc.1</Version>
+        <Authors>kanpov</Authors>
+        <Company>kanpov</Company>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/kanpov/FirecrackerSharp</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/kanpov/FirecrackerSharp</PackageProjectUrl>
+        <PackageTags>firecracker;microvm;sdk</PackageTags>
+        <Description>A remote/SSH host for the FirecrackerSharp microVM SDK</Description>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,6 +23,13 @@
 
     <ItemGroup>
       <PackageReference Include="SSH.NET" Version="2024.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="README.md">
+        <Pack>true</Pack>
+        <PackagePath>/</PackagePath>
+      </None>
     </ItemGroup>
 
 </Project>

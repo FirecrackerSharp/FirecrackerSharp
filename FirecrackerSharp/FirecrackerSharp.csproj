@@ -4,12 +4,27 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        
+        <PackageId>FirecrackerSharp</PackageId>
+        <Version>0.1.0-beta</Version>
+        <Authors>kanpov</Authors>
+        <Company>kanpov</Company>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/kanpov/FirecrackerSharp</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/kanpov/FirecrackerSharp</PackageProjectUrl>
+        <PackageTags>firecracker;microvm;sdk</PackageTags>
+        <Description>A robust and feature-complete .NET SDK for Firecracker microVMs</Description>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Octokit" Version="11.0.1" />
       <PackageReference Include="Serilog" Version="3.1.1" />
       <PackageReference Include="System.Text.Json" Version="8.0.3" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>
