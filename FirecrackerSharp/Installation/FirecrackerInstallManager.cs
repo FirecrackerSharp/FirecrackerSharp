@@ -79,7 +79,7 @@ public class FirecrackerInstallManager(
     /// Add several <see cref="FirecrackerInstall"/>'s to the index file.
     /// </summary>
     /// <param name="addedInstalls">An <see cref="IEnumerable{T}"/> with all <see cref="FirecrackerInstall"/>s to be added</param>
-    public async Task AddManyToIndexAsync(IEnumerable<FirecrackerInstall> addedInstalls)
+    public async Task AddAllToIndexAsync(IEnumerable<FirecrackerInstall> addedInstalls)
     {
         if (!File.Exists(IndexPath))
         {
