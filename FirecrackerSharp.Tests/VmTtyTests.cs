@@ -58,4 +58,17 @@ public class VmTtyTests : SingleVmFixture
 
         commandOutput.Should().Be("test");
     }
+
+    [Theory, AutoData]
+    public async Task SendStdinAsync_ShouldTransmitInput(string input)
+    {
+        var shell = await Vm.TtyManager.StartShellAsync();
+
+        var command = await shell.StartCommandAsync("""read n && echo "\$n" """, CaptureMode.Stdout);
+        await command.SendStdinAsync(input);
+        var capturedOutput = await command.CaptureOutputAsync();
+
+        capturedOutput.Should().NotBeNull();
+        capturedOutput.Should().Be(input);
+    }
 }

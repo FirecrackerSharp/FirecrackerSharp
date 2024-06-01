@@ -1,4 +1,4 @@
-using FirecrackerSharp.Host;
+using System.Web;
 
 namespace FirecrackerSharp.Tty;
 
@@ -8,14 +8,17 @@ namespace FirecrackerSharp.Tty;
 /// </summary>
 public class TtyShell
 {
-    public Guid Id { get; }
+    /// <summary>
+    /// The sequential ID that was generated to uniquely identify this <see cref="TtyShell"/>
+    /// </summary>
+    public long Id { get; }
     
     internal readonly VmTtyManager TtyManager;
     
-    internal TtyShell(VmTtyManager ttyManager)
+    internal TtyShell(VmTtyManager ttyManager, long id)
     {
         TtyManager = ttyManager;
-        Id = Guid.NewGuid();
+        Id = id;
     }
 
     /// <summary>
@@ -33,22 +36,30 @@ public class TtyShell
         string exitSignal = "^C",
         CancellationToken cancellationToken = new())
     {
+        commandText = commandText.Trim();
+        
         string? outputFile = null;
-        var commandId = Guid.NewGuid();
-        var ttyCommand = $"screen -X -p 0 -S {Id} stuff \"{commandText}^M\"";
+        var ttyCommand = $"screen -X -p 0 -S {Id} stuff '{commandText}^M'";
+
+        TtyManager.LastCommandId++;
+        var commandId = TtyManager.LastCommandId;
 
         if (captureMode != CaptureMode.None)
         {
-            const string stdoutDirectory = "/tmp/vm_shell_logs";
-            outputFile = $"{stdoutDirectory}/{Id}-{commandId}";
+            const string logDirectory = "/tmp/vm_shell_logs";
+            outputFile = $"{logDirectory}/{commandId}";
             
             var delimiter = captureMode == CaptureMode.StdoutPlusStderr ? "&>" : ">";
-            ttyCommand = $"screen -X -p 0 -S {Id} stuff \"{commandText} {delimiter} {outputFile} ^M\"";
-            
-            await TtyManager.WriteToTtyAsync($"mkdir {stdoutDirectory}", cancellationToken);
-        }
+            ttyCommand = $"screen -X -p 0 -S {Id} stuff '{commandText} {delimiter} {outputFile} ^M'";
 
-        var command = new TtyShellCommand(this, captureMode, outputFile, commandId, exitSignal);
+            if (!TtyManager.LogDirectoryExists)
+            {
+                await TtyManager.WriteToTtyAsync($"mkdir {logDirectory}", cancellationToken);
+                TtyManager.LogDirectoryExists = true;
+            }
+        }
+        
+        var command = new TtyShellCommand(this, captureMode, outputFile, exitSignal, commandId);
 
         await TtyManager.WriteToTtyAsync(ttyCommand, cancellationToken);
 

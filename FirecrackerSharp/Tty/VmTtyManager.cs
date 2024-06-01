@@ -20,6 +20,10 @@ public class VmTtyManager
     private readonly Vm _vm;
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+    
+    internal long LastShellId { get; set; }
+    internal long LastCommandId { get; set; }
+    internal bool LogDirectoryExists { get; set; }
 
     internal VmTtyManager(Vm vm)
     {
@@ -33,10 +37,10 @@ public class VmTtyManager
     /// <returns>The started <see cref="TtyShell"/></returns>
     public async Task<TtyShell> StartShellAsync(CancellationToken cancellationToken = new())
     {
-        var shell = new TtyShell(this);
-        var stringId = shell.Id.ToString();
+        LastShellId++;
+        var shell = new TtyShell(this, LastShellId);
 
-        await WriteToTtyAsync($"screen -dmS {stringId}", cancellationToken);
+        await WriteToTtyAsync($"screen -dmS {shell.Id}", cancellationToken);
         
         return shell;
     }

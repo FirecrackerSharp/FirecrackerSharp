@@ -15,9 +15,9 @@ public class TtyShellCommand : IAsyncDisposable
     /// </summary>
     public CaptureMode CaptureMode { get; }
     /// <summary>
-    /// The <see cref="Guid"/> that was generated to uniquely identify this <see cref="TtyShellCommand"/>.
+    /// The sequential ID that was generated to uniquely identify this <see cref="TtyShellCommand"/>.
     /// </summary>
-    public Guid Id { get; }
+    public long Id { get; }
     /// <summary>
     /// The exit signal that was assigned to this <see cref="TtyShellCommand"/> upon creation.
     /// </summary>
@@ -27,14 +27,14 @@ public class TtyShellCommand : IAsyncDisposable
         TtyShell shell,
         CaptureMode captureMode,
         string? outputFile,
-        Guid id,
-        string exitSignal)
+        string exitSignal,
+        long id)
     {
         _shell = shell;
         CaptureMode = captureMode;
         _outputFile = outputFile;
-        Id = id;
         ExitSignal = exitSignal;
+        Id = id;
     }
 
     /// <summary>
@@ -50,7 +50,9 @@ public class TtyShellCommand : IAsyncDisposable
         if (CaptureMode == CaptureMode.None) return null;
 
         await _shell.TtyManager.ReadFromTtyAsync(cancellationToken);
-        await _shell.TtyManager.WriteToTtyAsync($"cat {_outputFile}", cancellationToken, subsequentlyRead: false);
+        
+        var originalCommand = $"cat {_outputFile}";
+        await _shell.TtyManager.WriteToTtyAsync(originalCommand, cancellationToken, subsequentlyRead: false);
 
         var capturedOutput = await _shell.TtyManager.ReadFromTtyAsync(cancellationToken);
         if (capturedOutput is null) return null;
@@ -61,7 +63,7 @@ public class TtyShellCommand : IAsyncDisposable
                      .Split("\n")
                      .Select(x => x.TrimEnd()))
         {
-            if (!line.EndsWith('#') && !line.StartsWith('<'))
+            if (!line.StartsWith(originalCommand))
             {
                 capturedOutputBuilder.AppendLine(line);
             }
@@ -80,7 +82,7 @@ public class TtyShellCommand : IAsyncDisposable
     /// <param name="cancellationToken">The <see cref="CancellationToken"/> for this operation</param>
     public async Task CancelAsync(CancellationToken cancellationToken = new())
     {
-        await _shell.TtyManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff \"{ExitSignal}\"", cancellationToken);
+        await _shell.TtyManager.WriteToTtyAsync($"screen -X -p 0 -S {_shell.Id} stuff '{ExitSignal}'", cancellationToken);
     }
 
     /// <summary>
@@ -96,7 +98,7 @@ public class TtyShellCommand : IAsyncDisposable
     {
         var newlineSymbol = insertNewline ? "^M" : "";
         await _shell.TtyManager.WriteToTtyAsync(
-            $"screen -X -p 0 -S {_shell.Id} stuff \"{input}{newlineSymbol}\"", cancellationToken, subsequentlyRead: false);
+            $"screen -X -p 0 -S {_shell.Id} stuff '{input}{newlineSymbol}'", cancellationToken, subsequentlyRead: false);
     }
 
     /// <summary>
