@@ -33,6 +33,11 @@ internal class LocalHostFilesystem : IHostFilesystem
         return Path.GetTempFileName();
     }
 
+    public bool FileOrDirectoryExists(string filename)
+    {
+        return File.Exists(filename);
+    }
+
     public void CreateTextFile(string filename)
     {
         File.CreateText(filename).Close();

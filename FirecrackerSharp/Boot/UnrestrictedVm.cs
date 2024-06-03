@@ -52,7 +52,10 @@ public class UnrestrictedVm : Vm
 
     protected override void CleanupAfterShutdown()
     {
-        IHostFilesystem.Current.DeleteFile(SocketPath!);
+        if (IHostFilesystem.Current.FileOrDirectoryExists(SocketPath!))
+        {
+            IHostFilesystem.Current.DeleteFile(SocketPath!);
+        }
     }
 
     /// <summary>

@@ -20,8 +20,8 @@ public class VmTtyManager
     private readonly Vm _vm;
 
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
-    internal long LastShellId { get; set; }
+
+    private long LastShellId { get; set; }
     internal long LastCommandId { get; set; }
     internal bool LogDirectoryExists { get; set; }
 

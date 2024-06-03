@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         
         <PackageId>FirecrackerSharp</PackageId>
-        <Version>0.2.0-beta</Version>
+        <Version>0.2.1-beta</Version>
         <Authors>kanpov</Authors>
         <Company>kanpov</Company>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -14,6 +14,8 @@ public interface IHostFilesystem
 
     public string GetTemporaryFilename();
 
+    public bool FileOrDirectoryExists(string filename);
+
     void CreateTextFile(string filename);
     
     public void CreateDirectory(string path);
