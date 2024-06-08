@@ -21,11 +21,15 @@ namespace FirecrackerSharp.Installation;
 /// <param name="releaseTag">Either the GitHub tag of the needed release, or "latest" indicating the most recent available release</param>
 /// <param name="repoOwner">The GitHub owner account of the repository (firecracker-microvm by default)</param>
 /// <param name="repoName">The name of the GitHub repository (firecracker by default)</param>
+/// <param name="githubCredentials">The <see cref="Credentials"/> used to authorize to GitHub API in accordance with
+/// Octokit.NET. It's highly recommended to specify this in order to avoid getting rate limited for API requests made
+/// during Firecracker installation.</param>
 public class FirecrackerInstaller(
     string installRoot,
     string releaseTag = "latest",
     string repoOwner = "firecracker-microvm",
-    string repoName = "firecracker")
+    string repoName = "firecracker",
+    Credentials? githubCredentials = null)
 {
     private static readonly HttpClient HttpClient = new();
     private static readonly ILogger Logger = Log.ForContext(typeof(FirecrackerInstaller));
@@ -67,6 +71,11 @@ public class FirecrackerInstaller(
     private async Task<(ReleaseAsset, ReleaseAsset, Release)> FetchAssetsFromApiAsync()
     {
         var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp"));
+        if (githubCredentials is not null)
+        {
+            githubClient.Credentials = githubCredentials;
+        }
+        
         var repository = await githubClient.Repository.Get(repoOwner, repoName);
         if (repository is null)
         {

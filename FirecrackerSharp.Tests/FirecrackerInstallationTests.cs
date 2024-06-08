@@ -1,7 +1,6 @@
 using AutoFixture.Xunit2;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Tests.Fixtures;
-using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 using Octokit;
 
@@ -12,32 +11,29 @@ public class FirecrackerInstallationTests() : FirecrackerInstallationFixture("/t
      [Fact]
      public async Task FirecrackerInstaller_ShouldSucceed()
      {
-          var installer = new FirecrackerInstaller(DirectoryName);
-          var install = await installer.InstallAsync();
+          var install = await Installer.InstallAsync();
           await AssertInstallCorrectness(install);
      }
 
      [Fact]
      public async Task FirecrackerInstaller_ShouldDetectUpdates()
      {
-          var installer = new FirecrackerInstaller(DirectoryName);
-          var updatesAvailable = await installer.CheckForUpdatesAsync("v1.0.0");
+          var updatesAvailable = await Installer.CheckForUpdatesAsync("v1.0.0");
           updatesAvailable.Should().BeTrue();
      }
 
      [Fact]
      public async Task FirecrackerInstaller_ShouldNotDetectUpdates_WhenThereAreNone()
      {
-          var installer = new FirecrackerInstaller(DirectoryName);
-          var install = await installer.InstallAsync();
-          var updatesAvailable = await installer.CheckForUpdatesAsync(install.Version);
+          var install = await Installer.InstallAsync();
+          var updatesAvailable = await Installer.CheckForUpdatesAsync(install.Version);
           updatesAvailable.Should().BeFalse();
      }
 
      [Fact]
      public async Task FirecrackerInstallManager_ShouldForwardInstallation()
      {
-          var install = await InstallManager.InstallAsync();
+          var install = await InstallManager.InstallAsync(githubCredentials: GithubCredentials);
           await AssertInstallCorrectness(install);
      }
 
@@ -103,7 +99,10 @@ public class FirecrackerInstallationTests() : FirecrackerInstallationFixture("/t
 
      private static async Task AssertInstallCorrectness(FirecrackerInstall install)
      {
-          var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp-Tests"));
+          var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp-Tests"))
+          {
+               Credentials = GithubCredentials
+          };
           var latestRelease = await githubClient.Repository.Release.GetLatest("firecracker-microvm", "firecracker");
           
           install.Version.Should().Be(latestRelease.TagName);

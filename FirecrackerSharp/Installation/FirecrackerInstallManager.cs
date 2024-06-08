@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FirecrackerSharp.Host;
+using Octokit;
 
 namespace FirecrackerSharp.Installation;
 
@@ -48,11 +49,15 @@ public class FirecrackerInstallManager(
     /// <param name="releaseTag">The release tag to be installed, "latest" means the latest one available</param>
     /// <param name="repoOwner">The GitHub repository owner</param>
     /// <param name="repoName">The GitHub repository name</param>
+    /// <param name="githubCredentials">The <see cref="Credentials"/> used to authorize to GitHub API in accordance with
+    /// Octokit.NET. It's highly recommended to specify this in order to avoid getting rate limited for API requests made
+    /// during Firecracker installation.</param>
     /// <returns>The acquired <see cref="FirecrackerInstall"/></returns>
-    public async Task<FirecrackerInstall> InstallAsync(string releaseTag = "latest",
-        string repoOwner = "firecracker-microvm", string repoName = "firecracker")
+    public async Task<FirecrackerInstall> InstallAsync(
+        string releaseTag = "latest", string repoOwner = "firecracker-microvm", string repoName = "firecracker",
+        Credentials? githubCredentials = null)
     {
-        var installer = new FirecrackerInstaller(storagePath, releaseTag, repoOwner, repoName);
+        var installer = new FirecrackerInstaller(storagePath, releaseTag, repoOwner, repoName, githubCredentials);
         return await installer.InstallAsync();
     }
     
