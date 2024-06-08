@@ -45,9 +45,9 @@ public class FirecrackerInstallManager(
     /// This method does NOT save the acquired <see cref="FirecrackerInstall"/> to the index! To do this, call
     /// <see cref="AddToIndexAsync"/> with the returned <see cref="FirecrackerInstall"/> value.
     /// </summary>
-    /// <param name="releaseTag"></param>
-    /// <param name="repoOwner"></param>
-    /// <param name="repoName"></param>
+    /// <param name="releaseTag">The release tag to be installed, "latest" means the latest one available</param>
+    /// <param name="repoOwner">The GitHub repository owner</param>
+    /// <param name="repoName">The GitHub repository name</param>
     /// <returns>The acquired <see cref="FirecrackerInstall"/></returns>
     public async Task<FirecrackerInstall> InstallAsync(string releaseTag = "latest",
         string repoOwner = "firecracker-microvm", string repoName = "firecracker")
@@ -113,6 +113,33 @@ public class FirecrackerInstallManager(
     {
         var installs = await GetAllFromIndexAsync();
         return FindInIndex(installs, version, strict).FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Retrieve the latest <see cref="FirecrackerInstall"/> from the index file, if the index file contains any
+    /// installs.
+    /// </summary>
+    /// <returns>The latest <see cref="FirecrackerInstall"/> or null if none are present</returns>
+    public async Task<FirecrackerInstall?> GetLatestFromIndexAsync()
+    {
+        var installs = await GetAllFromIndexAsync();
+        return installs.MaxBy(i => new SemanticVersioning.Version(i.Version, loose: true));
+    }
+
+    /// <summary>
+    /// Check whether an update can be installed to the latest available <see cref="FirecrackerInstall"/> in the index
+    /// file. If there are no <see cref="FirecrackerInstall"/>s, true is returned.
+    /// </summary>
+    /// <param name="repoOwner">The GitHub repository owner</param>
+    /// <param name="repoName">The GitHub repository name</param>
+    /// <returns>Whether an update is available</returns>
+    public async Task<bool> CheckForUpdatesAsync(string repoOwner = "firecracker-microvm", string repoName = "firecracker")
+    {
+        var currentLatestInstall = await GetLatestFromIndexAsync();
+        if (currentLatestInstall is null) return false;
+        
+        var installer = new FirecrackerInstaller(storagePath, "latest", repoOwner, repoName);
+        return await installer.CheckForUpdatesAsync(currentLatestInstall.Version);
     }
 
     /// <summary>

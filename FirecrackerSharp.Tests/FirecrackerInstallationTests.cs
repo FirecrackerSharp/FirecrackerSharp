@@ -18,6 +18,23 @@ public class FirecrackerInstallationTests() : FirecrackerInstallationFixture("/t
      }
 
      [Fact]
+     public async Task FirecrackerInstaller_ShouldDetectUpdates()
+     {
+          var installer = new FirecrackerInstaller(DirectoryName);
+          var updatesAvailable = await installer.CheckForUpdatesAsync("v1.0.0");
+          updatesAvailable.Should().BeTrue();
+     }
+
+     [Fact]
+     public async Task FirecrackerInstaller_ShouldNotDetectUpdates_WhenThereAreNone()
+     {
+          var installer = new FirecrackerInstaller(DirectoryName);
+          var install = await installer.InstallAsync();
+          var updatesAvailable = await installer.CheckForUpdatesAsync(install.Version);
+          updatesAvailable.Should().BeFalse();
+     }
+
+     [Fact]
      public async Task FirecrackerInstallManager_ShouldForwardInstallation()
      {
           var install = await InstallManager.InstallAsync();
@@ -70,6 +87,18 @@ public class FirecrackerInstallationTests() : FirecrackerInstallationFixture("/t
           
           returnedInstall.Should().NotBeNull();
           returnedInstall.Should().Be(install);
+     }
+
+     [Fact]
+     public async Task GetLatestFromIndexAsync_ShouldReturnLatest()
+     {
+          await InstallManager.AddToIndexAsync(new FirecrackerInstall("v1.0.0", "", ""));
+          await InstallManager.AddToIndexAsync(new FirecrackerInstall("v1.1.0", "", ""));
+          
+          var latestInstall = await InstallManager.GetLatestFromIndexAsync();
+          
+          latestInstall.Should().NotBeNull();
+          latestInstall!.Version.Should().Be("v1.1.0");
      }
 
      private static async Task AssertInstallCorrectness(FirecrackerInstall install)

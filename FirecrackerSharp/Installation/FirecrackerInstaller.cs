@@ -50,6 +50,20 @@ public class FirecrackerInstaller(
         return firecracker;
     }
 
+    /// <summary>
+    /// Asynchronously check whether an update is available to a given version (release tag).
+    /// </summary>
+    /// <param name="currentReleaseTag">The version (release tag) to be checked against</param>
+    /// <returns>Whether an update is available</returns>
+    public async Task<bool> CheckForUpdatesAsync(string currentReleaseTag)
+    {
+        var (_, _, release) = await FetchAssetsFromApiAsync();
+        var currentVersion = new SemanticVersioning.Version(currentReleaseTag, loose: true);
+        var latestVersion = new SemanticVersioning.Version(release.TagName, loose: true);
+
+        return latestVersion > currentVersion;
+    }
+
     private async Task<(ReleaseAsset, ReleaseAsset, Release)> FetchAssetsFromApiAsync()
     {
         var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp"));
