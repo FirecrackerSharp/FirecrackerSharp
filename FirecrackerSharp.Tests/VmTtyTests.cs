@@ -15,6 +15,7 @@ public class VmTtyTests : SingleVmFixture
         await shell.StartCommandAsync("echo \"test\" > /tmp/file.txt");
 
         var catCommand = await shell.StartCommandAsync("cat /tmp/file.txt", CaptureMode.Stdout);
+        await Task.Delay(100);
         var capturedOutput = await catCommand.CaptureOutputAsync();
 
         capturedOutput.Should().NotBeNull();

@@ -95,7 +95,6 @@ function clone_repo() {
   fi
   cd FirecrackerSharp
   git fetch
-  git checkout test-run-script
   git pull
 }
 
@@ -138,5 +137,3 @@ clone_repo
 build_ssh_server_image
 download_test_data
 run_tests
-
-#$DOTNET --info
