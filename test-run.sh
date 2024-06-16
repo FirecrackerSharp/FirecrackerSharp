@@ -43,7 +43,12 @@ function install_deps() {
   if [ ! -f ~/.testcontainers.properties ]
   then
     echo "No Testcontainers configuration, creating one..."
-    echo "docker.host=/run/podman/podman.sock" > ~/.testcontainers.properties
+    if [[ $ROOTLESS == "yes" ]]
+    then
+      echo "docker.host=/run/podman/podman.sock" > ~/.testcontainers.properties
+    else
+      echo "docker.host=/run/user/$UID/podman/podman.sock" > ~/.testcontainers.properties
+    fi
     echo "Testcontainers configured to point to Podman socket"
   fi
 }
