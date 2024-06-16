@@ -123,9 +123,9 @@ function download_test_data() {
 
 function run_tests() {
   cd repo/FirecrackerSharp
-  dotnet restore
-  dotnet build
-  dotnet test
+  $DOTNET restore
+  $DOTNET build
+  $DOTNET test
 }
 
 mkdir ~/.firecracker
