@@ -1,38 +1,51 @@
 #!/bin/bash
 
-echo "Starting setup of a local test environment for FirecrackerSharp's test suite"
+echo "Starting setup of a local test environment for FirecrackerSharp's test suite. Only problems will be logged"
 
 DOTNET_SDK_VERSION="8.0"
 DOTNET="dotnet"
 DOTNET_OPTIONAL_INSTALL_LOCATION="/opt/firecracker-dotnet"
 
+if [ "$EUID" -ne 0 ]
+then
+  ROOTLESS="yes"
+  echo "Rootless mode of execution enabled, beware of potential issues!"
+else
+  ROOTLESS="no"
+fi
+
 bold=$(tput bold)
 normal=$(tput sgr0)
 
 function install_podman() {
-  if ! command -v curl &> /dev/null
+  if ! command -v podman &> /dev/null
   then
-    echo "Podman is not installed, please ensure it is present on the system"
+    echo "Podman is not installed"
     
     if command -v apt &> /dev/null
     then
-      echo "Installing curl via apt..."
-      apt install -y podman
+      echo "Installing Podman via apt..."
+      sudo apt install -y podman
     elif command -v dnf &> /dev/null
     then
-      echo "Installing curl via dnf..."
-      dnf install -y podman
+      echo "Installing Podman via dnf..."
+      sudo dnf install -y podman
     elif command -v zypper &> /dev/null
     then
-      echo "Installing curl via zypper..."
-      zypper --non-interactive in podman
+      echo "Installing Podman via zypper..."
+      sudo zypper --non-interactive in podman
     else
       echo "Your package manager is unsupported, install Podman manually"
       exit 1
     fi
   fi
   
-  systemctl start podman.socket
+  if [[ $ROOTLESS == "yes" ]]
+  then
+    systemctl start --user podman.socket
+  else
+    systemctl start podman.socket
+  fi
   
   if [ ! -f ~/.testcontainers.properties ]
   then
@@ -63,13 +76,22 @@ function check_kvm() {
     echo "KVM is not present on the system. If this is bare-metal, virtualization is not enabled or KVM needs to be installed. If this is a VM, you need to enable KVM pass-through"
     exit 1
   fi
+  
+  if ! [[ $(stat -c "%A" /dev/kvm) =~ "rw" ]]
+  then
+    echo "Access to KVM hasn't been granted to this non-root user. Trying to force access through"
+    [ $(stat -c "%G" /dev/kvm) = kvm ] && sudo usermod -aG kvm ${USER}
+    sudo setfacl -m u:${USER}:rw /dev/kvm
+    
+    if ! [[ $(stat -c "%A" /dev/kvm) =~ "rw" ]]
+    then
+      echo "Attempts at forcing access to KVM failed, you will need to do this manually"
+      exit 1
+    else
+      echo "Access to KVM was granted successfully"
+    fi
+  fi
 }
-
-if [ "$EUID" -ne 0 ]
-then
-  echo "This script needs to be run as root. If needed, a VM is also feasible with nested virtualization"
-  exit
-fi
 
 install_podman
 install_dotnet
