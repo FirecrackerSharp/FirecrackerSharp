@@ -9,9 +9,9 @@ namespace FirecrackerSharp.Tests.Helpers;
 public static class VmArrange
 {
     private static readonly VmConfiguration VmConfiguration = new(
-        new VmBootSource("/opt/firecracker-sharp/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
+        new VmBootSource("~/.firecracker/testdata/vmlinux-5.10.217", "console=ttyS0 reboot=k panic=1 pci=off"),
         new VmMachineConfiguration(256, 1),
-        Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "/opt/firecracker-sharp/ubuntu-22.04.ext4")],
+        Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "~/.firecracker/testdata/ubuntu-22.04.ext4")],
         Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: false, StatsPollingIntervalS: 1));
 
     private static FirecrackerOptions FirecrackerOptions => new(
@@ -22,8 +22,8 @@ public static class VmArrange
 
     private static readonly FirecrackerInstall FirecrackerInstall = new(
         "v1.7.0",
-        "/opt/firecracker-sharp/firecracker",
-        "/opt/firecracker-sharp/jailer");
+        "~/.firecracker/testdata/firecracker",
+        "~/.firecracker/testdata/jailer");
 
     private static string VmId => Random.Shared.NextInt64(100000).ToString();
 

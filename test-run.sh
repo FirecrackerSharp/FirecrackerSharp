@@ -1,10 +1,12 @@
 #!/bin/bash
 
-echo "Starting setup of a local test environment for FirecrackerSharp's test suite. Only problems will be logged"
+echo "Starting setup of a local test environment for FirecrackerSharp's test suite"
 
 DOTNET_SDK_VERSION="8.0"
 DOTNET="dotnet"
-DOTNET_OPTIONAL_INSTALL_LOCATION="/opt/firecracker-dotnet"
+GIT_REPOSITORY="https://github.com/kanpov/FirecrackerSharp.git"
+TEST_DATA_URL="https://kanpov.github.io/cdn/firecrackersharp/testdata-1.0.0.tar.gz"
+DEPENDENCIES="podman git curl tar"
 
 if [ "$EUID" -ne 0 ]
 then
@@ -14,30 +16,21 @@ else
   ROOTLESS="no"
 fi
 
-bold=$(tput bold)
-normal=$(tput sgr0)
-
-function install_podman() {
-  if ! command -v podman &> /dev/null
+function install_deps() {
+  if command -v apt &> /dev/null
   then
-    echo "Podman is not installed"
-    
-    if command -v apt &> /dev/null
-    then
-      echo "Installing Podman via apt..."
-      sudo apt install -y podman
-    elif command -v dnf &> /dev/null
-    then
-      echo "Installing Podman via dnf..."
-      sudo dnf install -y podman
-    elif command -v zypper &> /dev/null
-    then
-      echo "Installing Podman via zypper..."
-      sudo zypper --non-interactive in podman
-    else
-      echo "Your package manager is unsupported, install Podman manually"
-      exit 1
-    fi
+    echo "Installing dependencies via apt..."
+    sudo apt install -y $DEPENDENCIES
+  elif command -v dnf &> /dev/null
+  then
+    echo "Installing dependencies via dnf..."
+    sudo dnf install -y $DEPENDENCIES
+  elif command -v zypper &> /dev/null
+  then
+    echo "Installing dependencies via zypper..."
+    sudo zypper --non-interactive in $DEPENDENCIES
+  else
+    echo "Your package manager is unsupported, ensure these are installed: $DEPENDENCIES"
   fi
   
   if [[ $ROOTLESS == "yes" ]]
@@ -59,13 +52,13 @@ function install_dotnet() {
   if ! command -v dotnet &> /dev/null
   then
     echo "The .NET SDK could not be found, installing it..."
-    mkdir $DOTNET_OPTIONAL_INSTALL_LOCATION
+    mkdir ~/.firecracker/dotnet
     
     wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
     chmod +x dotnet-install.sh
-    ./dotnet-install.sh --channel $DOTNET_SDK_VERSION --install-dir $DOTNET_OPTIONAL_INSTALL_LOCATION
+    ./dotnet-install.sh --channel $DOTNET_SDK_VERSION --install-dir ~/.firecracker/dotnet
     
-    DOTNET="/opt/firecracker-dotnet/dotnet"
+    DOTNET="~/.firecracker/dotnet/dotnet"
   fi
 }
 
@@ -93,8 +86,53 @@ function check_kvm() {
   fi
 }
 
-install_podman
+function clone_repo() {
+  mkdir ~/.firecracker/repo
+  cd ~/.firecracker/repo
+  if [ ! -e FirecrackerSharp ]
+  then
+    git clone $GIT_REPOSITORY
+  fi
+  cd FirecrackerSharp
+  git fetch
+  git pull
+}
+
+function build_ssh_server_image() {
+  cd FirecrackerSharp.Host.Ssh.Tests
+  podman build -t ssh_server:latest .
+  cd ../../..
+}
+
+function download_test_data() {
+  if [ ! -e testdata ]
+  then
+    if [ ! -e test-data.tar.gz ]
+    then
+      echo "Downloading test data archive"
+      curl $TEST_DATA_URL -o test-data.tar.gz
+    fi
+    
+    echo "Extracting test data archive"
+    tar -xvzf test-data.tar.gz -C .
+    rm test-data.tar.gz
+  fi
+}
+
+function prepare_for_test_run() {
+  cd repo/FirecrackerSharp
+  dotnet restore
+  dotnet build
+}
+
+mkdir ~/.firecracker
+
+install_deps
 install_dotnet
 check_kvm
+clone_repo
+build_ssh_server_image
+download_test_data
+prepare_for_test_run
 
 #$DOTNET --info

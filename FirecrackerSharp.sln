@@ -18,8 +18,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{039AB2D0
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Tests", "FirecrackerSharp.Tests\FirecrackerSharp.Tests.csproj", "{63086CB2-8C83-4435-87CA-5C8F63493940}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirecrackerSharp.Demo", "FirecrackerSharp.Demo\FirecrackerSharp.Demo.csproj", "{B1CC17E2-54B5-494D-B9A8-2BEA7A2C1CF5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,10 +52,6 @@ Global
 		{63086CB2-8C83-4435-87CA-5C8F63493940}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63086CB2-8C83-4435-87CA-5C8F63493940}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63086CB2-8C83-4435-87CA-5C8F63493940}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1CC17E2-54B5-494D-B9A8-2BEA7A2C1CF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1CC17E2-54B5-494D-B9A8-2BEA7A2C1CF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1CC17E2-54B5-494D-B9A8-2BEA7A2C1CF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1CC17E2-54B5-494D-B9A8-2BEA7A2C1CF5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5D215CE0-98B5-4BE5-8A60-D5DC2C191209} = {039AB2D0-E8B9-432F-9CD5-E72CC8DF2B63}
