@@ -95,6 +95,7 @@ function clone_repo() {
   fi
   cd FirecrackerSharp
   git fetch
+  git checkout test-run-script
   git pull
 }
 
@@ -105,7 +106,9 @@ function build_ssh_server_image() {
 }
 
 function download_test_data() {
-  if [ ! -e testdata ]
+  sudo mkdir /opt/testdata
+  sudo chown -R $USER /opt/testdata
+  if [ ! -e /opt/testdata/firecracker ]
   then
     if [ ! -e test-data.tar.gz ]
     then
@@ -114,15 +117,16 @@ function download_test_data() {
     fi
     
     echo "Extracting test data archive"
-    tar -xvzf test-data.tar.gz -C .
+    tar -xvzf test-data.tar.gz -C /opt
     rm test-data.tar.gz
   fi
 }
 
-function prepare_for_test_run() {
+function run_tests() {
   cd repo/FirecrackerSharp
   dotnet restore
   dotnet build
+  dotnet test
 }
 
 mkdir ~/.firecracker
@@ -133,6 +137,6 @@ check_kvm
 clone_repo
 build_ssh_server_image
 download_test_data
-prepare_for_test_run
+run_tests
 
 #$DOTNET --info
