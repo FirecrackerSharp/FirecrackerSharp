@@ -122,7 +122,7 @@ public class SshHostSocketManagerTests : SshHostFixture
 
         if (!shouldActuallyRun) return;
 
-        const string binaryPath = "/opt/firecracker-sharp/uds-listener.bin";
+        const string binaryPath = "/opt/testdata/uds-listener.bin";
         const string outputPath = "/tmp/uds-listener.bin";
 
         if (!SftpClient.Exists(binaryPath))

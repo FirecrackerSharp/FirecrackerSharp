@@ -95,7 +95,7 @@ public class LocalHostSocketManagerTests : LocalHostFixture
             File.Delete(SocketAddress);
         }
         
-        const string binaryPath = "/opt/firecracker-sharp/uds-listener.bin";
+        const string binaryPath = "/opt/testdata/uds-listener.bin";
 
         _process?.Kill();
 
