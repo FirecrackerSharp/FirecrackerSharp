@@ -15,7 +15,9 @@ public static class VmArrange
         Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: false, StatsPollingIntervalS: 1));
 
     private static FirecrackerOptions FirecrackerOptions => new(
-        Guid.NewGuid().ToString());
+        Guid.NewGuid().ToString(),
+        WaitMillisAfterBoot: 2000,
+        WaitMillisForSocketInitialization: 200);
 
     private static JailerOptions JailerOptions => new(
         1000, 1000, SudoPassword: Environment.GetEnvironmentVariable("FSH_ROOT_PASSWORD"));

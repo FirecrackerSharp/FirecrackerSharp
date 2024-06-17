@@ -42,11 +42,10 @@ public abstract class Vm
     public readonly VmManagement Management;
 
     /// <summary>
-    /// The <see cref="VmTtyManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
-    /// limited, please refer to <see cref="VmTtyManager"/> documentation) access to the kernel TTY for executing
-    /// commands without a networking setup.
+    /// The <see cref="VmTtyClient"/> instance linked to this <see cref="Vm"/> that allows direct access to the microVM's
+    /// serial console / boot TTY.
     /// </summary>
-    public readonly VmTtyManager TtyManager;
+    public readonly VmTtyClient TtyClient;
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -59,7 +58,7 @@ public abstract class Vm
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
         Management = new VmManagement(this);
-        TtyManager = new VmTtyManager(this);
+        TtyClient = new VmTtyClient(this);
     }
 
     internal abstract Task StartProcessAsync();
@@ -102,15 +101,14 @@ public abstract class Vm
 
             if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
             {
-                // await TtyManager.WriteToTtyAsync(
-                //     VmConfiguration.TtyAuthentication.Username,
-                //     ttyAuthenticationTokenSource.Token,
-                //     subsequentlyRead: false);
+                await TtyClient.WriteAsync(
+                    VmConfiguration.TtyAuthentication.Username,
+                    cancellationToken: ttyAuthenticationTokenSource.Token);
             }
 
-            // await TtyManager.WriteToTtyAsync(
-            //     VmConfiguration.TtyAuthentication.Password,
-            //     ttyAuthenticationTokenSource.Token);
+            await TtyClient.WriteAsync(
+                VmConfiguration.TtyAuthentication.Password,
+                cancellationToken: ttyAuthenticationTokenSource.Token);
         }
         catch (TtyException)
         {
@@ -127,40 +125,54 @@ public abstract class Vm
     /// ("reboot") and thus had the process was terminated.
     /// </summary>
     /// <returns>Whether the shutdown was graceful</returns>
-    public async Task<bool> ShutdownAsync()
+    public async Task<VmShutdownResult> ShutdownAsync()
     {
         if (_backingSocket != null)
         {
             Socket.Dispose();
         }
 
+        var shutdownResult = VmShutdownResult.Successful;
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
-        var gracefulShutdown = false;
-        
+
         try
         {
-            await Process!.StdinWriter.WriteLineAsync(new StringBuilder("reboot"), cancellationTokenSource.Token);
+            await TtyClient.WriteAsync("reboot", cancellationToken: cancellationTokenSource.Token);
             try
             {
-                await Process.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));
+                await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
-                gracefulShutdown = true;
             }
             catch (Exception)
             {
-                await Process.KillAsync();
+                await Process!.KillAsync();
                 Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);
+                shutdownResult = VmShutdownResult.FailedDueToHangingProcess;
             }
+        }
+        catch (IOException)
+        {
+            Logger.Warning("microVM {vmId} prematurely shut down", VmId);
+            shutdownResult = VmShutdownResult.FailedDueToBrokenPipe;
+        }
+        catch (TtyException)
+        {
+            Logger.Warning("microVM {vmId} didn't respond to reboot signal being written to TTY", VmId);
+            shutdownResult = VmShutdownResult.FailedDueToTtyNotResponding;
+        }
+
+        try
+        {
+            CleanupAfterShutdown();
         }
         catch (Exception)
         {
-            Logger.Warning("microVM {vmId} prematurely shut down", VmId);
+            shutdownResult = VmShutdownResult.SoftFailedDuringCleanup;
         }
-        
-        CleanupAfterShutdown();
+
         Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
 
-        return gracefulShutdown;
+        return shutdownResult;
     }
 }

@@ -19,7 +19,6 @@ internal class LocalHostProcessManager : IHostProcessManager
                 CreateNoWindow = true
             }
         };
-        process.Start();
         return new LocalHostProcess(process);
     }
 
@@ -35,13 +34,13 @@ internal class LocalHostProcessManager : IHostProcessManager
 
     public async Task<IHostProcess> EscalateAndLaunchProcessAsync(string password, string executable, string args)
     {
-        var sudoBinary = File.Exists("/usr/bin/sudo") ? "/usr/bin/sudo" : "/bin/sudo";
+        var sudoBinary = File.Exists("/usr/bin/su") ? "/usr/bin/su" : "/bin/su";
         var osProcess = new Process
         {
             StartInfo = new ProcessStartInfo
             {
                 FileName = sudoBinary,
-                Arguments = "-s",
+                Arguments = "",
                 UseShellExecute = false,
                 RedirectStandardError = true,
                 RedirectStandardInput = true,

@@ -74,8 +74,8 @@ public class VmLoadTests : MinimalFixture
 
         async Task ShutdownAsync(Vm vm)
         {
-            var gracefulShutdown = await vm.ShutdownAsync();
-            if (!gracefulShutdown)
+            var shutdownResult = await vm.ShutdownAsync();
+            if (shutdownResult.IsFailure())
             {
                 allGracefulShutdowns = false;
                 // don't leave healthy VMs running if only one broke, that'd exhaust the runner's system resources

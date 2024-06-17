@@ -1,3 +1,4 @@
+using FirecrackerSharp.Boot;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
@@ -15,8 +16,8 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
-        var gracefulShutdown = await vm.ShutdownAsync();
-        gracefulShutdown.Should().BeTrue();
+        var shutdownResult = await vm.ShutdownAsync();
+        shutdownResult.IsSuccessful().Should().BeTrue();
     }
 
     [Theory]
@@ -27,7 +28,7 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartJailedVm(configurationApplicationMode);
         
-        var gracefulShutdown = await vm.ShutdownAsync();
-        gracefulShutdown.Should().BeTrue();
+        var shutdownResult = await vm.ShutdownAsync();
+        shutdownResult.IsSuccessful().Should().BeTrue();
     }
 }
