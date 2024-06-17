@@ -21,7 +21,7 @@ internal class LocalHostProcess : IHostProcess
         {
             if (args.Data is not null)
             {
-                OutputReceived?.Invoke(sender: this, args.Data);
+                OutputReceived?.Invoke(sender: this, args.Data + "\n");
             }
         };
 
@@ -29,7 +29,7 @@ internal class LocalHostProcess : IHostProcess
         {
             if (args.Data is not null)
             {
-                OutputReceived?.Invoke(sender: this, args.Data);
+                OutputReceived?.Invoke(sender: this, args.Data + "\n");
             }
         };
 

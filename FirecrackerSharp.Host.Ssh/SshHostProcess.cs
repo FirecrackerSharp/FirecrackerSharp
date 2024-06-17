@@ -34,7 +34,7 @@ internal class SshHostProcess : IHostProcess, IAsyncDisposable
             var line = Encoding.UTF8.GetString(args.Data);
             if (!string.IsNullOrEmpty(line))
             {
-                OutputReceived?.Invoke(sender: this, line);
+                OutputReceived?.Invoke(sender: this, line + "\n");
             }
         };
 

@@ -67,7 +67,6 @@ public class JailedVm : Vm
         }
         
         await HandlePostBootAsync();
-        var o = Process!.CurrentOutput;
         Logger.Information("Launched microVM {vmId} (jailed)", VmId);
     }
 
