@@ -99,10 +99,11 @@ public class FirecrackerInstallationTests() : FirecrackerInstallationFixture("/t
 
      private static async Task AssertInstallCorrectness(FirecrackerInstall install)
      {
-          var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp-Tests"))
+          var githubClient = new GitHubClient(new ProductHeaderValue("FirecrackerSharp-Tests"));
+          if (GithubCredentials is not null)
           {
-               Credentials = GithubCredentials
-          };
+               githubClient.Credentials = GithubCredentials;
+          }
           var latestRelease = await githubClient.Repository.Release.GetLatest("firecracker-microvm", "firecracker");
           
           install.Version.Should().Be(latestRelease.TagName);

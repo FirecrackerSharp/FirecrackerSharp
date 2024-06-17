@@ -12,6 +12,7 @@ internal class SshHostProcessManager(ConnectionPool connectionPool, ShellConfigu
             shellConfiguration.Width,
             shellConfiguration.Height,
             shellConfiguration.BufferSize);
+        shellStream.WriteLine(executable + " " + args);
         return new SshHostProcess(shellStream, ssh, shellConfiguration);
     }
 

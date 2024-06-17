@@ -25,10 +25,10 @@ public class LocalHostProcessManagerTests : LocalHostFixture
         var expectedOutput = await expectedProcess.StandardOutput.ReadToEndAsync();
 
         var actualProcess = IHostProcessManager.Current.LaunchProcess("/bin/bash", "-c \"ls --help\"");
-        await Task.Delay(100);
-        // var actualOutput = await actualProcess.KillAndReadAsync();
-        //
-        // actualOutput.Should().Be(expectedOutput);
+        var exited = await actualProcess.WaitForGracefulExitAsync(TimeSpan.FromSeconds(1));
+
+        exited.Should().BeTrue();
+        actualProcess.CurrentOutput.Should().Be(expectedOutput);
     }
     
     [Fact]

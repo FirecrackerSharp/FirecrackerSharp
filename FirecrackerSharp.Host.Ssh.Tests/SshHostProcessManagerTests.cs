@@ -7,12 +7,12 @@ public class SshHostProcessManagerTests : SshHostFixture
     [Fact]
     public async Task LaunchProcess_ShouldHaveCorrectOutput()
     {
-        var expectedOutput = SshClient.RunCommand("useradd --help")?.Result;
-
         var process = IHostProcessManager.Current.LaunchProcess("useradd", "--help");
-        // var actualOutput = await process.KillAndReadAsync();
+        await Task.Delay(500);
+        var exited = await process.WaitForGracefulExitAsync(TimeSpan.FromSeconds(1));
 
-        // actualOutput.Should().Be(expectedOutput);
+        exited.Should().BeTrue();
+        process.CurrentOutput.Should().Contain("Usage: useradd [options] LOGIN");
     }
     
     [Fact]
