@@ -1,6 +1,6 @@
 using FirecrackerSharp.Data;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// The optional and mandatory options to be passed into the firecracker binary.

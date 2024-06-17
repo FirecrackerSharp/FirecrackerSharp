@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// The optional and mandatory options to be passed into the jailer binary.

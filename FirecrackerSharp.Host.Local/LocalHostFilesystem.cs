@@ -11,6 +11,11 @@ internal class LocalHostFilesystem : IHostFilesystem
         await File.WriteAllTextAsync(path, content);
     }
 
+    public void AppendTextFile(string path, string content)
+    {
+        File.AppendAllText(path, content);
+    }
+
     public async Task WriteBinaryFileAsync(string path, byte[] content)
     {
         await File.WriteAllBytesAsync(path, content);

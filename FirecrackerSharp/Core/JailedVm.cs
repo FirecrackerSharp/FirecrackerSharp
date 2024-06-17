@@ -4,7 +4,7 @@ using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using Serilog;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// A microVM that was booted through the jailer binary inside a chroot jail.

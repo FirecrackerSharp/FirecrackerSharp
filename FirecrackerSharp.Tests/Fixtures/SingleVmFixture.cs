@@ -1,4 +1,4 @@
-using FirecrackerSharp.Boot;
+using FirecrackerSharp.Core;
 using FirecrackerSharp.Host.Local;
 using FirecrackerSharp.Tests.Helpers;
 
@@ -12,6 +12,7 @@ public class SingleVmFixture : IAsyncLifetime
     {
         LocalHost.Configure();
         Vm = await VmArrange.StartUnrestrictedVm();
+        Vm.LifecycleLogs.BootLogTarget = ILogTarget.Null;
     }
 
     public async Task DisposeAsync()

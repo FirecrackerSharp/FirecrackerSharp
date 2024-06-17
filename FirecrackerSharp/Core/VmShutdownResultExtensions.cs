@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 public static class VmShutdownResultExtensions
 {

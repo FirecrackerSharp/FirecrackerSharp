@@ -3,7 +3,7 @@ using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using Serilog;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// A <see cref="Vm"/> that was booted normally, as in not using the Firecracker jailer binary to create a chroot

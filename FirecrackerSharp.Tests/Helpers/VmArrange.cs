@@ -1,4 +1,4 @@
-using FirecrackerSharp.Boot;
+using FirecrackerSharp.Core;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;

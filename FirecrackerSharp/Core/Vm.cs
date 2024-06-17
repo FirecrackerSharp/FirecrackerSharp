@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Actions;
@@ -8,7 +7,7 @@ using FirecrackerSharp.Management;
 using FirecrackerSharp.Tty;
 using Serilog;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// The base class representing all Firecracker microVMs.
@@ -46,6 +45,8 @@ public abstract class Vm
     /// serial console / boot TTY.
     /// </summary>
     public readonly VmTtyClient TtyClient;
+
+    public readonly VmLifecycleLogs LifecycleLogs = new();
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -88,6 +89,9 @@ public abstract class Vm
         await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
         
         await AuthenticateTtyAsync();
+        
+        
+        TtyClient.RegisterListener();
     }
 
     private async Task AuthenticateTtyAsync()

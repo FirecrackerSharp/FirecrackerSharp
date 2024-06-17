@@ -1,5 +1,5 @@
 using System.Text;
-using FirecrackerSharp.Boot;
+using FirecrackerSharp.Core;
 
 namespace FirecrackerSharp.Tty;
 
@@ -8,14 +8,19 @@ public class VmTtyClient
     private readonly Vm _vm;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public bool IsReleased => _semaphore.CurrentCount > 0;
+    public bool IsAvailable => _semaphore.CurrentCount > 0;
     
     internal VmTtyClient(Vm vm)
     {
         _vm = vm;
     }
 
-    public Task WaitForReleaseAsync(CancellationToken cancellationToken = default)
+    internal void RegisterListener()
+    {
+        
+    }
+
+    public Task WaitForAvailabilityAsync(CancellationToken cancellationToken = default)
         => _semaphore.WaitAsync(cancellationToken);
     
     public async Task WriteAsync(
@@ -23,7 +28,7 @@ public class VmTtyClient
         bool insertNewline = true,
         CancellationToken cancellationToken = default)
     {
-        await WaitForReleaseAsync(cancellationToken);
+        await WaitForAvailabilityAsync(cancellationToken);
 
         try
         {
