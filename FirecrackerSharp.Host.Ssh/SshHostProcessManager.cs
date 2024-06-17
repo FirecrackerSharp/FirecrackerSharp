@@ -1,12 +1,18 @@
 namespace FirecrackerSharp.Host.Ssh;
 
-internal class SshHostProcessManager(ConnectionPool connectionPool) : IHostProcessManager
+internal class SshHostProcessManager(ConnectionPool connectionPool, ShellConfiguration shellConfiguration) : IHostProcessManager
 {
     public IHostProcess LaunchProcess(string executable, string args)
     {
         var ssh = connectionPool.NewUnmanagedSshConnection();
-        var command = ssh.CreateCommand(executable + " " + args);
-        return new SshHostProcess(command, ssh);
+        var shellStream = ssh.CreateShellStream(
+            shellConfiguration.Terminal,
+            shellConfiguration.Columns,
+            shellConfiguration.Rows,
+            shellConfiguration.Width,
+            shellConfiguration.Height,
+            shellConfiguration.BufferSize);
+        return new SshHostProcess(shellStream, ssh, shellConfiguration);
     }
 
     public bool IsEscalated => connectionPool.ConnectionInfo.Username == "root";

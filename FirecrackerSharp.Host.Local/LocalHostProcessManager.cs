@@ -36,7 +36,7 @@ internal class LocalHostProcessManager : IHostProcessManager
     public async Task<IHostProcess> EscalateAndLaunchProcessAsync(string password, string executable, string args)
     {
         var sudoBinary = File.Exists("/usr/bin/sudo") ? "/usr/bin/sudo" : "/bin/sudo";
-        var process = new Process
+        var osProcess = new Process
         {
             StartInfo = new ProcessStartInfo
             {
@@ -49,11 +49,12 @@ internal class LocalHostProcessManager : IHostProcessManager
                 CreateNoWindow = true
             }
         };
-        process.Start();
         
-        await process.StandardInput.WriteLineAsync(password);
-        await process.StandardInput.WriteLineAsync(executable + " " + args);
+        var process = new LocalHostProcess(osProcess);
 
-        return new LocalHostProcess(process);
+        await process.StdinWriter.WriteLineAsync(password);
+        await process.StdinWriter.WriteLineAsync(executable + " " + args);
+
+        return process;
     }
 }

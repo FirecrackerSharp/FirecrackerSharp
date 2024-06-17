@@ -12,17 +12,21 @@ namespace FirecrackerSharp.Host.Ssh;
 public static class SshHost
 {
     private static ConnectionPool? _currentConnectionPool;
-    
+
     /// <summary>
     /// Configure the SSH host to be used internally by the SDK.
     /// </summary>
     /// <param name="connectionPoolConfiguration">The <see cref="ConnectionPoolConfiguration"/> for SSH and SFTP</param>
     /// <param name="curlConfiguration">The <see cref="CurlConfiguration"/> for UDS communication</param>
-    public static void Configure(ConnectionPoolConfiguration connectionPoolConfiguration, CurlConfiguration curlConfiguration)
+    /// <param name="shellConfiguration">The <see cref="ShellConfiguration"/> for managing SSH shells (PTYs)</param>
+    public static void Configure(
+        ConnectionPoolConfiguration connectionPoolConfiguration,
+        CurlConfiguration curlConfiguration,
+        ShellConfiguration shellConfiguration)
     {
         _currentConnectionPool = new ConnectionPool(connectionPoolConfiguration);
         IHostFilesystem.Current = new SshHostFilesystem(_currentConnectionPool);
-        IHostProcessManager.Current = new SshHostProcessManager(_currentConnectionPool);
+        IHostProcessManager.Current = new SshHostProcessManager(_currentConnectionPool, shellConfiguration);
         IHostSocketManager.Current = new SshHostSocketManager(_currentConnectionPool, curlConfiguration);
         
         Log.Information("Using remote SSH host for FirecrackerSharp");

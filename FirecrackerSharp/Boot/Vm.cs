@@ -102,15 +102,15 @@ public abstract class Vm
 
             if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
             {
-                await TtyManager.WriteToTtyAsync(
-                    VmConfiguration.TtyAuthentication.Username,
-                    ttyAuthenticationTokenSource.Token,
-                    subsequentlyRead: false);
+                // await TtyManager.WriteToTtyAsync(
+                //     VmConfiguration.TtyAuthentication.Username,
+                //     ttyAuthenticationTokenSource.Token,
+                //     subsequentlyRead: false);
             }
 
-            await TtyManager.WriteToTtyAsync(
-                VmConfiguration.TtyAuthentication.Password,
-                ttyAuthenticationTokenSource.Token);
+            // await TtyManager.WriteToTtyAsync(
+            //     VmConfiguration.TtyAuthentication.Password,
+            //     ttyAuthenticationTokenSource.Token);
         }
         catch (TtyException)
         {
@@ -143,13 +143,13 @@ public abstract class Vm
             await Process!.StdinWriter.WriteLineAsync(new StringBuilder("reboot"), cancellationTokenSource.Token);
             try
             {
-                await Process.WaitUntilCompletionAsync(cancellationTokenSource.Token);
+                await Process.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
                 gracefulShutdown = true;
             }
             catch (Exception)
             {
-                await Process.KillAndReadAsync();
+                await Process.KillAsync();
                 Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);
             }
         }

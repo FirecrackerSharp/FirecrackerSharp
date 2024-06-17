@@ -40,7 +40,8 @@ public class SshHostFixture(string username = "root", string password = "root123
                 SshConnectionAmount: 2,
                 SftpConnectionAmount: 2,
                 KeepAliveInterval: TimeSpan.FromSeconds(1)),
-            CurlConfiguration.Default);
+            CurlConfiguration.Default,
+            ShellConfiguration.Default);
         
         Connect();
     }
