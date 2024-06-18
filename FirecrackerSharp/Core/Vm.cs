@@ -3,6 +3,7 @@ using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Actions;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Management;
 using FirecrackerSharp.Tty;
 using Serilog;
@@ -33,18 +34,37 @@ public abstract class Vm
             return _backingSocket;
         }
     }
-    
+
+    private readonly VmManagement _management;
+    private readonly VmTtyClient _ttyClient;
+
     /// <summary>
     /// The <see cref="VmManagement"/> instance linked to this <see cref="Vm"/> that allows access to the Firecracker
     /// Management API that is linked to this <see cref="Vm"/>'s Firecracker UDS.
     /// </summary>
-    public readonly VmManagement Management;
+    public VmManagement Management
+    {
+        get
+        {
+            if (Lifecycle.IsNotActive)
+                throw new NotAccessibleDueToLifecycleException("A microVM cannot be managed when not active");
+            return _management;
+        }
+    }
 
     /// <summary>
     /// The <see cref="VmTtyClient"/> instance linked to this <see cref="Vm"/> that allows direct access to the microVM's
     /// serial console / boot TTY.
     /// </summary>
-    public readonly VmTtyClient TtyClient;
+    public VmTtyClient TtyClient
+    {
+        get
+        {
+            if (Lifecycle.IsNotActive)
+                throw new NotAccessibleDueToLifecycleException("A microVM's TTY cannot be accessed when not active");
+            return _ttyClient;
+        }
+    }
 
     public readonly VmLifecycle Lifecycle = new();
 
@@ -58,11 +78,11 @@ public abstract class Vm
         FirecrackerInstall = firecrackerInstall;
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
-        Management = new VmManagement(this);
-        TtyClient = new VmTtyClient(this);
+        _management = new VmManagement(this);
+        _ttyClient = new VmTtyClient(this);
     }
 
-    internal abstract Task StartProcessAsync();
+    public abstract Task BootAsync();
 
     protected abstract void CleanupAfterShutdown();
 
@@ -77,16 +97,16 @@ public abstract class Vm
     protected async Task HandlePostBootAsync()
     {
         Lifecycle.CurrentPhase = VmLifecyclePhase.Boot;
-        TtyClient.StartListening();
+        _ttyClient.StartListening();
         
         if (VmConfiguration.ApplicationMode != VmConfigurationApplicationMode.JsonConfiguration)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisForSocketInitialization));
             
-            await Management.ApplyVmConfigurationAsync(
+            await _management.ApplyVmConfigurationAsync(
                 parallelize: VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ParallelizedApiCalls);
             
-            await Management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
+            await _management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
         }
         
         await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
@@ -107,12 +127,12 @@ public abstract class Vm
 
             if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
             {
-                await TtyClient.WriteAsync(
+                await _ttyClient.WriteAsync(
                     VmConfiguration.TtyAuthentication.Username,
                     cancellationToken: ttyAuthenticationTokenSource.Token);
             }
 
-            await TtyClient.WriteAsync(
+            await _ttyClient.WriteAsync(
                 VmConfiguration.TtyAuthentication.Password,
                 cancellationToken: ttyAuthenticationTokenSource.Token);
         }
@@ -133,6 +153,9 @@ public abstract class Vm
     /// <returns>Whether the shutdown was graceful</returns>
     public async Task<VmShutdownResult> ShutdownAsync()
     {
+        if (Lifecycle.IsNotActive)
+            throw new NotAccessibleDueToLifecycleException("Cannot shutdown microVM when it hasn't booted up yet");
+        
         Lifecycle.CurrentPhase = VmLifecyclePhase.Shutdown;
         
         if (_backingSocket != null)
@@ -146,7 +169,7 @@ public abstract class Vm
 
         try
         {
-            await TtyClient.WriteAsync("reboot", cancellationToken: cancellationTokenSource.Token);
+            await _ttyClient.WriteAsync("reboot", cancellationToken: cancellationTokenSource.Token);
             try
             {
                 await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));

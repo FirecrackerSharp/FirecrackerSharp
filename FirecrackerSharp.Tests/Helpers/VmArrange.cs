@@ -1,3 +1,4 @@
+using System.Text;
 using FirecrackerSharp.Core;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Ballooning;
@@ -32,21 +33,25 @@ public static class VmArrange
     public static async Task<Vm> StartUnrestrictedVm(VmConfigurationApplicationMode configurationApplicationMode
         = VmConfigurationApplicationMode.JsonConfiguration)
     {
-        return await UnrestrictedVm.StartAsync(
+        var unrestrictedVm = new UnrestrictedVm(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
             FirecrackerInstall,
             FirecrackerOptions,
             VmId);
+        await unrestrictedVm.BootAsync();
+        return unrestrictedVm;
     }
 
     public static async Task<Vm> StartJailedVm(VmConfigurationApplicationMode configurationApplicationMode
         = VmConfigurationApplicationMode.JsonConfiguration)
     {
-        return await JailedVm.StartAsync(
+        var jailedVm = new JailedVm(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
             FirecrackerInstall,
             FirecrackerOptions,
             JailerOptions,
             VmId);
+        await jailedVm.BootAsync();
+        return jailedVm;
     }
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using FirecrackerSharp.Core;
+using FirecrackerSharp.Lifecycle;
 
 namespace FirecrackerSharp.Tty;
 

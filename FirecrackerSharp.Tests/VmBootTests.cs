@@ -1,5 +1,5 @@
-using FirecrackerSharp.Core;
 using FirecrackerSharp.Data;
+using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;

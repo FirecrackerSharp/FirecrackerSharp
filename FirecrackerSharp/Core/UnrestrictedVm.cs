@@ -21,7 +21,7 @@ public class UnrestrictedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<UnrestrictedVm>();
 
-    private UnrestrictedVm(
+    public UnrestrictedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
@@ -32,8 +32,8 @@ public class UnrestrictedVm : Vm
         
         Logger.Debug("The Unix socket for the unrestricted microVM will be created at: {socketPath}", SocketPath);
     }
-    
-    internal override async Task StartProcessAsync()
+
+    public override async Task BootAsync()
     {
         string? configPath = null;
         if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.JsonConfiguration)
@@ -74,7 +74,7 @@ public class UnrestrictedVm : Vm
         string vmId)
     {
         var vm = new UnrestrictedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId);
-        await vm.StartProcessAsync();
+        await vm.BootAsync();
         return vm;
     }
 }
