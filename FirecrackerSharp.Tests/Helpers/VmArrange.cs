@@ -4,6 +4,7 @@ using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Lifecycle;
 
 namespace FirecrackerSharp.Tests.Helpers;
 
@@ -38,6 +39,7 @@ public static class VmArrange
             FirecrackerInstall,
             FirecrackerOptions,
             VmId);
+        unrestrictedVm.Lifecycle.AttachAllLogTargetsToSingle(ILogTarget.ToFile("/tmp/log.txt"));
         await unrestrictedVm.BootAsync();
         return unrestrictedVm;
     }

@@ -107,7 +107,7 @@ public abstract class Vm
         Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
     }
 
-    protected async Task HandlePostBootAsync()
+    private async Task HandlePostBootAsync()
     {
         _ttyClient.StartListening();
         

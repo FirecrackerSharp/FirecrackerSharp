@@ -31,21 +31,19 @@ public class VmTtyClient
                 case VmLifecyclePhase.Shutdown:
                     _vm.Lifecycle.ShutdownLogTarget.Receive(line);
                     break;
+                case VmLifecyclePhase.PreBoot:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         };
     }
 
-    public Task WaitForAvailabilityAsync(CancellationToken cancellationToken = default)
-        => _semaphore.WaitAsync(cancellationToken);
-    
     public async Task WriteAsync(
         string content,
         bool insertNewline = true,
         CancellationToken cancellationToken = default)
     {
-        await WaitForAvailabilityAsync(cancellationToken);
+        await _semaphore.WaitAsync(cancellationToken);
 
         try
         {

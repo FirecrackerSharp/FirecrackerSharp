@@ -7,7 +7,7 @@ public interface ILogTarget
 {
     public void Receive(string line);
 
-    public static readonly ILogTarget Null = new NullLogTarget();
+    internal static readonly ILogTarget Null = new NullLogTarget();
     
     public static ILogTarget ToStringBuilder(StringBuilder stringBuilder)
         => new StringBuilderLogTarget(stringBuilder);
