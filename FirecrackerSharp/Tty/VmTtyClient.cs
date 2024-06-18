@@ -139,6 +139,48 @@ public class VmTtyClient
         }
     }
 
+    public async Task<string?> RunBufferedCommandAsync(
+        string commandText,
+        bool insertNewline = true,
+        ICompletionTracker? completionTracker = null,
+        TimeSpan? pollTimeSpan = null,
+        CancellationToken cancellationToken = default)
+    {
+        await StartBufferedCommandAsync(commandText, insertNewline, completionTracker, cancellationToken);
+        return await WaitForBufferedCommandAsync(pollTimeSpan, cancellationToken);
+    }
+
+    public async Task StartBufferedCommandAsync(
+        string commandText,
+        bool insertNewline = true,
+        ICompletionTracker? completionTracker = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (_currentOutputBuffer is not MemoryOutputBuffer)
+        {
+            _currentOutputBuffer = new MemoryOutputBuffer();
+        }
+        
+        completionTracker ??= new ExitSignalCompletionTracker();
+        await WriteAsync(commandText, insertNewline, completionTracker, cancellationToken);
+    }
+
+    public string? TryGetCommandBuffer()
+    {
+        if (_currentOutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
+        return _currentCompletionTracker is null ? memoryBuffer.LastCommit : memoryBuffer.FutureCommitState;
+    }
+
+    public async Task<string?> WaitForBufferedCommandAsync(
+        TimeSpan? pollTimeSpan = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (_currentOutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
+        
+        await WaitForAvailabilityAsync(pollTimeSpan, cancellationToken);
+        return memoryBuffer.LastCommit;
+    }
+    
     private void RegisterCompletion()
     {
         _semaphore.Release();

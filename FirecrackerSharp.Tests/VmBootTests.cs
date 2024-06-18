@@ -19,14 +19,7 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
-        var mob = new MemoryOutputBuffer();
-        var ob = new AggregateOutputBuffer([new FileOutputBuffer("/tmp/log.txt"), mob]);
-        vm.TtyClient.OutputBuffer = ob;
-        var ct = new DelayCompletionTracker(TimeSpan.FromSeconds(2));
-
-        await vm.TtyClient.WriteAsync("df -h", completionTracker: ct);
-        await vm.TtyClient.WaitForAvailabilityAsync();
-        var commit = mob.LastCommit;
+        var output = await vm.TtyClient.RunBufferedCommandAsync("dd --help");
 
         var shutdownResult = await vm.ShutdownAsync();
         shutdownResult.IsSuccessful().Should().BeTrue();
