@@ -59,7 +59,4 @@ internal class LocalHostProcess : IHostProcess
 
         return true;
     }
-
-    public Task WaitForExitAsync(CancellationToken cancellationToken) =>
-        _osProcess.WaitForExitAsync(cancellationToken);
 }
