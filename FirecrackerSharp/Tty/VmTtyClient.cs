@@ -61,9 +61,9 @@ public sealed class VmTtyClient
                 shouldCapture = _currentCompletionTracker.ShouldCapture(line);
             }
 
-            if (shouldCapture && _currentOutputBuffer is not null)
+            if (shouldCapture && OutputBuffer is not null)
             {
-                _currentOutputBuffer.Receive(line);
+                OutputBuffer.Receive(line);
             }
 
             if (shouldComplete) RegisterCompletion();
@@ -156,9 +156,9 @@ public sealed class VmTtyClient
         ICompletionTracker? completionTracker = null,
         CancellationToken cancellationToken = default)
     {
-        if (_currentOutputBuffer is not MemoryOutputBuffer)
+        if (OutputBuffer is not MemoryOutputBuffer)
         {
-            _currentOutputBuffer = new MemoryOutputBuffer();
+            OutputBuffer = new MemoryOutputBuffer();
         }
         
         completionTracker ??= new ExitSignalCompletionTracker();
@@ -167,7 +167,7 @@ public sealed class VmTtyClient
 
     public string? TryGetCommandBuffer()
     {
-        if (_currentOutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
+        if (OutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
         return _currentCompletionTracker is null ? memoryBuffer.LastCommit : memoryBuffer.FutureCommitState;
     }
 
@@ -175,7 +175,7 @@ public sealed class VmTtyClient
         TimeSpan? pollTimeSpan = null,
         CancellationToken cancellationToken = default)
     {
-        if (_currentOutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
+        if (OutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
         
         await WaitForAvailabilityAsync(pollTimeSpan, cancellationToken);
         return memoryBuffer.LastCommit;
@@ -185,6 +185,6 @@ public sealed class VmTtyClient
     {
         _semaphore.Release();
         _currentCompletionTracker = null;
-        _currentOutputBuffer?.Commit();
+        OutputBuffer?.Commit();
     }
 }
