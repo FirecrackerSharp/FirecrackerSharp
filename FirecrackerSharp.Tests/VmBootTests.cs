@@ -1,3 +1,4 @@
+using System.Text;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Fixtures;
@@ -15,6 +16,13 @@ public class VmBootTests : MinimalFixture
     public async Task UnrestrictedVm_ShouldBootAndExitGracefully(VmConfigurationApplicationMode configurationApplicationMode)
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
+
+        var sb = new StringBuilder();
+
+        for (var i = 0; i < 5; ++i)
+        {
+            await vm.TtyClient.StartAndAwaitCommandAsync("df -h", captureBufferLogTarget: ILogTarget.ToStringBuilder(sb));
+        }
 
         var shutdownResult = await vm.ShutdownAsync();
         shutdownResult.IsSuccessful().Should().BeTrue();

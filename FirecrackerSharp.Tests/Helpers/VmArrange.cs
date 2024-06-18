@@ -39,7 +39,7 @@ public static class VmArrange
             FirecrackerInstall,
             FirecrackerOptions,
             VmId);
-        unrestrictedVm.Lifecycle.AttachAllLogTargetsToSingle(ILogTarget.ToFile("/tmp/log.txt"));
+        unrestrictedVm.Lifecycle.AttachLogTarget(VmLifecyclePhase.Active, ILogTarget.ToFile("/tmp/log.txt"));
         await unrestrictedVm.BootAsync();
         return unrestrictedVm;
     }
