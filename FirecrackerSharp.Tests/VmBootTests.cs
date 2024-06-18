@@ -1,8 +1,8 @@
-using System.Text;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
+using FirecrackerSharp.Tty;
 using FluentAssertions;
 
 namespace FirecrackerSharp.Tests;
@@ -17,13 +17,13 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
-        var sb = new StringBuilder();
-
-        for (var i = 0; i < 5; ++i)
-        {
-            await vm.TtyClient.StartAndAwaitCommandAsync("df -h", captureBufferLogTarget: ILogTarget.ToStringBuilder(sb));
-        }
-
+        var ob = new InMemoryOutputBuffer();
+        vm.TtyClient.OutputBuffer = ob;
+        var ct = new ExitSignalCompletionTracker(prefix: "ES");
+        await vm.TtyClient.WriteAsync("cat /tmp/tmpttt.txt", completionTracker: ct);
+        await vm.TtyClient.WaitForAvailabilityAsync();
+        var output = ob.Content;
+        
         var shutdownResult = await vm.ShutdownAsync();
         shutdownResult.IsSuccessful().Should().BeTrue();
     }

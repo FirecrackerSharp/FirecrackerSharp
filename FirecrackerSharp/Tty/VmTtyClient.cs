@@ -8,21 +8,20 @@ public class VmTtyClient
 {
     private readonly Vm _vm;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-
+    
+    private ICompletionTracker? _currentCompletionTracker;
+    private IOutputBuffer? _currentOutputBuffer;
+    
     public bool IsAvailable => _semaphore.CurrentCount > 0;
-    
-    private readonly StringBuilder _captureBuffer = new();
-    private ILogTarget? _captureBufferLogTarget;
-    private bool _captureBufferOpen;
-    
-    private string? _currentExitSignal;
-    private bool _isSkipScheduled;
-
-    public event EventHandler<bool>? CaptureBufferOpened;
-    public event EventHandler<string>? CaptureBufferClosed;
-    public event EventHandler<string>? CaptureBufferReceivedData;
-
-    public Func<string> ExitSignalFactory { get; set; } = () => "exit_" + Random.Shared.Next(1, 100000);
+    public IOutputBuffer? OutputBuffer
+    {
+        get => _currentOutputBuffer;
+        set
+        {
+            _currentOutputBuffer = value;
+            _currentOutputBuffer?.Open();
+        }
+    }
     
     internal VmTtyClient(Vm vm)
     {
@@ -49,83 +48,52 @@ public class VmTtyClient
                     throw new ArgumentOutOfRangeException();
             }
 
-            if (_currentExitSignal is not null
-                && line.Trim() == _currentExitSignal
-                && !IsAvailable)
+            if (_vm.Lifecycle.IsNotActive) return;
+            
+            var shouldCapture = true;
+            var shouldComplete = false;
+            
+            if (_currentCompletionTracker is not null)
             {
-                _semaphore.Release();
+                shouldComplete = _currentCompletionTracker.CheckReactively(line);
+                shouldCapture = _currentCompletionTracker.ShouldCapture(line);
             }
-            else
+
+            if (shouldCapture && _currentOutputBuffer is not null)
             {
-                if (_isSkipScheduled)
-                {
-                    _isSkipScheduled = false;
-                    return;
-                }
-                
-                _captureBuffer.Append(line);
-                _captureBufferLogTarget?.Receive(line);
-                CaptureBufferReceivedData?.Invoke(sender: this, line);
+                _currentOutputBuffer.Receive(line);
             }
+
+            if (shouldComplete) RegisterCompletion();
         };
     }
 
-    public async Task<string> StartAndAwaitCommandAsync(
-        string commandText,
-        bool insertNewline = true,
-        ILogTarget? captureBufferLogTarget = null,
+    public async Task WaitForAvailabilityAsync(
+        TimeSpan? pollTimeSpan = null,
         CancellationToken cancellationToken = default)
     {
-        await StartCommandAsync(commandText, insertNewline, captureBufferLogTarget, cancellationToken);
-        return await AwaitCurrentCommandAsync(cancellationToken);
-    }
+        pollTimeSpan ??= TimeSpan.FromMilliseconds(1);
 
-    public async Task StartCommandAsync(
-        string commandText,
-        bool insertNewline = true,
-        ILogTarget? captureBufferLogTarget = null,
-        CancellationToken cancellationToken = default)
-    {
-        _currentExitSignal = ExitSignalFactory();
-        commandText = commandText.Trim();
-        
-        await WriteAsync(
-            $"{commandText} ; echo {_currentExitSignal}",
-            insertNewline,
-            immediatelyRelease: false,
-            cancellationToken: cancellationToken);
-        
-        await OpenCaptureBufferAsync(
-            scheduleSkip: true,
-            captureBufferLogTarget,
-            bypassSemaphore: true,
-            cancellationToken);
-    }
-
-    public async Task<string> AwaitCurrentCommandAsync(CancellationToken cancellationToken = default)
-    {
-        await _semaphore.WaitAsync(cancellationToken);
-        var data = CloseCaptureBuffer();
-        return data;
-    }
-
-    public async Task<string> InterruptCommandAsync(
-        string interruptSignal = "^C",
-        bool insertNewline = true,
-        CancellationToken cancellationToken = default)
-    {
-        var output = CloseCaptureBuffer();
-        await WriteAsync(interruptSignal, insertNewline, immediatelyRelease: true, cancellationToken);
-        return output;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(pollTimeSpan.Value, cancellationToken);
+            if (IsAvailable) break;
+        }
     }
 
     public async Task WriteAsync(
         string content,
         bool insertNewline = true,
-        bool immediatelyRelease = true,
+        ICompletionTracker? completionTracker = null,
         CancellationToken cancellationToken = default)
     {
         await _semaphore.WaitAsync(cancellationToken);
+        
+        if (completionTracker is not null)
+        {
+            completionTracker.TtyClient = this;
+            content = completionTracker.TransformInput(content);
+        }
         
         try
         {
@@ -144,48 +112,30 @@ public class VmTtyClient
         }
         finally
         {
-            if (immediatelyRelease)
+            if (completionTracker is null)
             {
                 _semaphore.Release();
+            }
+            else
+            {
+                _currentCompletionTracker = completionTracker;
+                var passiveTask = _currentCompletionTracker.CheckPassively();
+                if (passiveTask is not null)
+                {
+                    Task.Run(async () =>
+                    {
+                        var shouldComplete = await passiveTask;
+                        if (shouldComplete) RegisterCompletion();
+                    });
+                }
             }
         }
     }
 
-    public async Task OpenCaptureBufferAsync(
-        bool scheduleSkip = false,
-        ILogTarget? captureBufferLogTarget = null,
-        bool bypassSemaphore = false,
-        CancellationToken cancellationToken = default)
+    private void RegisterCompletion()
     {
-        if (_captureBufferOpen) throw new TtyException("Cannot open multiple simultaneous capture buffers");
-
-        if (!bypassSemaphore)
-        {
-            await _semaphore.WaitAsync(cancellationToken);
-        }
-
-        _captureBufferOpen = true;
-        
-        _captureBufferLogTarget = captureBufferLogTarget;
-        _isSkipScheduled = scheduleSkip;
-        
-        _captureBuffer.Clear();
-        CaptureBufferOpened?.Invoke(sender: this, scheduleSkip);
-    }
-
-    public string CloseCaptureBuffer()
-    {
-        if (!_captureBufferOpen) throw new TtyException("Cannot close capture buffer when it isn't open");
-        _captureBufferOpen = false;
-        
-        _captureBufferLogTarget = null;
         _semaphore.Release();
-        
-        var bufferContent = _captureBuffer.ToString();
-        _captureBuffer.Clear();
-        CaptureBufferClosed?.Invoke(sender: this, bufferContent);
-        return bufferContent;
+        _currentCompletionTracker = null;
+        _currentOutputBuffer?.Commit();
     }
-
-    public string GetCurrentCaptureBuffer() => _captureBuffer.ToString();
 }
