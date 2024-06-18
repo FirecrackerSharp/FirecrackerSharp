@@ -15,9 +15,25 @@ public class VmTtyClient
         _vm = vm;
     }
 
-    internal void RegisterListener()
+    internal void StartListening()
     {
-        
+        _vm.Process!.OutputReceived += (_, line) =>
+        {
+            switch (_vm.Lifecycle.CurrentPhase)
+            {
+                case VmLifecyclePhase.Boot:
+                    _vm.Lifecycle.BootLogTarget.Receive(line);
+                    break;
+                case VmLifecyclePhase.Active:
+                    _vm.Lifecycle.ActiveLogTarget.Receive(line);
+                    break;
+                case VmLifecyclePhase.Shutdown:
+                    _vm.Lifecycle.ShutdownLogTarget.Receive(line);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        };
     }
 
     public Task WaitForAvailabilityAsync(CancellationToken cancellationToken = default)

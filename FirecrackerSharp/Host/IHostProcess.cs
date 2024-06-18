@@ -3,7 +3,7 @@ namespace FirecrackerSharp.Host;
 public interface IHostProcess
 {
     public StreamWriter StdinWriter { get; }
-    public string CurrentOutput { get; }
+    public string CurrentOutput { get; set; }
 
     public event EventHandler<string> OutputReceived; 
     

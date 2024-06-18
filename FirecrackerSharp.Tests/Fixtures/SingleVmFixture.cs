@@ -12,7 +12,7 @@ public class SingleVmFixture : IAsyncLifetime
     {
         LocalHost.Configure();
         Vm = await VmArrange.StartUnrestrictedVm();
-        Vm.LifecycleLogs.BootLogTarget = ILogTarget.Null;
+        Vm.Lifecycle.BootLogTarget = ILogTarget.Null;
     }
 
     public async Task DisposeAsync()

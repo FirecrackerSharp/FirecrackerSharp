@@ -46,7 +46,7 @@ public abstract class Vm
     /// </summary>
     public readonly VmTtyClient TtyClient;
 
-    public readonly VmLifecycleLogs LifecycleLogs = new();
+    public readonly VmLifecycle Lifecycle = new();
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -76,6 +76,9 @@ public abstract class Vm
 
     protected async Task HandlePostBootAsync()
     {
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Boot;
+        TtyClient.StartListening();
+        
         if (VmConfiguration.ApplicationMode != VmConfigurationApplicationMode.JsonConfiguration)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisForSocketInitialization));
@@ -89,9 +92,8 @@ public abstract class Vm
         await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
         
         await AuthenticateTtyAsync();
-        
-        
-        TtyClient.RegisterListener();
+
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Active;
     }
 
     private async Task AuthenticateTtyAsync()
@@ -131,6 +133,8 @@ public abstract class Vm
     /// <returns>Whether the shutdown was graceful</returns>
     public async Task<VmShutdownResult> ShutdownAsync()
     {
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Shutdown;
+        
         if (_backingSocket != null)
         {
             Socket.Dispose();

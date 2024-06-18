@@ -7,7 +7,7 @@ internal class LocalHostProcess : IHostProcess
     private readonly Process _osProcess;
     
     public StreamWriter StdinWriter => _osProcess.StandardInput;
-    public string CurrentOutput { get; private set; } = string.Empty;
+    public string CurrentOutput { get; set; } = string.Empty;
     public event EventHandler<string>? OutputReceived;
 
     internal LocalHostProcess(Process osProcess)

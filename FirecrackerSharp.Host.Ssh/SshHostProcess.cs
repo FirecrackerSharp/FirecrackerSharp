@@ -19,7 +19,7 @@ internal class SshHostProcess : IHostProcess, IAsyncDisposable
         }
     }
     
-    public string CurrentOutput { get; private set; } = string.Empty;
+    public string CurrentOutput { get; set; } = string.Empty;
     
     public event EventHandler<string>? OutputReceived;
 
