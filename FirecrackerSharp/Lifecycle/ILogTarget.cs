@@ -18,8 +18,8 @@ public interface ILogTarget
     public static ILogTarget ToFile(string filePath, bool onAppHost = true)
         => new FileLogTarget(filePath, onAppHost);
 
-    public static ILogTarget ToCombination(IEnumerable<ILogTarget> aggregatedTargets)
-        => new CombinedLogTarget(aggregatedTargets);
+    public static ILogTarget ToAggregate(IEnumerable<ILogTarget> aggregatedTargets)
+        => new AggregateLogTarget(aggregatedTargets);
 
     private class NullLogTarget : ILogTarget
     {
@@ -67,7 +67,7 @@ public interface ILogTarget
         }
     }
 
-    private class CombinedLogTarget(IEnumerable<ILogTarget> aggregatedTargets) : ILogTarget
+    private class AggregateLogTarget(IEnumerable<ILogTarget> aggregatedTargets) : ILogTarget
     {
         public void Receive(string line)
         {

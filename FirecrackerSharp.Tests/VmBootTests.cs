@@ -4,6 +4,7 @@ using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
 using FirecrackerSharp.Tty;
 using FirecrackerSharp.Tty.CompletionTracking;
+using FirecrackerSharp.Tty.OutputBuffering;
 using FluentAssertions;
 
 namespace FirecrackerSharp.Tests;
@@ -18,13 +19,14 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
-        var ob = new MemoryOutputBuffer();
+        var mob = new MemoryOutputBuffer();
+        var ob = new AggregateOutputBuffer([new FileOutputBuffer("/tmp/log.txt"), mob]);
         vm.TtyClient.OutputBuffer = ob;
         var ct = new DelayCompletionTracker(TimeSpan.FromSeconds(2));
 
         await vm.TtyClient.WriteAsync("df -h", completionTracker: ct);
         await vm.TtyClient.WaitForAvailabilityAsync();
-        var output = ob.LastCommit;
+        var commit = mob.LastCommit;
 
         var shutdownResult = await vm.ShutdownAsync();
         shutdownResult.IsSuccessful().Should().BeTrue();

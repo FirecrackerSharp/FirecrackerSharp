@@ -1,4 +1,4 @@
-namespace FirecrackerSharp.Tty;
+namespace FirecrackerSharp.Tty.OutputBuffering;
 
 public interface IOutputBuffer
 {

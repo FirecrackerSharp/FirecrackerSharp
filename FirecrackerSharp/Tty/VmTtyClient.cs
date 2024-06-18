@@ -2,6 +2,7 @@ using System.Text;
 using FirecrackerSharp.Core;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tty.CompletionTracking;
+using FirecrackerSharp.Tty.OutputBuffering;
 
 namespace FirecrackerSharp.Tty;
 

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace FirecrackerSharp.Tty;
+namespace FirecrackerSharp.Tty.OutputBuffering;
 
 public class MemoryOutputBuffer : IOutputBuffer
 {
