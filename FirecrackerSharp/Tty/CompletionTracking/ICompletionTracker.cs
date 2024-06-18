@@ -1,8 +1,8 @@
-namespace FirecrackerSharp.Tty;
+namespace FirecrackerSharp.Tty.CompletionTracking;
 
 public interface ICompletionTracker
 {
-    VmTtyClient TtyClient { get; set; }
+    CompletionTrackerContext? Context { get; set; }
     
     public string TransformInput(string inputText);
 

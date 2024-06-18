@@ -1,11 +1,10 @@
-namespace FirecrackerSharp.Tty;
+namespace FirecrackerSharp.Tty.CompletionTracking;
 
 public class ExitSignalCompletionTracker : ICompletionTracker
 {
-    public VmTtyClient TtyClient { get; set; } = null!;
+    public CompletionTrackerContext? Context { get; set; }
 
     private string? _currentExitSignal;
-    private string? _currentCommand;
     private readonly Func<string> _exitSignalGenerator;
     
     public ExitSignalCompletionTracker(Func<string> exitSignalGenerator)
@@ -21,19 +20,18 @@ public class ExitSignalCompletionTracker : ICompletionTracker
             return prefix + number;
         };
     }
-    
+
     public string TransformInput(string inputText)
     {
         _currentExitSignal = _exitSignalGenerator();
         inputText = inputText.Trim();
-        _currentCommand = inputText + ";echo " + _currentExitSignal;
-        return _currentCommand;
+        return inputText + ";echo " + _currentExitSignal;
     }
 
     public bool ShouldCapture(string line)
     {
         line = line.Trim();
-        return line != _currentExitSignal && !line.Contains(_currentCommand!);
+        return line != _currentExitSignal && !line.Contains(Context!.InputText);
     }
 
     public bool CheckReactively(string line)

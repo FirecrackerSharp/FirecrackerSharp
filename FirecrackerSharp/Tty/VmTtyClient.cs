@@ -1,6 +1,7 @@
 using System.Text;
 using FirecrackerSharp.Core;
 using FirecrackerSharp.Lifecycle;
+using FirecrackerSharp.Tty.CompletionTracking;
 
 namespace FirecrackerSharp.Tty;
 
@@ -82,7 +83,7 @@ public class VmTtyClient
     }
 
     public async Task WriteAsync(
-        string content,
+        string inputText,
         bool insertNewline = true,
         ICompletionTracker? completionTracker = null,
         CancellationToken cancellationToken = default)
@@ -91,19 +92,18 @@ public class VmTtyClient
         
         if (completionTracker is not null)
         {
-            completionTracker.TtyClient = this;
-            content = completionTracker.TransformInput(content);
+            inputText = completionTracker.TransformInput(inputText);
         }
         
         try
         {
             if (insertNewline)
             {
-                await _vm.Process!.StdinWriter.WriteLineAsync(new StringBuilder(content), cancellationToken);
+                await _vm.Process!.StdinWriter.WriteLineAsync(new StringBuilder(inputText), cancellationToken);
             }
             else
             {
-                await _vm.Process!.StdinWriter.WriteAsync(new StringBuilder(content), cancellationToken);
+                await _vm.Process!.StdinWriter.WriteAsync(new StringBuilder(inputText), cancellationToken);
             }
         }
         catch (OperationCanceledException)
@@ -118,8 +118,14 @@ public class VmTtyClient
             }
             else
             {
+                completionTracker.Context = new CompletionTrackerContext(
+                    TtyClient: this,
+                    TrackingStartTime: DateTimeOffset.UtcNow,
+                    InputText: inputText);
+                
                 _currentCompletionTracker = completionTracker;
                 var passiveTask = _currentCompletionTracker.CheckPassively();
+                
                 if (passiveTask is not null)
                 {
                     Task.Run(async () =>
