@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Lifecycle;
 
-public class VmLifecycle
+public sealed class VmLifecycle
 {
     private VmLifecyclePhase _currentPhase = VmLifecyclePhase.PreBoot;
     

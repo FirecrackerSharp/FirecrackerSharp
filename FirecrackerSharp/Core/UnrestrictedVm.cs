@@ -17,7 +17,7 @@ namespace FirecrackerSharp.Core;
 /// having a connection to the outside Internet, while using <see cref="JailedVm"/> exclusively for those microVMs that
 /// strictly require such isolation.
 /// </summary>
-public class UnrestrictedVm : Vm
+public sealed class UnrestrictedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<UnrestrictedVm>();
 

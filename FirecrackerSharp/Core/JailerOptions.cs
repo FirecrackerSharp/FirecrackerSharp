@@ -10,7 +10,7 @@ namespace FirecrackerSharp.Core;
 /// <param name="ChrootBaseDirectory">The base directory for chroot jails</param>
 /// <param name="ExtraArguments">Any extra CLI arguments to pass into the jailer binary. Refer to Firecracker's
 /// documentation as to which are possible</param>
-public record JailerOptions(
+public sealed record JailerOptions(
     ulong LinuxGid,
     ulong LinuxUid,
     string? SudoPassword = null,

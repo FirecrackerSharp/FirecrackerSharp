@@ -2,7 +2,7 @@ using System.Text;
 
 namespace FirecrackerSharp.Tty.OutputBuffering;
 
-public class MemoryOutputBuffer : IOutputBuffer
+public sealed class MemoryOutputBuffer : IOutputBuffer
 {
     private readonly StringBuilder _stringBuilder = new();
     private readonly List<string> _commits = [];

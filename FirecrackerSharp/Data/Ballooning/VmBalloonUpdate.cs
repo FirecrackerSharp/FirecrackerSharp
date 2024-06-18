@@ -1,4 +1,4 @@
 namespace FirecrackerSharp.Data.Ballooning;
 
-public record VmBalloonUpdate(
+public sealed record VmBalloonUpdate(
     int AmountMib);

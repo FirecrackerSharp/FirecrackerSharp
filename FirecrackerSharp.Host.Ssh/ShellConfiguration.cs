@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Host.Ssh;
 
-public record ShellConfiguration(
+public sealed record ShellConfiguration(
     string Terminal,
     uint Columns,
     uint Rows,

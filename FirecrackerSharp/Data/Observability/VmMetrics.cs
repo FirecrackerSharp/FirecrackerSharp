@@ -1,4 +1,4 @@
 namespace FirecrackerSharp.Data.Observability;
 
-public record VmMetrics(
+public sealed record VmMetrics(
     string MetricsPath);

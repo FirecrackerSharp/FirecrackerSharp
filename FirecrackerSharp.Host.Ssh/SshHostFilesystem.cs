@@ -2,7 +2,7 @@
 
 namespace FirecrackerSharp.Host.Ssh;
 
-internal class SshHostFilesystem(ConnectionPool connectionPool) : IHostFilesystem
+internal sealed class SshHostFilesystem(ConnectionPool connectionPool) : IHostFilesystem
 {
     public Task WriteTextFileAsync(string path, string content)
     {

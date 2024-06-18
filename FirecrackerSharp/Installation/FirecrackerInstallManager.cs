@@ -18,7 +18,7 @@ namespace FirecrackerSharp.Installation;
 /// <param name="jsonSerializerOptions">The <see cref="JsonSerializerOptions"/> that are used to save and load the
 /// index file</param>
 /// <param name="indexFilename">The filename of the index</param>
-public class FirecrackerInstallManager(
+public sealed class FirecrackerInstallManager(
     string storagePath,
     JsonSerializerOptions jsonSerializerOptions,
     string indexFilename = "index.json")

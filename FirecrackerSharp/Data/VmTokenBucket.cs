@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data;
 
-public record VmTokenBucket(
+public sealed record VmTokenBucket(
     int RefillTime,
     int Size,
     int? OneTimeBurst = null);

@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Tty.CompletionTracking;
 
-public class DelayCompletionTracker(
+public sealed class DelayCompletionTracker(
     TimeSpan delayTimeSpan,
     bool excludeContainingCommand = true) : ICompletionTracker
 {

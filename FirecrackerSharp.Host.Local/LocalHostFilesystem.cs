@@ -4,7 +4,7 @@ using SharpCompress.Readers;
 
 namespace FirecrackerSharp.Host.Local;
 
-internal class LocalHostFilesystem : IHostFilesystem
+internal sealed class LocalHostFilesystem : IHostFilesystem
 {
     public async Task WriteTextFileAsync(string path, string content)
     {

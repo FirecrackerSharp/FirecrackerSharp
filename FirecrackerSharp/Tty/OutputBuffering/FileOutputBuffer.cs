@@ -3,7 +3,7 @@ using FirecrackerSharp.Host;
 
 namespace FirecrackerSharp.Tty.OutputBuffering;
 
-public class FileOutputBuffer(
+public sealed class FileOutputBuffer(
     string filePath,
     bool onAppHost = true,
     bool deferWriteUntilCommit = false) : IOutputBuffer

@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Host.Ssh;
 
-internal class SshHostProcessManager(ConnectionPool connectionPool, ShellConfiguration shellConfiguration) : IHostProcessManager
+internal sealed class SshHostProcessManager(ConnectionPool connectionPool, ShellConfiguration shellConfiguration) : IHostProcessManager
 {
     public IHostProcess LaunchProcess(string executable, string args)
     {

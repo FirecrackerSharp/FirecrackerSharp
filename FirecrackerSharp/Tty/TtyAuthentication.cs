@@ -9,7 +9,7 @@ namespace FirecrackerSharp.Tty;
 /// <param name="Username">The username used to authenticate, if <see cref="UsernameAutofilled"/> isn't true</param>
 /// <param name="UsernameAutofilled">Whether the username is automatically filled by the TTY, usually false</param>
 /// <param name="TimeoutSeconds">The timeout in seconds, after which to cancel the attempt to authenticate</param>
-public record TtyAuthentication(
+public sealed record TtyAuthentication(
     string Password,
     string Username = "root",
     bool UsernameAutofilled = false,

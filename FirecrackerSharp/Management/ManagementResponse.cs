@@ -6,7 +6,7 @@ namespace FirecrackerSharp.Management;
 /// This response encapsulates the relevant data from an HTTP response received internally by the SDK and can be one of
 /// the following: a success with no or some content (200/204), a bad request (400) and an internal server error (500).
 /// </summary>
-public class ManagementResponse
+public sealed class ManagementResponse
 {
     private readonly object? _content;
     private readonly string? _faultMessage;

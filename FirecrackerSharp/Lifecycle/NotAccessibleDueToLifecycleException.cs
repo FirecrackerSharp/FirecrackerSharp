@@ -1,3 +1,3 @@
 namespace FirecrackerSharp.Lifecycle;
 
-public class NotAccessibleDueToLifecycleException(string message) : Exception(message);
+public sealed class NotAccessibleDueToLifecycleException(string message) : Exception(message);

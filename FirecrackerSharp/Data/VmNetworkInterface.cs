@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data;
 
-public record VmNetworkInterface(
+public sealed record VmNetworkInterface(
     string HostDevName,
     string IfaceId,
     string? GuestMac = null,

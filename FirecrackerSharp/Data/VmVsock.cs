@@ -1,5 +1,5 @@
 namespace FirecrackerSharp.Data;
 
-public record VmVsock(
+public sealed record VmVsock(
     int GuestCid,
     string UdsPath);

@@ -11,7 +11,7 @@ namespace FirecrackerSharp.Core;
 ///
 /// Refer to <see cref="UnrestrictedVm"/> documentation on when to use this instead of a <see cref="UnrestrictedVm"/>.
 /// </summary>
-public class JailedVm : Vm
+public sealed class JailedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<JailedVm>();
     private readonly JailerOptions _jailerOptions;

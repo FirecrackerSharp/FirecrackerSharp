@@ -1,5 +1,5 @@
 namespace FirecrackerSharp.Data;
 
-public record VmRateLimiter(
+public sealed record VmRateLimiter(
     VmTokenBucket Bandwidth,
     VmTokenBucket Ops);

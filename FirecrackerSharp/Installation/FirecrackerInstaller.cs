@@ -24,7 +24,7 @@ namespace FirecrackerSharp.Installation;
 /// <param name="githubCredentials">The <see cref="Credentials"/> used to authorize to GitHub API in accordance with
 /// Octokit.NET. It's highly recommended to specify this in order to avoid getting rate limited for API requests made
 /// during Firecracker installation.</param>
-public class FirecrackerInstaller(
+public sealed class FirecrackerInstaller(
     string installRoot,
     string releaseTag = "latest",
     string repoOwner = "firecracker-microvm",

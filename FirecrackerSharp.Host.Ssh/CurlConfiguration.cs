@@ -7,7 +7,7 @@ namespace FirecrackerSharp.Host.Ssh;
 /// terminated and considered "timed out"</param>
 /// <param name="PollFrequency">A <see cref="TimeSpan"/> representing how frequently curl should be polled to see
 /// if the request has completed.</param>
-public record CurlConfiguration(
+public sealed record CurlConfiguration(
     TimeSpan Timeout,
     TimeSpan PollFrequency)
 {

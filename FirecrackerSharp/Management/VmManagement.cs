@@ -14,7 +14,7 @@ namespace FirecrackerSharp.Management;
 /// API functionality is intentionally unsupported by this SDK as we believe that encapsulating pre-boot microVM
 /// configuration through <see cref="VmConfiguration"/> instead of API calls makes more practical sense.
 /// </summary>
-public class VmManagement
+public sealed class VmManagement
 {
     private readonly Vm _vm;
     

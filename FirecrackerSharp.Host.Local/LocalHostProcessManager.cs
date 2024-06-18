@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace FirecrackerSharp.Host.Local;
 
-internal class LocalHostProcessManager : IHostProcessManager
+internal sealed class LocalHostProcessManager : IHostProcessManager
 {
     public IHostProcess LaunchProcess(string executable, string args)
     {

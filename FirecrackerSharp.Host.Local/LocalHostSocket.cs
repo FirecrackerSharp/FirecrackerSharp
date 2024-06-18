@@ -6,7 +6,7 @@ using FirecrackerSharp.Management;
 
 namespace FirecrackerSharp.Host.Local;
 
-public class LocalHostSocket(HttpClient httpClient) : IHostSocket
+internal sealed class LocalHostSocket(HttpClient httpClient) : IHostSocket
 {
     public async Task<ManagementResponse> GetAsync<T>(string uri)
     {

@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Tty.OutputBuffering;
 
-public class AggregateOutputBuffer(IEnumerable<IOutputBuffer> aggregatedOutputBuffers) : IOutputBuffer
+public sealed class AggregateOutputBuffer(IEnumerable<IOutputBuffer> aggregatedOutputBuffers) : IOutputBuffer
 {
     public void Open()
     {

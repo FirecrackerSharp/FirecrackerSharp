@@ -6,7 +6,7 @@ using FirecrackerSharp.Tty.OutputBuffering;
 
 namespace FirecrackerSharp.Tty;
 
-public class VmTtyClient
+public sealed class VmTtyClient
 {
     private readonly Vm _vm;
     private readonly SemaphoreSlim _semaphore = new(1, 1);

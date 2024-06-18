@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Tty.CompletionTracking;
 
-public class ExitSignalCompletionTracker : ICompletionTracker
+public sealed class ExitSignalCompletionTracker : ICompletionTracker
 {
     public CompletionTrackerContext? Context { get; set; }
 

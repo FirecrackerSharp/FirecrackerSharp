@@ -2,7 +2,7 @@ using System.Net.Sockets;
 
 namespace FirecrackerSharp.Host.Local;
 
-public class LocalHostSocketManager : IHostSocketManager
+internal sealed class LocalHostSocketManager : IHostSocketManager
 {
     public IHostSocket Connect(string socketAddress, string baseAddress)
     {

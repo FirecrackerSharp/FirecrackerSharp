@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data.Observability;
 
-public record VmLogger(
+public sealed record VmLogger(
     string LogPath,
     VmLogLevel Level = VmLogLevel.Info,
     bool ShowLevel = false,

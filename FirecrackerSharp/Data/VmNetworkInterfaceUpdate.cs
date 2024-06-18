@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data;
 
-public record VmNetworkInterfaceUpdate(
+public sealed record VmNetworkInterfaceUpdate(
     string IfaceId,
     VmRateLimiter RxRateLimiter,
     VmRateLimiter TxRateLimiter);

@@ -3,7 +3,7 @@ using Renci.SshNet;
 
 namespace FirecrackerSharp.Host.Ssh;
 
-internal class SshHostProcess : IHostProcess, IAsyncDisposable
+internal sealed class SshHostProcess : IHostProcess, IAsyncDisposable
 {
     private StreamWriter? _stdinWriter;
     private readonly ShellStream _shellStream;
