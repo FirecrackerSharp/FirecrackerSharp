@@ -35,7 +35,7 @@ public class JailedVm : Vm
         SocketPath = IHostFilesystem.Current.JoinPaths(_jailPath, _socketPathInJail);
     }
 
-    public override async Task BootAsync()
+    protected override async Task BootInternalAsync()
     {
         VmConfiguration = await MoveAllToJailAsync(_jailPath);
         Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
@@ -65,9 +65,6 @@ public class JailedVm : Vm
             Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
                 FirecrackerInstall.JailerBinary, args);
         }
-        
-        await HandlePostBootAsync();
-        Logger.Information("Launched microVM {vmId} (jailed)", VmId);
     }
 
     protected override void CleanupAfterShutdown()

@@ -1,5 +1,6 @@
 using FirecrackerSharp.Core;
 using FirecrackerSharp.Host.Local;
+using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Helpers;
 
 namespace FirecrackerSharp.Tests.Fixtures;

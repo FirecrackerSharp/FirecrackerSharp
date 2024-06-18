@@ -33,7 +33,7 @@ public class UnrestrictedVm : Vm
         Logger.Debug("The Unix socket for the unrestricted microVM will be created at: {socketPath}", SocketPath);
     }
 
-    public override async Task BootAsync()
+    protected override async Task BootInternalAsync()
     {
         string? configPath = null;
         if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.JsonConfiguration)
@@ -45,9 +45,6 @@ public class UnrestrictedVm : Vm
         var args = FirecrackerOptions.FormatToArguments(configPath, SocketPath);
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);
         Process = IHostProcessManager.Current.LaunchProcess(FirecrackerInstall.FirecrackerBinary, args);
-
-        await HandlePostBootAsync();
-        Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);
     }
 
     protected override void CleanupAfterShutdown()
@@ -74,7 +71,7 @@ public class UnrestrictedVm : Vm
         string vmId)
     {
         var vm = new UnrestrictedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId);
-        await vm.BootAsync();
+        await vm.BootInternalAsync();
         return vm;
     }
 }

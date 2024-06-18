@@ -82,8 +82,21 @@ public abstract class Vm
         _ttyClient = new VmTtyClient(this);
     }
 
-    public abstract Task BootAsync();
+    public async Task BootAsync()
+    {
+        if (Lifecycle.CurrentPhase != VmLifecyclePhase.PreBoot)
+        {
+            throw new NotAccessibleDueToLifecycleException("A microVM can only be booted once");
+        }
 
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Boot;
+        await BootInternalAsync();
+        await HandlePostBootAsync();
+        Logger.Information("Launched microVM {vmId}", VmId);
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Active;
+    }
+
+    protected abstract Task BootInternalAsync();
     protected abstract void CleanupAfterShutdown();
 
     protected async Task SerializeConfigToFileAsync(string configPath)
@@ -96,7 +109,6 @@ public abstract class Vm
 
     protected async Task HandlePostBootAsync()
     {
-        Lifecycle.CurrentPhase = VmLifecyclePhase.Boot;
         _ttyClient.StartListening();
         
         if (VmConfiguration.ApplicationMode != VmConfigurationApplicationMode.JsonConfiguration)
@@ -112,8 +124,6 @@ public abstract class Vm
         await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
         
         await AuthenticateTtyAsync();
-
-        Lifecycle.CurrentPhase = VmLifecyclePhase.Active;
     }
 
     private async Task AuthenticateTtyAsync()
@@ -154,8 +164,10 @@ public abstract class Vm
     public async Task<VmShutdownResult> ShutdownAsync()
     {
         if (Lifecycle.IsNotActive)
+        {
             throw new NotAccessibleDueToLifecycleException("Cannot shutdown microVM when it hasn't booted up yet");
-        
+        }
+
         Lifecycle.CurrentPhase = VmLifecyclePhase.Shutdown;
         
         if (_backingSocket != null)
@@ -203,6 +215,7 @@ public abstract class Vm
         }
 
         Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
+        Lifecycle.FinishLastPhase();
 
         return shutdownResult;
     }

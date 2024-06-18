@@ -1,7 +1,7 @@
 using System.Text;
 using FirecrackerSharp.Host;
 
-namespace FirecrackerSharp.Core;
+namespace FirecrackerSharp.Lifecycle;
 
 public interface ILogTarget
 {
