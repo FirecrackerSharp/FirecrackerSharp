@@ -99,7 +99,7 @@ public sealed class VmTtyClient
         return PollForSemaphoreAsync(_intermittentWriteSemaphore, pollTimeSpan, completer, cancellationToken);
     }
 
-    public async Task WritePrimaryAsync(
+    public async Task BeginPrimaryWriteAsync(
         string inputText,
         bool insertNewline = true,
         ICompletionTracker? completionTracker = null,
@@ -140,7 +140,7 @@ public sealed class VmTtyClient
             cancellationToken);
     }
 
-    public async Task WriteIntermittentAsync(
+    public async Task BeginIntermittentWriteAsync(
         string inputText,
         bool insertNewline = true,
         ICompletionTracker? completionTracker = null,
@@ -218,7 +218,7 @@ public sealed class VmTtyClient
         }
         
         completionTracker ??= new ExitSignalCompletionTracker();
-        await WritePrimaryAsync(commandText, insertNewline, completionTracker, cancellationToken);
+        await BeginPrimaryWriteAsync(commandText, insertNewline, completionTracker, cancellationToken);
     }
 
     public string? TryGetMemoryBufferState()
