@@ -29,23 +29,19 @@ public sealed class VmLifecycle
         CurrentPhase = VmLifecyclePhase.NotBooted;
     }
 
-    public void AttachLogTarget(VmLifecyclePhase lifecyclePhase, ILogTarget logTarget)
+    public void AttachLogTarget(LoggedVmLifecyclePhase lifecyclePhase, ILogTarget logTarget)
     {
         switch (lifecyclePhase)
         {
-            case VmLifecyclePhase.NotBooted:
-                throw new NotAccessibleDueToLifecycleException("The preparing phase is not logged");
-            case VmLifecyclePhase.Booting:
+            case LoggedVmLifecyclePhase.Boot:
                 BootLogTarget = logTarget;
                 break;
-            case VmLifecyclePhase.Active:
+            case LoggedVmLifecyclePhase.Active:
                 ActiveLogTarget = logTarget;
                 break;
-            case VmLifecyclePhase.ShuttingDown:
+            case LoggedVmLifecyclePhase.Shutdown:
                 ShutdownLogTarget = logTarget;
                 break;
-            case VmLifecyclePhase.PoweredOff:
-                throw new NotAccessibleDueToLifecycleException("The powered-off phase is not logged");
             default:
                 throw new ArgumentOutOfRangeException(nameof(lifecyclePhase), lifecyclePhase, null);
         }
@@ -65,23 +61,30 @@ public sealed class VmLifecycle
         ShutdownLogTarget = logTarget;
     }
 
-    public void DetachLogTarget(VmLifecyclePhase lifecyclePhase)
+    public bool IsLogTargetAttached(LoggedVmLifecyclePhase lifecyclePhase)
+    {
+        return lifecyclePhase switch
+        {
+            LoggedVmLifecyclePhase.Boot => BootLogTarget != ILogTarget.Null,
+            LoggedVmLifecyclePhase.Active => ActiveLogTarget != ILogTarget.Null,
+            LoggedVmLifecyclePhase.Shutdown => ShutdownLogTarget != ILogTarget.Null,
+            _ => throw new ArgumentOutOfRangeException(nameof(lifecyclePhase), lifecyclePhase, null)
+        };
+    }
+
+    public void DetachLogTarget(LoggedVmLifecyclePhase lifecyclePhase)
     {
         switch (lifecyclePhase)
         {
-            case VmLifecyclePhase.NotBooted:
-                throw new NotAccessibleDueToLifecycleException("The preparing phase is not logged");
-            case VmLifecyclePhase.Booting:
+            case LoggedVmLifecyclePhase.Boot:
                 BootLogTarget = ILogTarget.Null;
                 break;
-            case VmLifecyclePhase.Active:
+            case LoggedVmLifecyclePhase.Active:
                 ActiveLogTarget = ILogTarget.Null;
                 break;
-            case VmLifecyclePhase.ShuttingDown:
+            case LoggedVmLifecyclePhase.Shutdown:
                 ShutdownLogTarget = ILogTarget.Null;
                 break;
-            case VmLifecyclePhase.PoweredOff:
-                throw new NotAccessibleDueToLifecycleException("The powered-off phase is not logged");
             default:
                 throw new ArgumentOutOfRangeException(nameof(lifecyclePhase), lifecyclePhase, null);
         }
