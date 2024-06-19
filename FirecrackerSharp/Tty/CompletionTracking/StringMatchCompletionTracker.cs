@@ -10,7 +10,7 @@ namespace FirecrackerSharp.Tty.CompletionTracking;
 /// <param name="stringComparison">The type of <see cref="StringComparison"/>, case-sensitive by default</param>
 /// <param name="excludeContainingCommand">Whether to exclude the line containing the original command from the
 /// output buffer, true by default</param>
-public class StringMatchCompletionTracker(
+public sealed class StringMatchCompletionTracker(
     StringMatchOperation stringMatchOperation,
     string value,
     StringComparison stringComparison = StringComparison.Ordinal,
