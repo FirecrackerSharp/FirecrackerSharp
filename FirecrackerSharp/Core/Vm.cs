@@ -140,11 +140,13 @@ public abstract class Vm
                 await _ttyClient.WritePrimaryAsync(
                     VmConfiguration.TtyAuthentication.Username,
                     cancellationToken: ttyAuthenticationTokenSource.Token);
+                _ttyClient.CompletePrimaryWrite();
             }
 
             await _ttyClient.WritePrimaryAsync(
                 VmConfiguration.TtyAuthentication.Password,
                 cancellationToken: ttyAuthenticationTokenSource.Token);
+            _ttyClient.CompletePrimaryWrite();
         }
         catch (TtyException)
         {
