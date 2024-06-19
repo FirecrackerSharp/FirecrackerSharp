@@ -16,7 +16,18 @@ public interface ILogTarget
         => new StreamLogTarget(stream);
 
     public static ILogTarget ToFile(string filePath, bool onAppHost = true)
-        => new FileLogTarget(filePath, onAppHost);
+    {
+        switch (onAppHost)
+        {
+            case true when !File.Exists(filePath):
+                File.CreateText(filePath).Close();
+                break;
+            case false when !IHostFilesystem.Current.FileOrDirectoryExists(filePath):
+                IHostFilesystem.Current.CreateTextFile(filePath);
+                break;
+        }
+        return new FileLogTarget(filePath, onAppHost);
+    }
 
     public static ILogTarget ToAggregate(IEnumerable<ILogTarget> aggregatedTargets)
         => new AggregateLogTarget(aggregatedTargets);
@@ -52,18 +63,11 @@ public interface ILogTarget
         }
     }
 
-    private class StreamLogTarget : ILogTarget
+    private class StreamLogTarget(Stream stream) : ILogTarget
     {
-        private readonly StreamWriter _streamWriter;
-
-        internal StreamLogTarget(Stream stream)
-        {
-            _streamWriter = new StreamWriter(stream);
-        }
-
         public void Receive(string line)
         {
-            _streamWriter.Write(line);
+            stream.Write(Encoding.Default.GetBytes(line));
         }
     }
 
