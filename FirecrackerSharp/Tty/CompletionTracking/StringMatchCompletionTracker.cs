@@ -18,6 +18,8 @@ public class StringMatchCompletionTracker(
 
     public bool CheckReactively(string line)
     {
+        if (line.Trim() == Context!.InputText) return false;
+        
         return stringMatchMode switch
         {
             StringMatchMode.Contains => line.Contains(value, stringComparison),
