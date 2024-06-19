@@ -45,6 +45,7 @@ public class VmTtyClientTests : SingleVmFixture
         await Vm.TtyClient.BeginPrimaryWriteAsync("cat --help", cancellationToken: token);
         await Task.Delay(TimeSpan.FromMilliseconds(500), token);
         Vm.TtyClient.CompletePrimaryWrite();
+        Vm.TtyClient.IsAvailableForPrimaryWrite.Should().BeTrue();
         AssertHelpOutput();
     }
 
@@ -66,6 +67,7 @@ public class VmTtyClientTests : SingleVmFixture
         await Vm.TtyClient.StartBufferedCommandAsync("read n && echo $n", cancellationToken: token);
         await Vm.TtyClient.BeginIntermittentWriteAsync("sample_input", cancellationToken: token);
         Vm.TtyClient.CompleteIntermittentWrite();
+        Vm.TtyClient.IsAvailableForIntermittentWrite.Should().BeTrue();
         
         var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
         output.Should().NotBeNull();
@@ -79,7 +81,7 @@ public class VmTtyClientTests : SingleVmFixture
         await Vm.TtyClient.StartBufferedCommandAsync("read n && echo q$n", cancellationToken: token);
         await Task.Delay(100, token);
         await Vm.TtyClient.BeginIntermittentWriteAsync("test",
-            completionTracker: new StringMatchCompletionTracker(StringMatchMode.Contains, "qtest"),
+            completionTracker: new StringMatchCompletionTracker(StringMatchOperation.Contains, "qtest"),
             cancellationToken: token);
         await Vm.TtyClient.WaitForIntermittentAvailabilityAsync(cancellationToken: token);
         await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
