@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data.Ballooning;
 
-public record VmBalloonStatistics(
+public sealed record VmBalloonStatistics(
     int TargetPages,
     int ActualPages,
     int TargetMib,

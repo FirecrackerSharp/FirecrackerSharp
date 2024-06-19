@@ -1,4 +1,4 @@
 namespace FirecrackerSharp.Data.Actions;
 
-public record VmAction(
+public sealed record VmAction(
     VmActionType ActionType);

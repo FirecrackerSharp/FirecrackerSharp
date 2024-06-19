@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data.Drives;
 
-public record VmDrive(
+public sealed record VmDrive(
     string DriveId,
     bool IsRootDevice,
     string? Partuuid = null,

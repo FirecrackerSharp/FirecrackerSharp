@@ -10,7 +10,7 @@ namespace FirecrackerSharp.Installation;
 /// <param name="Version">The version (GitHub tag) of this Firecracker installation</param>
 /// <param name="FirecrackerBinary">The absolute path to the firecracker binary, which must be executable</param>
 /// <param name="JailerBinary">The absolute path to the jailer binary, which must be executable</param>
-public record FirecrackerInstall(
+public sealed record FirecrackerInstall(
     string Version,
     string FirecrackerBinary,
     string JailerBinary);

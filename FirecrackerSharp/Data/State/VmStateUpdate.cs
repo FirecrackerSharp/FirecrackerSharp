@@ -1,4 +1,4 @@
 namespace FirecrackerSharp.Data.State;
 
-public record VmStateUpdate(
+public sealed record VmStateUpdate(
     VmStateForUpdate State);

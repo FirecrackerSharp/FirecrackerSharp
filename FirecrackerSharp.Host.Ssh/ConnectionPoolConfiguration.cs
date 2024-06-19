@@ -9,7 +9,7 @@ namespace FirecrackerSharp.Host.Ssh;
 /// <param name="SshConnectionAmount">The amount of concurrent SSH connections that should be kept active</param>
 /// <param name="SftpConnectionAmount">The amount of concurrent SFTP connections that should be kept active</param>
 /// <param name="KeepAliveInterval">The <see cref="TimeSpan"/> of sending a keep-alive request to an SSH/SFTP connection</param>
-public record ConnectionPoolConfiguration(
+public sealed record ConnectionPoolConfiguration(
     ConnectionInfo ConnectionInfo,
     uint SshConnectionAmount,
     uint SftpConnectionAmount,

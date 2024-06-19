@@ -3,7 +3,7 @@ using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using Serilog;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// A <see cref="Vm"/> that was booted normally, as in not using the Firecracker jailer binary to create a chroot
@@ -17,11 +17,11 @@ namespace FirecrackerSharp.Boot;
 /// having a connection to the outside Internet, while using <see cref="JailedVm"/> exclusively for those microVMs that
 /// strictly require such isolation.
 /// </summary>
-public class UnrestrictedVm : Vm
+public sealed class UnrestrictedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<UnrestrictedVm>();
 
-    private UnrestrictedVm(
+    public UnrestrictedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
@@ -32,8 +32,8 @@ public class UnrestrictedVm : Vm
         
         Logger.Debug("The Unix socket for the unrestricted microVM will be created at: {socketPath}", SocketPath);
     }
-    
-    internal override async Task StartProcessAsync()
+
+    protected override async Task BootInternalAsync()
     {
         string? configPath = null;
         if (VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.JsonConfiguration)
@@ -45,9 +45,6 @@ public class UnrestrictedVm : Vm
         var args = FirecrackerOptions.FormatToArguments(configPath, SocketPath);
         Logger.Debug("Launch arguments for microVM {vmId} (unrestricted) are: {args}", VmId, args);
         Process = IHostProcessManager.Current.LaunchProcess(FirecrackerInstall.FirecrackerBinary, args);
-
-        await HandlePostBootAsync();
-        Logger.Information("Launched microVM {vmId} (unrestricted)", VmId);
     }
 
     protected override void CleanupAfterShutdown()
@@ -74,7 +71,7 @@ public class UnrestrictedVm : Vm
         string vmId)
     {
         var vm = new UnrestrictedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId);
-        await vm.StartProcessAsync();
+        await vm.BootInternalAsync();
         return vm;
     }
 }

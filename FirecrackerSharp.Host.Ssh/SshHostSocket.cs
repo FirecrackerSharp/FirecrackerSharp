@@ -4,7 +4,7 @@ using FirecrackerSharp.Management;
 
 namespace FirecrackerSharp.Host.Ssh;
 
-internal class SshHostSocket(
+internal sealed class SshHostSocket(
     ConnectionPool connectionPool,
     CurlConfiguration curlConfiguration,
     string baseAddress,

@@ -1,6 +1,6 @@
 namespace FirecrackerSharp.Data;
 
-public record VmBootSource(
+public sealed record VmBootSource(
     string KernelImagePath,
     string? BootArgs = null,
     string? InitrdPath = null);

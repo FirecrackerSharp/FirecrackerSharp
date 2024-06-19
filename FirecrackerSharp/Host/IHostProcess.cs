@@ -2,9 +2,11 @@ namespace FirecrackerSharp.Host;
 
 public interface IHostProcess
 {
-    public StreamReader StdoutReader { get; }
     public StreamWriter StdinWriter { get; }
+    public string CurrentOutput { get; set; }
 
-    public Task<string> KillAndReadAsync();
-    public Task WaitUntilCompletionAsync(CancellationToken cancellationToken);
+    public event EventHandler<string> OutputReceived; 
+    
+    public Task KillAsync();
+    public Task<bool> WaitForGracefulExitAsync(TimeSpan timeout);
 }

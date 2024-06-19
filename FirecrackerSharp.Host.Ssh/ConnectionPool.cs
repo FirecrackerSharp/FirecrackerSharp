@@ -3,7 +3,7 @@ using Serilog;
 
 namespace FirecrackerSharp.Host.Ssh;
 
-internal class ConnectionPool : IDisposable
+internal sealed class ConnectionPool : IDisposable
 {
     private static readonly ILogger Logger = Log.ForContext<ConnectionPool>();
     private static readonly Random Random = new();

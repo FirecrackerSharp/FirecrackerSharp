@@ -1,6 +1,6 @@
 using FirecrackerSharp.Data;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// The optional and mandatory options to be passed into the firecracker binary.
@@ -15,7 +15,7 @@ namespace FirecrackerSharp.Boot;
 /// <param name="WaitMillisAfterBoot">How many milliseconds to wait after instantiating the firecracker/jailer process
 /// in order for the microVM to boot through the init system (openrc, systemd, runc etc.), or null if no waiting
 /// should occur (not recommended to avoid prematurely contacting the microVM)</param>
-public record FirecrackerOptions(
+public sealed record FirecrackerOptions(
     string SocketFilename,
     string SocketDirectory = "/tmp/firecracker",
     string ExtraArguments = "",

@@ -1,9 +1,10 @@
 using FirecrackerSharp.Data;
-using FirecrackerSharp.Tests.Fixtures;
+using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Helpers;
+using FirecrackerSharp.Tty.CompletionTracking;
 using FluentAssertions;
 
-namespace FirecrackerSharp.Tests;
+namespace FirecrackerSharp.Tests.Vmm;
 
 public class VmBootTests : MinimalFixture
 {
@@ -15,8 +16,14 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
-        var gracefulShutdown = await vm.ShutdownAsync();
-        gracefulShutdown.Should().BeTrue();
+        await vm.TtyClient.StartBufferedCommandAsync("read n && echo q$n");
+        await vm.TtyClient.WriteIntermittentAsync("test", completionTracker:
+            new StringMatchCompletionTracker(StringMatchMode.Contains, "qtest"));
+        await vm.TtyClient.WaitForIntermittentAvailabilityAsync();
+        var buf = await vm.TtyClient.WaitForBufferedCommandAsync();
+
+        var shutdownResult = await vm.ShutdownAsync();
+        shutdownResult.IsSuccessful().Should().BeTrue();
     }
 
     [Theory]
@@ -27,7 +34,7 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartJailedVm(configurationApplicationMode);
         
-        var gracefulShutdown = await vm.ShutdownAsync();
-        gracefulShutdown.Should().BeTrue();
+        var shutdownResult = await vm.ShutdownAsync();
+        shutdownResult.IsSuccessful().Should().BeTrue();
     }
 }

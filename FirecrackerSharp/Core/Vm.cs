@@ -1,14 +1,14 @@
-using System.Text;
 using System.Text.Json;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Actions;
 using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Management;
 using FirecrackerSharp.Tty;
 using Serilog;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// The base class representing all Firecracker microVMs.
@@ -34,19 +34,39 @@ public abstract class Vm
             return _backingSocket;
         }
     }
-    
+
+    private readonly VmManagement _management;
+    private readonly VmTtyClient _ttyClient;
+
     /// <summary>
     /// The <see cref="VmManagement"/> instance linked to this <see cref="Vm"/> that allows access to the Firecracker
     /// Management API that is linked to this <see cref="Vm"/>'s Firecracker UDS.
     /// </summary>
-    public readonly VmManagement Management;
+    public VmManagement Management
+    {
+        get
+        {
+            if (Lifecycle.IsNotActive)
+                throw new NotAccessibleDueToLifecycleException("A microVM cannot be managed when not active");
+            return _management;
+        }
+    }
 
     /// <summary>
-    /// The <see cref="VmTtyManager"/> instance linked to this <see cref="Vm"/> that allows semi-parallel (although
-    /// limited, please refer to <see cref="VmTtyManager"/> documentation) access to the kernel TTY for executing
-    /// commands without a networking setup.
+    /// The <see cref="VmTtyClient"/> instance linked to this <see cref="Vm"/> that allows direct access to the microVM's
+    /// serial console / boot TTY.
     /// </summary>
-    public readonly VmTtyManager TtyManager;
+    public VmTtyClient TtyClient
+    {
+        get
+        {
+            if (Lifecycle.IsNotActive)
+                throw new NotAccessibleDueToLifecycleException("A microVM's TTY cannot be accessed when not active");
+            return _ttyClient;
+        }
+    }
+
+    public readonly VmLifecycle Lifecycle = new();
 
     protected Vm(
         VmConfiguration vmConfiguration,
@@ -58,12 +78,25 @@ public abstract class Vm
         FirecrackerInstall = firecrackerInstall;
         FirecrackerOptions = firecrackerOptions;
         VmId = vmId;
-        Management = new VmManagement(this);
-        TtyManager = new VmTtyManager(this);
+        _management = new VmManagement(this);
+        _ttyClient = new VmTtyClient(this);
     }
 
-    internal abstract Task StartProcessAsync();
+    public async Task BootAsync()
+    {
+        if (Lifecycle.CurrentPhase != VmLifecyclePhase.NotBooted)
+        {
+            throw new NotAccessibleDueToLifecycleException("A microVM can only be booted once");
+        }
 
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Booting;
+        await BootInternalAsync();
+        await HandlePostBootAsync();
+        Logger.Information("Launched microVM {vmId}", VmId);
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Active;
+    }
+
+    protected abstract Task BootInternalAsync();
     protected abstract void CleanupAfterShutdown();
 
     protected async Task SerializeConfigToFileAsync(string configPath)
@@ -74,16 +107,18 @@ public abstract class Vm
         Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
     }
 
-    protected async Task HandlePostBootAsync()
+    private async Task HandlePostBootAsync()
     {
+        _ttyClient.StartListening();
+        
         if (VmConfiguration.ApplicationMode != VmConfigurationApplicationMode.JsonConfiguration)
         {
             await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisForSocketInitialization));
             
-            await Management.ApplyVmConfigurationAsync(
+            await _management.ApplyVmConfigurationAsync(
                 parallelize: VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ParallelizedApiCalls);
             
-            await Management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
+            await _management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
         }
         
         await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
@@ -102,15 +137,16 @@ public abstract class Vm
 
             if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
             {
-                await TtyManager.WriteToTtyAsync(
+                await _ttyClient.WritePrimaryAsync(
                     VmConfiguration.TtyAuthentication.Username,
-                    ttyAuthenticationTokenSource.Token,
-                    subsequentlyRead: false);
+                    cancellationToken: ttyAuthenticationTokenSource.Token);
+                _ttyClient.CompletePrimaryWrite();
             }
 
-            await TtyManager.WriteToTtyAsync(
+            await _ttyClient.WritePrimaryAsync(
                 VmConfiguration.TtyAuthentication.Password,
-                ttyAuthenticationTokenSource.Token);
+                cancellationToken: ttyAuthenticationTokenSource.Token);
+            _ttyClient.CompletePrimaryWrite();
         }
         catch (TtyException)
         {
@@ -127,40 +163,62 @@ public abstract class Vm
     /// ("reboot") and thus had the process was terminated.
     /// </summary>
     /// <returns>Whether the shutdown was graceful</returns>
-    public async Task<bool> ShutdownAsync()
+    public async Task<VmShutdownResult> ShutdownAsync()
     {
+        if (Lifecycle.IsNotActive)
+        {
+            throw new NotAccessibleDueToLifecycleException("Cannot shutdown microVM when it hasn't booted up yet");
+        }
+
+        Lifecycle.CurrentPhase = VmLifecyclePhase.ShuttingDown;
+        
         if (_backingSocket != null)
         {
             Socket.Dispose();
         }
 
+        var shutdownResult = VmShutdownResult.Successful;
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
-        var gracefulShutdown = false;
-        
+
         try
         {
-            await Process!.StdinWriter.WriteLineAsync(new StringBuilder("reboot"), cancellationTokenSource.Token);
+            await _ttyClient.WritePrimaryAsync("reboot", cancellationToken: cancellationTokenSource.Token);
             try
             {
-                await Process.WaitUntilCompletionAsync(cancellationTokenSource.Token);
+                await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
-                gracefulShutdown = true;
             }
             catch (Exception)
             {
-                await Process.KillAndReadAsync();
+                await Process!.KillAsync();
                 Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);
+                shutdownResult = VmShutdownResult.FailedDueToHangingProcess;
             }
+        }
+        catch (IOException)
+        {
+            Logger.Warning("microVM {vmId} prematurely shut down", VmId);
+            shutdownResult = VmShutdownResult.FailedDueToBrokenPipe;
+        }
+        catch (TtyException)
+        {
+            Logger.Warning("microVM {vmId} didn't respond to reboot signal being written to TTY", VmId);
+            shutdownResult = VmShutdownResult.FailedDueToTtyNotResponding;
+        }
+
+        try
+        {
+            CleanupAfterShutdown();
         }
         catch (Exception)
         {
-            Logger.Warning("microVM {vmId} prematurely shut down", VmId);
+            shutdownResult = VmShutdownResult.SoftFailedDuringCleanup;
         }
-        
-        CleanupAfterShutdown();
-        Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
 
-        return gracefulShutdown;
+        Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
+        Lifecycle.CurrentPhase = VmLifecyclePhase.PoweredOff;
+
+        return shutdownResult;
     }
 }

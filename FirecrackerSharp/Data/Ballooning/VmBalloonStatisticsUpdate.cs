@@ -1,4 +1,4 @@
 namespace FirecrackerSharp.Data.Ballooning;
 
-public record VmBalloonStatisticsUpdate(
+public sealed record VmBalloonStatisticsUpdate(
     int StatsPollingIntervalS);

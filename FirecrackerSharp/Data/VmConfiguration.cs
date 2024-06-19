@@ -6,7 +6,7 @@ using FirecrackerSharp.Tty;
 
 namespace FirecrackerSharp.Data;
 
-public record VmConfiguration(
+public sealed record VmConfiguration(
     [property: JsonPropertyName("boot-source")]
     VmBootSource BootSource,
     [property: JsonPropertyName("machine-config")]

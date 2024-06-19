@@ -4,21 +4,21 @@ using FirecrackerSharp.Host;
 using FirecrackerSharp.Installation;
 using Serilog;
 
-namespace FirecrackerSharp.Boot;
+namespace FirecrackerSharp.Core;
 
 /// <summary>
 /// A microVM that was booted through the jailer binary inside a chroot jail.
 ///
 /// Refer to <see cref="UnrestrictedVm"/> documentation on when to use this instead of a <see cref="UnrestrictedVm"/>.
 /// </summary>
-public class JailedVm : Vm
+public sealed class JailedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<JailedVm>();
     private readonly JailerOptions _jailerOptions;
     private readonly string _jailPath;
     private readonly string _socketPathInJail;
 
-    private JailedVm(
+    public JailedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
         FirecrackerOptions firecrackerOptions,
@@ -35,7 +35,7 @@ public class JailedVm : Vm
         SocketPath = IHostFilesystem.Current.JoinPaths(_jailPath, _socketPathInJail);
     }
 
-    internal override async Task StartProcessAsync()
+    protected override async Task BootInternalAsync()
     {
         VmConfiguration = await MoveAllToJailAsync(_jailPath);
         Logger.Debug("Moved all resources to jail of microVM {vmId}", VmId);
@@ -65,19 +65,12 @@ public class JailedVm : Vm
             Process = await IHostProcessManager.Current.EscalateAndLaunchProcessAsync(_jailerOptions.SudoPassword,
                 FirecrackerInstall.JailerBinary, args);
         }
-        
-        await HandlePostBootAsync();
-        Logger.Information("Launched microVM {vmId} (jailed)", VmId);
     }
 
     protected override void CleanupAfterShutdown()
     {
         var jailParentDirectory = Directory.GetParent(_jailPath)!.FullName;
-
-        if (IHostFilesystem.Current.FileOrDirectoryExists(jailParentDirectory))
-        {
-            IHostFilesystem.Current.DeleteDirectoryRecursively(jailParentDirectory);
-        }
+        IHostFilesystem.Current.DeleteDirectoryRecursively(jailParentDirectory);
     }
 
     private async Task<VmConfiguration> MoveAllToJailAsync(string jailPath)
@@ -125,26 +118,5 @@ public class JailedVm : Vm
     {
         return IHostFilesystem.Current.CopyFileAsync(
             originalPath, IHostFilesystem.Current.JoinPaths(jailPath, newFilename));
-    }
-
-    /// <summary>
-    /// Boot up a <see cref="JailedVm"/> with the given parameters and return its instance for further management.
-    /// </summary>
-    /// <param name="vmConfiguration">The entire pre-boot <see cref="VmConfiguration"/> for this microVM</param>
-    /// <param name="firecrackerInstall">The <see cref="FirecrackerInstall"/> to be used to boot this microVM</param>
-    /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to be passed into the firecracker binary</param>
-    /// <param name="jailerOptions">The <see cref="JailerOptions"/> to be passed into the jailer binary</param>
-    /// <param name="vmId">A unique microVM identifier that must not be repeated for multiple VMs.</param>
-    /// <returns>The booted <see cref="Vm"/></returns>
-    public static async Task<Vm> StartAsync(
-        VmConfiguration vmConfiguration,
-        FirecrackerInstall firecrackerInstall,
-        FirecrackerOptions firecrackerOptions,
-        JailerOptions jailerOptions,
-        string vmId)
-    {
-        var vm = new JailedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, jailerOptions, vmId);
-        await vm.StartProcessAsync();
-        return vm;
     }
 }

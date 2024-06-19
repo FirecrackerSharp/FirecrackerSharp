@@ -1,8 +1,9 @@
-using FirecrackerSharp.Boot;
+using FirecrackerSharp.Core;
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Installation;
+using FirecrackerSharp.Lifecycle;
 
 namespace FirecrackerSharp.Tests.Helpers;
 
@@ -15,7 +16,9 @@ public static class VmArrange
         Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: false, StatsPollingIntervalS: 1));
 
     private static FirecrackerOptions FirecrackerOptions => new(
-        Guid.NewGuid().ToString());
+        Guid.NewGuid().ToString(),
+        WaitMillisAfterBoot: 2000,
+        WaitMillisForSocketInitialization: 200);
 
     private static JailerOptions JailerOptions => new(
         1000, 1000, SudoPassword: Environment.GetEnvironmentVariable("FSH_ROOT_PASSWORD"));
@@ -30,21 +33,27 @@ public static class VmArrange
     public static async Task<Vm> StartUnrestrictedVm(VmConfigurationApplicationMode configurationApplicationMode
         = VmConfigurationApplicationMode.JsonConfiguration)
     {
-        return await UnrestrictedVm.StartAsync(
+        var unrestrictedVm = new UnrestrictedVm(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
             FirecrackerInstall,
             FirecrackerOptions,
             VmId);
+        await unrestrictedVm.BootAsync();
+        return unrestrictedVm;
     }
+
+    public static Vm GetUnrestrictedVm() => new UnrestrictedVm(VmConfiguration, FirecrackerInstall, FirecrackerOptions, VmId);
 
     public static async Task<Vm> StartJailedVm(VmConfigurationApplicationMode configurationApplicationMode
         = VmConfigurationApplicationMode.JsonConfiguration)
     {
-        return await JailedVm.StartAsync(
+        var jailedVm = new JailedVm(
             VmConfiguration with { ApplicationMode = configurationApplicationMode },
             FirecrackerInstall,
             FirecrackerOptions,
             JailerOptions,
             VmId);
+        await jailedVm.BootAsync();
+        return jailedVm;
     }
 }

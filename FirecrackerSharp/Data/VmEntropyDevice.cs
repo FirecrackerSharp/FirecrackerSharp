@@ -1,4 +1,4 @@
 namespace FirecrackerSharp.Data;
 
-public record VmEntropyDevice(
+public sealed record VmEntropyDevice(
     VmRateLimiter RateLimiter);

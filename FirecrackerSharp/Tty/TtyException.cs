@@ -5,4 +5,4 @@ namespace FirecrackerSharp.Tty;
 /// (failure to read or write).
 /// </summary>
 /// <param name="message">The message describing the error</param>
-public class TtyException(string message) : Exception(message);
+public sealed class TtyException(string message) : Exception(message);

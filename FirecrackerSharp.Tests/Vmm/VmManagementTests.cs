@@ -3,11 +3,10 @@ using FirecrackerSharp.Data.Actions;
 using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Data.State;
-using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 
-namespace FirecrackerSharp.Tests;
+namespace FirecrackerSharp.Tests.Vmm;
 
 public class VmManagementTests : SingleVmFixture
 {

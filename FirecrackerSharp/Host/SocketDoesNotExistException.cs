@@ -1,3 +1,3 @@
 namespace FirecrackerSharp.Host;
 
-public class SocketDoesNotExistException(string message) : Exception(message);
+public sealed class SocketDoesNotExistException(string message) : Exception(message);
