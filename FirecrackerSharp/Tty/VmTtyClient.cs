@@ -76,20 +76,28 @@ public sealed class VmTtyClient
                 OutputBuffer.Receive(line);
             }
 
-            if (shouldCompletePrimary && !IsAvailableForPrimaryWrite) RegisterPrimaryCompletion();
-            if (shouldCompleteIntermittent && !IsAvailableForIntermittentWrite) RegisterIntermittentCompletion();
+            if (shouldCompletePrimary) CompletePrimaryWrite();
+            if (shouldCompleteIntermittent) CompleteIntermittentWrite();
         };
     }
 
-    public Task WaitForPrimaryAvailabilityAsync(
+    public Task<bool> WaitForPrimaryAvailabilityAsync(
         TimeSpan? pollTimeSpan = null,
+        bool forceCompletionAfterTimeout = false,
         CancellationToken cancellationToken = default)
-        => PollForSemaphoreAsync(_primaryWriteSemaphore, pollTimeSpan, cancellationToken);
+    {
+        Action? completer = forceCompletionAfterTimeout ? CompletePrimaryWrite : null;
+        return PollForSemaphoreAsync(_primaryWriteSemaphore, pollTimeSpan, completer, cancellationToken);
+    }
 
-    public Task WaitForIntermittentAvailabilityAsync(
+    public Task<bool> WaitForIntermittentAvailabilityAsync(
         TimeSpan? pollTimeSpan = null,
+        bool forceCompletionAfterTimeout = false,
         CancellationToken cancellationToken = default)
-        => PollForSemaphoreAsync(_intermittentWriteSemaphore, pollTimeSpan, cancellationToken);
+    {
+        Action? completer = forceCompletionAfterTimeout ? CompleteIntermittentWrite : null;
+        return PollForSemaphoreAsync(_intermittentWriteSemaphore, pollTimeSpan, completer, cancellationToken);
+    }
 
     public async Task WritePrimaryAsync(
         string inputText,
@@ -109,7 +117,6 @@ public sealed class VmTtyClient
             {
                 if (completionTracker is null)
                 {
-                    _primaryWriteSemaphore.Release();
                     return;
                 }
 
@@ -126,7 +133,7 @@ public sealed class VmTtyClient
                     Task.Run(async () =>
                     {
                         var shouldComplete = await passiveTask;
-                        if (shouldComplete) RegisterPrimaryCompletion();
+                        if (shouldComplete) CompletePrimaryWrite();
                     });
                 }
             },
@@ -151,7 +158,6 @@ public sealed class VmTtyClient
             {
                 if (completionTracker is null)
                 {
-                    _intermittentWriteSemaphore.Release();
                     return;
                 }
 
@@ -168,11 +174,24 @@ public sealed class VmTtyClient
                     Task.Run(async () =>
                     {
                         var shouldComplete = await passiveTask;
-                        if (shouldComplete) RegisterIntermittentCompletion();
+                        if (shouldComplete) CompleteIntermittentWrite();
                     });
                 }
             },
             cancellationToken);
+    }
+
+    public void CompletePrimaryWrite()
+    {
+        if (!IsAvailableForPrimaryWrite) _primaryWriteSemaphore.Release();
+        _primaryCompletionTracker = null;
+        OutputBuffer?.Commit();
+    }
+
+    public void CompleteIntermittentWrite()
+    {
+        if (!IsAvailableForIntermittentWrite) _intermittentWriteSemaphore.Release();
+        _intermittentCompletionTracker = null;
     }
 
     public async Task<string?> RunBufferedCommandAsync(
@@ -180,10 +199,11 @@ public sealed class VmTtyClient
         bool insertNewline = true,
         ICompletionTracker? completionTracker = null,
         TimeSpan? pollTimeSpan = null,
+        bool forceCompletionAfterTimeout = false,
         CancellationToken cancellationToken = default)
     {
         await StartBufferedCommandAsync(commandText, insertNewline, completionTracker, cancellationToken);
-        return await WaitForBufferedCommandAsync(pollTimeSpan, cancellationToken);
+        return await WaitForBufferedCommandAsync(pollTimeSpan, forceCompletionAfterTimeout, cancellationToken);
     }
 
     public async Task StartBufferedCommandAsync(
@@ -201,7 +221,7 @@ public sealed class VmTtyClient
         await WritePrimaryAsync(commandText, insertNewline, completionTracker, cancellationToken);
     }
 
-    public string? TryGetCommandBuffer()
+    public string? TryGetMemoryBufferState()
     {
         if (OutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
         return _primaryCompletionTracker is null ? memoryBuffer.LastCommit : memoryBuffer.FutureCommitState;
@@ -209,11 +229,12 @@ public sealed class VmTtyClient
 
     public async Task<string?> WaitForBufferedCommandAsync(
         TimeSpan? pollTimeSpan = null,
+        bool forceCompletionAfterTimeout = false,
         CancellationToken cancellationToken = default)
     {
         if (OutputBuffer is not MemoryOutputBuffer memoryBuffer) return null;
         
-        await WaitForPrimaryAvailabilityAsync(pollTimeSpan, cancellationToken);
+        await WaitForPrimaryAvailabilityAsync(pollTimeSpan, forceCompletionAfterTimeout, cancellationToken);
         return memoryBuffer.LastCommit;
     }
 
@@ -241,28 +262,25 @@ public sealed class VmTtyClient
         }
     }
 
-    private static async Task PollForSemaphoreAsync(SemaphoreSlim semaphore, TimeSpan? pollTimeSpan,
-        CancellationToken cancellationToken)
+    private static async Task<bool> PollForSemaphoreAsync(
+        SemaphoreSlim semaphore, TimeSpan? pollTimeSpan, Action? completer, CancellationToken cancellationToken)
     {
         pollTimeSpan ??= TimeSpan.FromMilliseconds(1);
 
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            await Task.Delay(pollTimeSpan.Value, cancellationToken);
-            if (semaphore.CurrentCount > 0) break;
+            while (true)
+            {
+                await Task.Delay(pollTimeSpan.Value, cancellationToken);
+                if (semaphore.CurrentCount > 0) break;
+            }
         }
-    }
-    
-    private void RegisterPrimaryCompletion()
-    {
-        _primaryWriteSemaphore.Release();
-        _primaryCompletionTracker = null;
-        OutputBuffer?.Commit();
-    }
+        catch (OperationCanceledException)
+        {
+            completer?.Invoke();
+            return false;
+        }
 
-    private void RegisterIntermittentCompletion()
-    {
-        _intermittentWriteSemaphore.Release();
-        _intermittentCompletionTracker = null;
+        return true;
     }
 }

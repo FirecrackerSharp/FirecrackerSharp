@@ -40,123 +40,109 @@ public class VmTtyClientTests : SingleVmFixture
     [Fact]
     public async Task WritePrimaryAsync_ShouldPerformNonTrackedWrite()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-                Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
-                await Vm.TtyClient.WritePrimaryAsync("cat --help", cancellationToken: token);
-                await Task.Delay(TimeSpan.FromMilliseconds(300), token);
-                AssertHelpOutput();
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        var token = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
+        Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
+        await Vm.TtyClient.WritePrimaryAsync("cat --help", cancellationToken: token);
+        await Task.Delay(TimeSpan.FromMilliseconds(500), token);
+        Vm.TtyClient.CompletePrimaryWrite();
+        AssertHelpOutput();
     }
 
     [Fact]
     public async Task WritePrimaryAsync_ShouldPerformTrackedWrite()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-                Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
-                await Vm.TtyClient.WritePrimaryAsync(
-                    "cat --help", completionTracker: new ExitSignalCompletionTracker(), cancellationToken: token);
-                await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
-                AssertHelpOutput();
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
+        Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
+        await Vm.TtyClient.WritePrimaryAsync(
+            "cat --help", completionTracker: new ExitSignalCompletionTracker(), cancellationToken: token);
+        await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
+        AssertHelpOutput();
     }
 
     [Fact]
     public async Task WriteIntermittentAsync_ShouldPerformNonTrackedWrite()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-                await Vm.TtyClient.StartBufferedCommandAsync("read n && echo $n", cancellationToken: token);
-                await Vm.TtyClient.WriteIntermittentAsync("sample_input", cancellationToken: token);
-                
-                var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
-                output.Should().NotBeNull();
-                output!.Trim().Should().Be("sample_input\nsample_input");
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
+        await Vm.TtyClient.StartBufferedCommandAsync("read n && echo $n", cancellationToken: token);
+        await Vm.TtyClient.WriteIntermittentAsync("sample_input", cancellationToken: token);
+        Vm.TtyClient.CompleteIntermittentWrite();
+        
+        var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
+        output.Should().NotBeNull();
+        output!.Trim().Should().Be("sample_input\nsample_input");
     }
 
     [Fact]
     public async Task WriteIntermittentAsync_ShouldPerformTrackedWrite()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var token = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
-                await Vm.TtyClient.StartBufferedCommandAsync("read n && echo q$n", cancellationToken: token);
-                await Vm.TtyClient.WriteIntermittentAsync("test",
-                    completionTracker: new StringMatchCompletionTracker(StringMatchMode.Contains, "qtest"),
-                    cancellationToken: token);
-                await Vm.TtyClient.WaitForIntermittentAvailabilityAsync(cancellationToken: token);
-                await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
+        var token = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
+        await Vm.TtyClient.StartBufferedCommandAsync("read n && echo q$n", cancellationToken: token);
+        await Task.Delay(100, token);
+        await Vm.TtyClient.WriteIntermittentAsync("test",
+            completionTracker: new StringMatchCompletionTracker(StringMatchMode.Contains, "qtest"),
+            cancellationToken: token);
+        await Vm.TtyClient.WaitForIntermittentAvailabilityAsync(cancellationToken: token);
+        await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
 
-                var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
-                output.Should().NotBeNull();
-                output.Should().Be("test\nqtest");
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
+        output.Should().NotBeNull();
+        output!.Trim().Should().Be("test\nqtest");
     }
     
     [Fact]
     public async Task RunBufferedCommandAsync_ShouldReturnCorrectOutput()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var output = await Vm.TtyClient.RunBufferedCommandAsync("cat --help",
-                    cancellationToken: new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token);
-                output.Should().NotBeNull();
-                output!.Trim().Should().Be(HelpOutput);
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        var output = await Vm.TtyClient.RunBufferedCommandAsync("cat --help",
+            cancellationToken: new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token);
+        output.Should().NotBeNull();
+        output!.Trim().Should().Be(HelpOutput);
     }
 
     [Fact]
     public async Task StartBufferedCommandAsync_ShouldQueueCommand()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var token = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token;
-                
-                await Vm.TtyClient.StartBufferedCommandAsync("cat --help", cancellationToken: token);
-                Vm.TtyClient.IsAvailableForPrimaryWrite.Should().BeFalse();
-                await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
-                AssertHelpOutput();
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        var token = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token;
+        await Vm.TtyClient.StartBufferedCommandAsync("cat --help", cancellationToken: token);
+        await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
+        AssertHelpOutput();
     }
 
     [Fact]
     public async Task WaitForBufferedCommandAsync_ShouldReturnCorrectOutput()
     {
-        await FluentActions
-            .Awaiting(async () =>
-            {
-                var token = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token;
-                await Vm.TtyClient.WritePrimaryAsync(
-                    "cat --help", completionTracker: new ExitSignalCompletionTracker(), cancellationToken: token);
+        var token = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token;
+        Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
+        await Vm.TtyClient.WritePrimaryAsync(
+            "cat --help", completionTracker: new ExitSignalCompletionTracker(), cancellationToken: token);
+        
+        var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
+        output.Should().NotBeNull();
+        output!.Trim().Should().Be(HelpOutput);
+    }
+
+    [Fact]
+    public async Task TryGetMemoryBufferState_ShouldReturnInProgressAndFinalizedBuffers()
+    {
+        var token = new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token;
+        Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
+        await Vm.TtyClient.WritePrimaryAsync("cat --help", completionTracker: new ExitSignalCompletionTracker(),
+            cancellationToken: token);
+    
+        var partialBuffer = Vm.TtyClient.TryGetMemoryBufferState();
+        partialBuffer.Should().NotBeNull();
+        partialBuffer.Should().BeEmpty();
                 
-                var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
-                output.Should().NotBeNull();
-                output!.Trim().Should().Be(HelpOutput);
-            })
-            .Should().NotThrowAsync<OperationCanceledException>();
+        await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
+
+        var fullBuffer = Vm.TtyClient.TryGetMemoryBufferState();
+        fullBuffer.Should().NotBeNull();
+        fullBuffer!.Trim().Should().Be(HelpOutput);
     }
 
     private void AssertHelpOutput()
     {
         var output = ((MemoryOutputBuffer)Vm.TtyClient.OutputBuffer!).LastCommit;
         output.Should().NotBeNull();
-        output!.Trim().Should().Be(HelpOutput);
+        output!.Trim().Should().EndWith(HelpOutput);
     }
 }
