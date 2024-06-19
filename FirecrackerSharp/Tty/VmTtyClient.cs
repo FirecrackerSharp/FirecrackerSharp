@@ -65,13 +65,13 @@ public sealed class VmTtyClient
             
             if (_primaryCompletionTracker is not null)
             {
-                shouldCompletePrimary = _primaryCompletionTracker.CheckReactively(line);
+                shouldCompletePrimary = _primaryCompletionTracker.Check(line);
                 shouldCapture = _primaryCompletionTracker.ShouldCapture(line);
             }
 
             if (_intermittentCompletionTracker is not null)
             {
-                shouldCompleteIntermittent = _intermittentCompletionTracker.CheckReactively(line);
+                shouldCompleteIntermittent = _intermittentCompletionTracker.Check(line);
             }
             
             if (shouldCapture && OutputBuffer is not null)
@@ -118,27 +118,13 @@ public sealed class VmTtyClient
         await WriteInternalAsync(inputText, insertNewline,
             () =>
             {
-                if (completionTracker is null)
-                {
-                    return;
-                }
+                if (completionTracker is null) return;
 
                 completionTracker.Context = new CompletionTrackerContext(
                     TtyClient: this,
                     TrackingStartTime: DateTimeOffset.UtcNow,
                     InputText: inputText);
-
                 _primaryCompletionTracker = completionTracker;
-                var passiveTask = _primaryCompletionTracker.CheckPassively();
-
-                if (passiveTask is not null)
-                {
-                    Task.Run(async () =>
-                    {
-                        var shouldComplete = await passiveTask;
-                        if (shouldComplete) CompletePrimaryWrite();
-                    });
-                }
             },
             cancellationToken);
     }
@@ -159,27 +145,13 @@ public sealed class VmTtyClient
         await WriteInternalAsync(inputText, insertNewline,
             () =>
             {
-                if (completionTracker is null)
-                {
-                    return;
-                }
+                if (completionTracker is null) return;
 
                 completionTracker.Context = new CompletionTrackerContext(
                     TtyClient: this,
                     TrackingStartTime: DateTimeOffset.UtcNow,
                     InputText: inputText);
-
                 _intermittentCompletionTracker = completionTracker;
-                var passiveTask = _intermittentCompletionTracker.CheckPassively();
-
-                if (passiveTask is not null)
-                {
-                    Task.Run(async () =>
-                    {
-                        var shouldComplete = await passiveTask;
-                        if (shouldComplete) CompleteIntermittentWrite();
-                    });
-                }
             },
             cancellationToken);
     }

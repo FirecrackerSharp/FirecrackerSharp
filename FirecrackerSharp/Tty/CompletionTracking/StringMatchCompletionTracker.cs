@@ -26,7 +26,7 @@ public class StringMatchCompletionTracker(
         return !line.Contains(Context!.InputText);
     }
 
-    public bool CheckReactively(string line)
+    public bool Check(string line)
     {
         line = line.Trim('\n');
         
@@ -39,6 +39,4 @@ public class StringMatchCompletionTracker(
             _ => throw new ArgumentOutOfRangeException(nameof(stringMatchOperation), stringMatchOperation, null)
         };
     }
-
-    public Task<bool>? CheckPassively() => null;
 }

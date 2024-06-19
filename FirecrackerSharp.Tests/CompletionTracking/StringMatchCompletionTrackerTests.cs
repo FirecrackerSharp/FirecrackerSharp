@@ -15,10 +15,10 @@ public class StringMatchCompletionTrackerTests
             { Context = _trackerContext };
         var caseInsensitiveTracker = new StringMatchCompletionTracker(StringMatchOperation.Contains, "test", StringComparison.OrdinalIgnoreCase)
             { Context = _trackerContext };
-        caseSensitiveTracker.CheckReactively("q_test_q").Should().BeTrue();
-        caseSensitiveTracker.CheckReactively("q_Test_q").Should().BeFalse();
-        caseInsensitiveTracker.CheckReactively("q_test_q").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("q_Test_q").Should().BeTrue();
+        caseSensitiveTracker.Check("q_test_q").Should().BeTrue();
+        caseSensitiveTracker.Check("q_Test_q").Should().BeFalse();
+        caseInsensitiveTracker.Check("q_test_q").Should().BeTrue();
+        caseInsensitiveTracker.Check("q_Test_q").Should().BeTrue();
     }
 
     [Fact]
@@ -28,12 +28,12 @@ public class StringMatchCompletionTrackerTests
             { Context = _trackerContext };
         var caseInsensitiveTracker = new StringMatchCompletionTracker(StringMatchOperation.StartsWith, "test", StringComparison.OrdinalIgnoreCase)
             { Context = _trackerContext };
-        caseSensitiveTracker.CheckReactively("test_q").Should().BeTrue();
-        caseSensitiveTracker.CheckReactively("Test_q").Should().BeFalse();
-        caseSensitiveTracker.CheckReactively("q_test_q").Should().BeFalse();
-        caseInsensitiveTracker.CheckReactively("test_q").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("Test_q").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("q_test_q").Should().BeFalse();
+        caseSensitiveTracker.Check("test_q").Should().BeTrue();
+        caseSensitiveTracker.Check("Test_q").Should().BeFalse();
+        caseSensitiveTracker.Check("q_test_q").Should().BeFalse();
+        caseInsensitiveTracker.Check("test_q").Should().BeTrue();
+        caseInsensitiveTracker.Check("Test_q").Should().BeTrue();
+        caseInsensitiveTracker.Check("q_test_q").Should().BeFalse();
     }
 
     [Fact]
@@ -43,12 +43,12 @@ public class StringMatchCompletionTrackerTests
             { Context = _trackerContext };
         var caseInsensitiveTracker = new StringMatchCompletionTracker(StringMatchOperation.EndsWith, "test", StringComparison.OrdinalIgnoreCase)
             { Context = _trackerContext };
-        caseSensitiveTracker.CheckReactively("q_test").Should().BeTrue();
-        caseSensitiveTracker.CheckReactively("q_Test").Should().BeFalse();
-        caseSensitiveTracker.CheckReactively("q_test_q").Should().BeFalse();
-        caseInsensitiveTracker.CheckReactively("q_test").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("q_Test").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("q_test_q").Should().BeFalse();
+        caseSensitiveTracker.Check("q_test").Should().BeTrue();
+        caseSensitiveTracker.Check("q_Test").Should().BeFalse();
+        caseSensitiveTracker.Check("q_test_q").Should().BeFalse();
+        caseInsensitiveTracker.Check("q_test").Should().BeTrue();
+        caseInsensitiveTracker.Check("q_Test").Should().BeTrue();
+        caseInsensitiveTracker.Check("q_test_q").Should().BeFalse();
     }
 
     [Fact]
@@ -58,18 +58,12 @@ public class StringMatchCompletionTrackerTests
             { Context = _trackerContext };
         var caseInsensitiveTracker = new StringMatchCompletionTracker(StringMatchOperation.Equals, "test", StringComparison.OrdinalIgnoreCase)
             { Context = _trackerContext };
-        caseSensitiveTracker.CheckReactively("test").Should().BeTrue();
-        caseSensitiveTracker.CheckReactively("Test").Should().BeFalse();
-        caseSensitiveTracker.CheckReactively("testq").Should().BeFalse();
-        caseInsensitiveTracker.CheckReactively("test").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("Test").Should().BeTrue();
-        caseInsensitiveTracker.CheckReactively("testq").Should().BeFalse();
-    }
-    
-    [Fact]
-    public void PassiveCheck_ShouldNotBeSupported()
-    {
-        _defaultTracker.CheckPassively().Should().BeNull();
+        caseSensitiveTracker.Check("test").Should().BeTrue();
+        caseSensitiveTracker.Check("Test").Should().BeFalse();
+        caseSensitiveTracker.Check("testq").Should().BeFalse();
+        caseInsensitiveTracker.Check("test").Should().BeTrue();
+        caseInsensitiveTracker.Check("Test").Should().BeTrue();
+        caseInsensitiveTracker.Check("testq").Should().BeFalse();
     }
 
     [Fact]

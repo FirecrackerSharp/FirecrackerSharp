@@ -39,11 +39,5 @@ public interface ICompletionTracker
     /// </summary>
     /// <param name="line">The streamed-in line</param>
     /// <returns>Whether to register completion</returns>
-    public bool CheckReactively(string line);
-
-    /// <summary>
-    /// Returns null if no passive check is queued or an async task to be run in the background to check for completion.
-    /// </summary>
-    /// <returns>Null or a background task</returns>
-    public Task<bool>? CheckPassively();
+    public bool Check(string line);
 }

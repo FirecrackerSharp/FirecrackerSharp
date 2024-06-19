@@ -54,11 +54,8 @@ public sealed class ExitSignalCompletionTracker : ICompletionTracker
         return line != _currentExitSignal && !line.Contains(Context!.InputText);
     }
 
-    public bool CheckReactively(string line)
+    public bool Check(string line)
     {
         return line.Trim() == _currentExitSignal;
     }
-
-    // passive checking is not supported for this action tracker
-    public Task<bool>? CheckPassively() => null;
 }
