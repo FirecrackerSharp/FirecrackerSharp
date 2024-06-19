@@ -11,7 +11,7 @@ public sealed class MemoryOutputBuffer : IOutputBuffer
     public IReadOnlyList<string> Commits => _commits;
     public string? LastCommit => _commits.LastOrDefault();
 
-    public event EventHandler<(string, string)>? CommitUpdated;
+    public event EventHandler<string>? CommitUpdated;
     public event EventHandler<string>? CommitFinished;
 
     public void Open() { }
@@ -19,7 +19,7 @@ public sealed class MemoryOutputBuffer : IOutputBuffer
     public void Receive(string line)
     {
         _stringBuilder.Append(line);
-        CommitUpdated?.Invoke(sender: this, (line, FutureCommitState));
+        CommitUpdated?.Invoke(sender: this, line);
     }
 
     public void Commit()

@@ -2,7 +2,7 @@ using FirecrackerSharp.Host.Local;
 using FirecrackerSharp.Installation;
 using Octokit;
 
-namespace FirecrackerSharp.Tests.Fixtures;
+namespace FirecrackerSharp.Tests.Helpers;
 
 public class FirecrackerInstallationFixture : IAsyncLifetime
 {

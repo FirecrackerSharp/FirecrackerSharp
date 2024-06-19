@@ -1,10 +1,9 @@
 using FirecrackerSharp.Core;
 using FirecrackerSharp.Lifecycle;
-using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 
-namespace FirecrackerSharp.Tests;
+namespace FirecrackerSharp.Tests.Vmm;
 
 public class VmLoadTests : MinimalFixture
 {

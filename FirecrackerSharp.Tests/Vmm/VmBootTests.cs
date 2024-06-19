@@ -1,13 +1,10 @@
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Lifecycle;
-using FirecrackerSharp.Tests.Fixtures;
 using FirecrackerSharp.Tests.Helpers;
-using FirecrackerSharp.Tty;
 using FirecrackerSharp.Tty.CompletionTracking;
-using FirecrackerSharp.Tty.OutputBuffering;
 using FluentAssertions;
 
-namespace FirecrackerSharp.Tests;
+namespace FirecrackerSharp.Tests.Vmm;
 
 public class VmBootTests : MinimalFixture
 {

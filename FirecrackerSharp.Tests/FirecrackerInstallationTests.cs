@@ -1,6 +1,6 @@
 using AutoFixture.Xunit2;
 using FirecrackerSharp.Installation;
-using FirecrackerSharp.Tests.Fixtures;
+using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 using Octokit;
 
