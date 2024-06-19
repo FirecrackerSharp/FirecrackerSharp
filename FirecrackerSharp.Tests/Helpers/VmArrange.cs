@@ -38,10 +38,11 @@ public static class VmArrange
             FirecrackerInstall,
             FirecrackerOptions,
             VmId);
-        unrestrictedVm.Lifecycle.AttachLogTarget(VmLifecyclePhase.Active, ILogTarget.ToFile("/tmp/log.txt"));
         await unrestrictedVm.BootAsync();
         return unrestrictedVm;
     }
+
+    public static Vm GetUnrestrictedVm() => new UnrestrictedVm(VmConfiguration, FirecrackerInstall, FirecrackerOptions, VmId);
 
     public static async Task<Vm> StartJailedVm(VmConfigurationApplicationMode configurationApplicationMode
         = VmConfigurationApplicationMode.JsonConfiguration)

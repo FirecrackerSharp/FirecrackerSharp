@@ -2,7 +2,7 @@ namespace FirecrackerSharp.Lifecycle;
 
 public sealed class VmLifecycle
 {
-    private VmLifecyclePhase _currentPhase = VmLifecyclePhase.PreBoot;
+    private VmLifecyclePhase _currentPhase = VmLifecyclePhase.NotBooted;
     
     internal ILogTarget BootLogTarget = ILogTarget.Null;
     internal ILogTarget ActiveLogTarget = ILogTarget.Null;
@@ -22,28 +22,30 @@ public sealed class VmLifecycle
     public event EventHandler<VmLifecyclePhase>? PhaseStarted;
     public event EventHandler<VmLifecyclePhase>? PhaseFinished;
 
-    public bool IsNotActive => CurrentPhase != VmLifecyclePhase.Active;
+    internal bool IsNotActive => CurrentPhase != VmLifecyclePhase.Active;
 
     internal VmLifecycle()
     {
-        CurrentPhase = VmLifecyclePhase.PreBoot;
+        CurrentPhase = VmLifecyclePhase.NotBooted;
     }
 
     public void AttachLogTarget(VmLifecyclePhase lifecyclePhase, ILogTarget logTarget)
     {
         switch (lifecyclePhase)
         {
-            case VmLifecyclePhase.PreBoot:
-                throw new NotAccessibleDueToLifecycleException("Cannot attach a log target to the pre-boot phase");
-            case VmLifecyclePhase.Boot:
+            case VmLifecyclePhase.NotBooted:
+                throw new NotAccessibleDueToLifecycleException("The preparing phase is not logged");
+            case VmLifecyclePhase.Booting:
                 BootLogTarget = logTarget;
                 break;
             case VmLifecyclePhase.Active:
                 ActiveLogTarget = logTarget;
                 break;
-            case VmLifecyclePhase.Shutdown:
+            case VmLifecyclePhase.ShuttingDown:
                 ShutdownLogTarget = logTarget;
                 break;
+            case VmLifecyclePhase.PoweredOff:
+                throw new NotAccessibleDueToLifecycleException("The powered-off phase is not logged");
             default:
                 throw new ArgumentOutOfRangeException(nameof(lifecyclePhase), lifecyclePhase, null);
         }
@@ -67,17 +69,19 @@ public sealed class VmLifecycle
     {
         switch (lifecyclePhase)
         {
-            case VmLifecyclePhase.PreBoot:
-                throw new NotAccessibleDueToLifecycleException("Cannot detach a log target from the pre-boot phase");
-            case VmLifecyclePhase.Boot:
+            case VmLifecyclePhase.NotBooted:
+                throw new NotAccessibleDueToLifecycleException("The preparing phase is not logged");
+            case VmLifecyclePhase.Booting:
                 BootLogTarget = ILogTarget.Null;
                 break;
             case VmLifecyclePhase.Active:
                 ActiveLogTarget = ILogTarget.Null;
                 break;
-            case VmLifecyclePhase.Shutdown:
+            case VmLifecyclePhase.ShuttingDown:
                 ShutdownLogTarget = ILogTarget.Null;
                 break;
+            case VmLifecyclePhase.PoweredOff:
+                throw new NotAccessibleDueToLifecycleException("The powered-off phase is not logged");
             default:
                 throw new ArgumentOutOfRangeException(nameof(lifecyclePhase), lifecyclePhase, null);
         }
@@ -88,10 +92,5 @@ public sealed class VmLifecycle
         BootLogTarget = ILogTarget.Null;
         ActiveLogTarget = ILogTarget.Null;
         ShutdownLogTarget = ILogTarget.Null;
-    }
-
-    internal void FinishLastPhase()
-    {
-        PhaseFinished?.Invoke(sender: this, _currentPhase);
     }
 }

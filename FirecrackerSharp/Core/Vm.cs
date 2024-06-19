@@ -84,12 +84,12 @@ public abstract class Vm
 
     public async Task BootAsync()
     {
-        if (Lifecycle.CurrentPhase != VmLifecyclePhase.PreBoot)
+        if (Lifecycle.CurrentPhase != VmLifecyclePhase.NotBooted)
         {
             throw new NotAccessibleDueToLifecycleException("A microVM can only be booted once");
         }
 
-        Lifecycle.CurrentPhase = VmLifecyclePhase.Boot;
+        Lifecycle.CurrentPhase = VmLifecyclePhase.Booting;
         await BootInternalAsync();
         await HandlePostBootAsync();
         Logger.Information("Launched microVM {vmId}", VmId);
@@ -168,7 +168,7 @@ public abstract class Vm
             throw new NotAccessibleDueToLifecycleException("Cannot shutdown microVM when it hasn't booted up yet");
         }
 
-        Lifecycle.CurrentPhase = VmLifecyclePhase.Shutdown;
+        Lifecycle.CurrentPhase = VmLifecyclePhase.ShuttingDown;
         
         if (_backingSocket != null)
         {
@@ -215,7 +215,7 @@ public abstract class Vm
         }
 
         Log.Information("microVM {vmId} was successfully cleaned up after shutdown (socket/jail deleted)", VmId);
-        Lifecycle.FinishLastPhase();
+        Lifecycle.CurrentPhase = VmLifecyclePhase.PoweredOff;
 
         return shutdownResult;
     }

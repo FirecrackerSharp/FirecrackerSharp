@@ -40,16 +40,16 @@ public sealed class VmTtyClient
         {
             switch (_vm.Lifecycle.CurrentPhase)
             {
-                case VmLifecyclePhase.Boot:
+                case VmLifecyclePhase.Booting:
                     _vm.Lifecycle.BootLogTarget.Receive(line);
                     break;
                 case VmLifecyclePhase.Active:
                     _vm.Lifecycle.ActiveLogTarget.Receive(line);
                     break;
-                case VmLifecyclePhase.Shutdown:
+                case VmLifecyclePhase.ShuttingDown:
                     _vm.Lifecycle.ShutdownLogTarget.Receive(line);
                     break;
-                case VmLifecyclePhase.PreBoot:
+                case VmLifecyclePhase.NotBooted:
                 default:
                     throw new ArgumentOutOfRangeException();
             }

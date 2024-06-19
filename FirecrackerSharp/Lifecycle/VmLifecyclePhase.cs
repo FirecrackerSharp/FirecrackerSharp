@@ -2,8 +2,9 @@ namespace FirecrackerSharp.Lifecycle;
 
 public enum VmLifecyclePhase
 {
-    PreBoot,
-    Boot,
+    NotBooted,
+    Booting,
     Active,
-    Shutdown
+    ShuttingDown,
+    PoweredOff
 }

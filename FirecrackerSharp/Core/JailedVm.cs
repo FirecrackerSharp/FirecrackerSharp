@@ -70,11 +70,7 @@ public sealed class JailedVm : Vm
     protected override void CleanupAfterShutdown()
     {
         var jailParentDirectory = Directory.GetParent(_jailPath)!.FullName;
-
-        if (IHostFilesystem.Current.FileOrDirectoryExists(jailParentDirectory))
-        {
-            IHostFilesystem.Current.DeleteDirectoryRecursively(jailParentDirectory);
-        }
+        IHostFilesystem.Current.DeleteDirectoryRecursively(jailParentDirectory);
     }
 
     private async Task<VmConfiguration> MoveAllToJailAsync(string jailPath)
