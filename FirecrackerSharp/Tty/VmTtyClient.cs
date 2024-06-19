@@ -50,6 +50,9 @@ public sealed class VmTtyClient
                     _vm.Lifecycle.ShutdownLogTarget.Receive(line);
                     break;
                 case VmLifecyclePhase.NotBooted:
+                    return;
+                case VmLifecyclePhase.PoweredOff:
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
