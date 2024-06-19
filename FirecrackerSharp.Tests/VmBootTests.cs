@@ -19,7 +19,10 @@ public class VmBootTests : MinimalFixture
     {
         var vm = await VmArrange.StartUnrestrictedVm(configurationApplicationMode);
 
-        var output = await vm.TtyClient.RunBufferedCommandAsync("dd --help");
+        await vm.TtyClient.StartBufferedCommandAsync("read n && echo $n");
+        await vm.TtyClient.WriteIntermittentAsync("test");
+        var res = await vm.TtyClient.WaitForBufferedCommandAsync();
+        res.Should().NotBeNull();
 
         var shutdownResult = await vm.ShutdownAsync();
         shutdownResult.IsSuccessful().Should().BeTrue();

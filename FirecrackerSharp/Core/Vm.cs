@@ -137,12 +137,12 @@ public abstract class Vm
 
             if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
             {
-                await _ttyClient.WriteAsync(
+                await _ttyClient.WritePrimaryAsync(
                     VmConfiguration.TtyAuthentication.Username,
                     cancellationToken: ttyAuthenticationTokenSource.Token);
             }
 
-            await _ttyClient.WriteAsync(
+            await _ttyClient.WritePrimaryAsync(
                 VmConfiguration.TtyAuthentication.Password,
                 cancellationToken: ttyAuthenticationTokenSource.Token);
         }
@@ -181,7 +181,7 @@ public abstract class Vm
 
         try
         {
-            await _ttyClient.WriteAsync("reboot", cancellationToken: cancellationTokenSource.Token);
+            await _ttyClient.WritePrimaryAsync("reboot", cancellationToken: cancellationTokenSource.Token);
             try
             {
                 await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));
