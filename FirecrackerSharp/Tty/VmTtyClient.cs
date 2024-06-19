@@ -13,6 +13,7 @@ public sealed class VmTtyClient
     private readonly SemaphoreSlim _intermittentWriteSemaphore = new(1, 1);
     
     private ICompletionTracker? _primaryCompletionTracker;
+    private ICompletionTracker? _intermittentCompletionTracker;
     private IOutputBuffer? _currentOutputBuffer;
     
     public bool IsAvailableForPrimaryWrite => _primaryWriteSemaphore.CurrentCount > 0;
@@ -56,20 +57,27 @@ public sealed class VmTtyClient
             if (_vm.Lifecycle.IsNotActive) return;
             
             var shouldCapture = true;
-            var shouldComplete = false;
+            var shouldCompletePrimary = false;
+            var shouldCompleteIntermittent = false;
             
             if (_primaryCompletionTracker is not null)
             {
-                shouldComplete = _primaryCompletionTracker.CheckReactively(line);
+                shouldCompletePrimary = _primaryCompletionTracker.CheckReactively(line);
                 shouldCapture = _primaryCompletionTracker.ShouldCapture(line);
             }
 
+            if (_intermittentCompletionTracker is not null)
+            {
+                shouldCompleteIntermittent = _intermittentCompletionTracker.CheckReactively(line);
+            }
+            
             if (shouldCapture && OutputBuffer is not null)
             {
                 OutputBuffer.Receive(line);
             }
 
-            if (shouldComplete && !IsAvailableForPrimaryWrite) RegisterPrimaryCompletion();
+            if (shouldCompletePrimary && !IsAvailableForPrimaryWrite) RegisterPrimaryCompletion();
+            if (shouldCompleteIntermittent && !IsAvailableForIntermittentWrite) RegisterIntermittentCompletion();
         };
     }
 
@@ -102,25 +110,24 @@ public sealed class VmTtyClient
                 if (completionTracker is null)
                 {
                     _primaryWriteSemaphore.Release();
+                    return;
                 }
-                else
+
+                completionTracker.Context = new CompletionTrackerContext(
+                    TtyClient: this,
+                    TrackingStartTime: DateTimeOffset.UtcNow,
+                    InputText: inputText);
+
+                _primaryCompletionTracker = completionTracker;
+                var passiveTask = _primaryCompletionTracker.CheckPassively();
+
+                if (passiveTask is not null)
                 {
-                    completionTracker.Context = new CompletionTrackerContext(
-                        TtyClient: this,
-                        TrackingStartTime: DateTimeOffset.UtcNow,
-                        InputText: inputText);
-
-                    _primaryCompletionTracker = completionTracker;
-                    var passiveTask = _primaryCompletionTracker.CheckPassively();
-
-                    if (passiveTask is not null)
+                    Task.Run(async () =>
                     {
-                        Task.Run(async () =>
-                        {
-                            var shouldComplete = await passiveTask;
-                            if (shouldComplete) RegisterPrimaryCompletion();
-                        });
-                    }
+                        var shouldComplete = await passiveTask;
+                        if (shouldComplete) RegisterPrimaryCompletion();
+                    });
                 }
             },
             cancellationToken);
@@ -129,11 +136,42 @@ public sealed class VmTtyClient
     public async Task WriteIntermittentAsync(
         string inputText,
         bool insertNewline = true,
+        ICompletionTracker? completionTracker = null,
         CancellationToken cancellationToken = default)
     {
         await _intermittentWriteSemaphore.WaitAsync(cancellationToken);
 
-        await WriteInternalAsync(inputText, insertNewline, () => _intermittentWriteSemaphore.Release(),
+        if (completionTracker is not null)
+        {
+            inputText = completionTracker.TransformInput(inputText);
+        }
+
+        await WriteInternalAsync(inputText, insertNewline,
+            () =>
+            {
+                if (completionTracker is null)
+                {
+                    _intermittentWriteSemaphore.Release();
+                    return;
+                }
+
+                completionTracker.Context = new CompletionTrackerContext(
+                    TtyClient: this,
+                    TrackingStartTime: DateTimeOffset.UtcNow,
+                    InputText: inputText);
+
+                _intermittentCompletionTracker = completionTracker;
+                var passiveTask = _intermittentCompletionTracker.CheckPassively();
+
+                if (passiveTask is not null)
+                {
+                    Task.Run(async () =>
+                    {
+                        var shouldComplete = await passiveTask;
+                        if (shouldComplete) RegisterIntermittentCompletion();
+                    });
+                }
+            },
             cancellationToken);
     }
 
@@ -220,5 +258,11 @@ public sealed class VmTtyClient
         _primaryWriteSemaphore.Release();
         _primaryCompletionTracker = null;
         OutputBuffer?.Commit();
+    }
+
+    private void RegisterIntermittentCompletion()
+    {
+        _intermittentWriteSemaphore.Release();
+        _intermittentCompletionTracker = null;
     }
 }
