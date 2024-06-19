@@ -34,13 +34,7 @@ public class ExitSignalCompletionTrackerTests
     public void ReactiveCheck_ShouldTriggerOnExitSignal()
     {
         _completionTracker.TransformInput("");
-        _completionTracker.CheckReactively("exit").Should().BeTrue();
-        _completionTracker.CheckReactively("not_exit").Should().BeFalse();
-    }
-
-    [Fact]
-    public void PassiveCheck_ShouldNotBeSupported()
-    {
-        _completionTracker.CheckPassively().Should().BeNull();
+        _completionTracker.Check("exit").Should().BeTrue();
+        _completionTracker.Check("not_exit").Should().BeFalse();
     }
 }

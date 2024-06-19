@@ -1,7 +1,17 @@
 namespace FirecrackerSharp.Tty.CompletionTracking;
 
+/// <summary>
+/// A <see cref="ICompletionTracker"/> that reactively matches the streamed-in lines against a given string value via
+/// a certain <see cref="StringMatchOperation"/> and completes when the match is found.
+/// </summary>
+/// <param name="stringMatchOperation">The <see cref="StringMatchOperation"/> used for determining which operation to apply
+/// to the two strings</param>
+/// <param name="value">The string value to match against</param>
+/// <param name="stringComparison">The type of <see cref="StringComparison"/>, case-sensitive by default</param>
+/// <param name="excludeContainingCommand">Whether to exclude the line containing the original command from the
+/// output buffer, true by default</param>
 public class StringMatchCompletionTracker(
-    StringMatchMode stringMatchMode,
+    StringMatchOperation stringMatchOperation,
     string value,
     StringComparison stringComparison = StringComparison.Ordinal,
     bool excludeContainingCommand = true) : ICompletionTracker
@@ -16,18 +26,17 @@ public class StringMatchCompletionTracker(
         return !line.Contains(Context!.InputText);
     }
 
-    public bool CheckReactively(string line)
+    public bool Check(string line)
     {
-        if (line.Trim() == Context!.InputText) return false;
+        line = line.Trim('\n');
         
-        return stringMatchMode switch
+        return stringMatchOperation switch
         {
-            StringMatchMode.Contains => line.Contains(value, stringComparison),
-            StringMatchMode.StartsWith => line.StartsWith(value, stringComparison),
-            StringMatchMode.EndsWith => line.EndsWith(value, stringComparison),
-            _ => throw new ArgumentOutOfRangeException(nameof(stringMatchMode), stringMatchMode, null)
+            StringMatchOperation.Contains => line.Contains(value, stringComparison),
+            StringMatchOperation.StartsWith => line.StartsWith(value, stringComparison),
+            StringMatchOperation.EndsWith => line.EndsWith(value, stringComparison),
+            StringMatchOperation.Equals => line.Equals(value, stringComparison),
+            _ => throw new ArgumentOutOfRangeException(nameof(stringMatchOperation), stringMatchOperation, null)
         };
     }
-
-    public Task<bool>? CheckPassively() => null;
 }

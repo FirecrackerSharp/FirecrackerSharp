@@ -11,7 +11,7 @@ public class MemoryOutputBufferTests
     public void Receive_ShouldTriggerEvent()
     {
         var eventTriggered = false;
-        _buffer.CommitUpdated += (_, line) =>
+        _buffer.FutureCommitUpdated += (_, line) =>
         {
             line.Should().Be("test");
             _buffer.FutureCommitState.Should().Be("test");

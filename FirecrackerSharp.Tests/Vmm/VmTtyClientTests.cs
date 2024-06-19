@@ -38,34 +38,36 @@ public class VmTtyClientTests : SingleVmFixture
     """;
 
     [Fact]
-    public async Task WritePrimaryAsync_ShouldPerformNonTrackedWrite()
+    public async Task BeginPrimaryWriteAsync_ShouldPerformNonTrackedWrite()
     {
         var token = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
         Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
-        await Vm.TtyClient.WritePrimaryAsync("cat --help", cancellationToken: token);
+        await Vm.TtyClient.BeginPrimaryWriteAsync("cat --help", cancellationToken: token);
         await Task.Delay(TimeSpan.FromMilliseconds(500), token);
         Vm.TtyClient.CompletePrimaryWrite();
+        Vm.TtyClient.IsAvailableForPrimaryWrite.Should().BeTrue();
         AssertHelpOutput();
     }
 
     [Fact]
-    public async Task WritePrimaryAsync_ShouldPerformTrackedWrite()
+    public async Task BeginPrimaryWriteAsync_ShouldPerformTrackedWrite()
     {
         var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
         Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
-        await Vm.TtyClient.WritePrimaryAsync(
+        await Vm.TtyClient.BeginPrimaryWriteAsync(
             "cat --help", completionTracker: new ExitSignalCompletionTracker(), cancellationToken: token);
         await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
         AssertHelpOutput();
     }
 
     [Fact]
-    public async Task WriteIntermittentAsync_ShouldPerformNonTrackedWrite()
+    public async Task BeginIntermittentWriteAsync_ShouldPerformNonTrackedWrite()
     {
         var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
         await Vm.TtyClient.StartBufferedCommandAsync("read n && echo $n", cancellationToken: token);
-        await Vm.TtyClient.WriteIntermittentAsync("sample_input", cancellationToken: token);
+        await Vm.TtyClient.BeginIntermittentWriteAsync("sample_input", cancellationToken: token);
         Vm.TtyClient.CompleteIntermittentWrite();
+        Vm.TtyClient.IsAvailableForIntermittentWrite.Should().BeTrue();
         
         var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
         output.Should().NotBeNull();
@@ -73,13 +75,13 @@ public class VmTtyClientTests : SingleVmFixture
     }
 
     [Fact]
-    public async Task WriteIntermittentAsync_ShouldPerformTrackedWrite()
+    public async Task BeginIntermittentWriteAsync_ShouldPerformTrackedWrite()
     {
         var token = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
         await Vm.TtyClient.StartBufferedCommandAsync("read n && echo q$n", cancellationToken: token);
         await Task.Delay(100, token);
-        await Vm.TtyClient.WriteIntermittentAsync("test",
-            completionTracker: new StringMatchCompletionTracker(StringMatchMode.Contains, "qtest"),
+        await Vm.TtyClient.BeginIntermittentWriteAsync("test",
+            completionTracker: new StringMatchCompletionTracker(StringMatchOperation.Contains, "qtest"),
             cancellationToken: token);
         await Vm.TtyClient.WaitForIntermittentAvailabilityAsync(cancellationToken: token);
         await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
@@ -112,7 +114,7 @@ public class VmTtyClientTests : SingleVmFixture
     {
         var token = new CancellationTokenSource(TimeSpan.FromMilliseconds(500)).Token;
         Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
-        await Vm.TtyClient.WritePrimaryAsync(
+        await Vm.TtyClient.BeginPrimaryWriteAsync(
             "cat --help", completionTracker: new ExitSignalCompletionTracker(), cancellationToken: token);
         
         var output = await Vm.TtyClient.WaitForBufferedCommandAsync(cancellationToken: token);
@@ -125,7 +127,7 @@ public class VmTtyClientTests : SingleVmFixture
     {
         var token = new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token;
         Vm.TtyClient.OutputBuffer = new MemoryOutputBuffer();
-        await Vm.TtyClient.WritePrimaryAsync("cat --help", completionTracker: new ExitSignalCompletionTracker(),
+        await Vm.TtyClient.BeginPrimaryWriteAsync("cat --help", completionTracker: new ExitSignalCompletionTracker(),
             cancellationToken: token);
     
         var partialBuffer = Vm.TtyClient.TryGetMemoryBufferState();

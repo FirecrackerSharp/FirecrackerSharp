@@ -18,6 +18,16 @@ public sealed class JailedVm : Vm
     private readonly string _jailPath;
     private readonly string _socketPathInJail;
 
+    /// <summary>
+    /// Instantiate a new jailed microVM. After this, it'll be in the "not booted" lifecycle phase,
+    /// use <see cref="Vm.BootAsync"/> to actually boot it. It is typical to also configure lifecycle logging before
+    /// booting the VM.
+    /// </summary>
+    /// <param name="vmConfiguration">The <see cref="VmConfiguration"/> for this VM</param>
+    /// <param name="firecrackerInstall">The <see cref="FirecrackerInstall"/> whose binaries to use</param>
+    /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to be passed to the firecracker binary</param>
+    /// <param name="jailerOptions">The <see cref="JailerOptions"/> to be passed to the jailer binary</param>
+    /// <param name="vmId">The unique identifier of this VM</param>
     public JailedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,

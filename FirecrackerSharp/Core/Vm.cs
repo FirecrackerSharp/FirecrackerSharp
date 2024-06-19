@@ -41,6 +41,8 @@ public abstract class Vm
     /// <summary>
     /// The <see cref="VmManagement"/> instance linked to this <see cref="Vm"/> that allows access to the Firecracker
     /// Management API that is linked to this <see cref="Vm"/>'s Firecracker UDS.
+    /// This is a running microVM facility, meaning it is only available during the active <see cref="VmLifecyclePhase"/>,
+    /// otherwise a <see cref="NotAccessibleDueToLifecycleException"/> will be thrown during a get attempt.
     /// </summary>
     public VmManagement Management
     {
@@ -55,6 +57,8 @@ public abstract class Vm
     /// <summary>
     /// The <see cref="VmTtyClient"/> instance linked to this <see cref="Vm"/> that allows direct access to the microVM's
     /// serial console / boot TTY.
+    /// This is a running microVM facility, meaning it is only available during the active <see cref="VmLifecyclePhase"/>,
+    /// otherwise a <see cref="NotAccessibleDueToLifecycleException"/> will be thrown during a get attempt.
     /// </summary>
     public VmTtyClient TtyClient
     {
@@ -66,6 +70,11 @@ public abstract class Vm
         }
     }
 
+    /// <summary>
+    /// The <see cref="VmLifecycle"/> instance linked to this microVM and used for monitoring its lifecycle and managing
+    /// log targets.
+    /// This is not a running microVM facility, so it is available during all <see cref="VmLifecyclePhase"/>s.
+    /// </summary>
     public readonly VmLifecycle Lifecycle = new();
 
     protected Vm(
@@ -82,6 +91,11 @@ public abstract class Vm
         _ttyClient = new VmTtyClient(this);
     }
 
+    /// <summary>
+    /// Boot the microVM.
+    /// </summary>
+    /// <exception cref="NotAccessibleDueToLifecycleException">If this was called not during the "not booted"
+    /// phase, which is the only one supported for this operation</exception>
     public async Task BootAsync()
     {
         if (Lifecycle.CurrentPhase != VmLifecyclePhase.NotBooted)
@@ -137,13 +151,13 @@ public abstract class Vm
 
             if (!VmConfiguration.TtyAuthentication.UsernameAutofilled)
             {
-                await _ttyClient.WritePrimaryAsync(
+                await _ttyClient.BeginPrimaryWriteAsync(
                     VmConfiguration.TtyAuthentication.Username,
                     cancellationToken: ttyAuthenticationTokenSource.Token);
                 _ttyClient.CompletePrimaryWrite();
             }
 
-            await _ttyClient.WritePrimaryAsync(
+            await _ttyClient.BeginPrimaryWriteAsync(
                 VmConfiguration.TtyAuthentication.Password,
                 cancellationToken: ttyAuthenticationTokenSource.Token);
             _ttyClient.CompletePrimaryWrite();
@@ -156,13 +170,11 @@ public abstract class Vm
     }
 
     /// <summary>
-    /// Shutdown this microVM and dispose of all associated transient resources.
-    ///
-    /// The shutdown process can either succeed after a graceful shutdown, or fail if the microVM process had been
-    /// killed before <see cref="ShutdownAsync"/> was called or if the microVM didn't respond to the TTY exit command
-    /// ("reboot") and thus had the process was terminated.
+    /// Shut down this microVM and dispose of all associated transient resources.
     /// </summary>
-    /// <returns>Whether the shutdown was graceful</returns>
+    /// <exception cref="NotAccessibleDueToLifecycleException">If this was called not during the active lifecycle phase,
+    /// which is the only one supported</exception>
+    /// <returns>The <see cref="VmShutdownResult"/> representing the outcome of this shutdown attempt</returns>
     public async Task<VmShutdownResult> ShutdownAsync()
     {
         if (Lifecycle.IsNotActive)
@@ -183,7 +195,7 @@ public abstract class Vm
 
         try
         {
-            await _ttyClient.WritePrimaryAsync("reboot", cancellationToken: cancellationTokenSource.Token);
+            await _ttyClient.BeginPrimaryWriteAsync("reboot", cancellationToken: cancellationTokenSource.Token);
             try
             {
                 await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));

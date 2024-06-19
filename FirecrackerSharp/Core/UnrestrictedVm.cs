@@ -21,6 +21,15 @@ public sealed class UnrestrictedVm : Vm
 {
     private static readonly ILogger Logger = Log.ForContext<UnrestrictedVm>();
 
+    /// <summary>
+    /// Instantiate a new unrestricted microVM. After this, it'll be in the "not booted" lifecycle phase,
+    /// use <see cref="Vm.BootAsync"/> to actually boot it. It is typical to also configure lifecycle logging before
+    /// booting the VM.
+    /// </summary>
+    /// <param name="vmConfiguration">The <see cref="VmConfiguration"/> for this VM</param>
+    /// <param name="firecrackerInstall">The <see cref="FirecrackerInstall"/> to be used</param>
+    /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to pass to the Firecracker binary</param>
+    /// <param name="vmId">The unique identifier of this VM</param>
     public UnrestrictedVm(
         VmConfiguration vmConfiguration,
         FirecrackerInstall firecrackerInstall,
@@ -53,25 +62,5 @@ public sealed class UnrestrictedVm : Vm
         {
             IHostFilesystem.Current.DeleteFile(SocketPath!);
         }
-    }
-
-    /// <summary>
-    /// Boot up a <see cref="UnrestrictedVm"/> with the given parameters and return its instance for further management.
-    /// </summary>
-    /// <param name="vmConfiguration">The entire pre-boot <see cref="VmConfiguration"/> for this microVM</param>
-    /// <param name="firecrackerInstall">The <see cref="FirecrackerInstall"/> to be used to boot this microVM</param>
-    /// <param name="firecrackerOptions">The <see cref="FirecrackerOptions"/> to be passed into the firecracker binary</param>
-    /// <param name="vmId">A unique microVM identifier that must not be repeated for multiple VMs. A <see cref="Guid"/>
-    /// can't be used due to length restrictions imposed by Firecracker (up to 50 characters)!</param>
-    /// <returns>The booted <see cref="Vm"/></returns>
-    public static async Task<Vm> StartAsync(
-        VmConfiguration vmConfiguration,
-        FirecrackerInstall firecrackerInstall,
-        FirecrackerOptions firecrackerOptions,
-        string vmId)
-    {
-        var vm = new UnrestrictedVm(vmConfiguration, firecrackerInstall, firecrackerOptions, vmId);
-        await vm.BootInternalAsync();
-        return vm;
     }
 }
