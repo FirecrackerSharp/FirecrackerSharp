@@ -4,7 +4,7 @@ using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Helpers;
 using FluentAssertions;
 
-namespace FirecrackerSharp.Tests.Vmm;
+namespace FirecrackerSharp.Tests;
 
 public class LogTargetTests : MinimalFixture
 {

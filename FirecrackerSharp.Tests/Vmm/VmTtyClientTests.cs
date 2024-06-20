@@ -133,7 +133,7 @@ public class VmTtyClientTests : SingleVmFixture
         var partialBuffer = Vm.TtyClient.TryGetMemoryBufferState();
         partialBuffer.Should().NotBeNull();
         partialBuffer.Should().BeEmpty();
-                
+
         await Vm.TtyClient.WaitForPrimaryAvailabilityAsync(cancellationToken: token);
 
         var fullBuffer = Vm.TtyClient.TryGetMemoryBufferState();

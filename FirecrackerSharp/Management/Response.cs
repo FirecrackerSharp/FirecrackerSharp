@@ -105,6 +105,7 @@ public sealed class Response
     public Response ChainWith(Response otherResponse, string errorSplit = "; chained with: \n")
     {
         if (otherResponse == Success && this == Success) return Success;
+        if (otherResponse == Success) return this;
         
         if (otherResponse.Type == ResponseType.BadRequest)
         {

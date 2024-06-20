@@ -14,7 +14,7 @@ public sealed record WaitOptions(
     TimeSpan TimeoutForShutdown)
 {
     public static readonly WaitOptions Default = new(
-        DelayForBoot: TimeSpan.FromMilliseconds(1500),
+        DelayForBoot: TimeSpan.FromSeconds(2),
         DelayBeforeBootApiRequests: TimeSpan.FromMilliseconds(150),
         TimeoutForBootApiRequests: TimeSpan.FromSeconds(10),
         TimeoutForShutdown: TimeSpan.FromSeconds(30));
