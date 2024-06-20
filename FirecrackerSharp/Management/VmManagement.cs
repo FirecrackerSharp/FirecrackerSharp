@@ -27,20 +27,22 @@ public sealed class VmManagement
     /// Gets the information (state) of this microVM (<see cref="VmInfo"/>).
     /// Endpoint: "GET /".
     /// </summary>
-    /// <returns>The <see cref="ManagementResponse"/> returned from this endpoint with potential content of <see cref="VmInfo"/></returns>
-    public async Task<ManagementResponse> GetInfoAsync()
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>The <see cref="ResponseWith{VmInfo}"/> response</returns>
+    public async Task<ResponseWith<VmInfo>> GetInfoAsync(CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.GetAsync<VmInfo>("/");
+        return await _vm.Socket.GetAsync<VmInfo>("/", cancellationToken);
     }
 
     /// <summary>
     /// Gets the entirety of this microVM's <see cref="VmConfiguration"/> that takes all post-boot modifications into account.
     /// Endpoint: "GET /vm/config".
     /// </summary>
-    /// <returns>The <see cref="ManagementResponse"/> returned from this endpoint with potential content of <see cref="VmConfiguration"/></returns>
-    public async Task<ManagementResponse> GetCurrentConfigurationAsync()
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>The <see cref="ResponseWith{VmConfiguration}"/> response</returns>
+    public async Task<ResponseWith<VmConfiguration>> GetCurrentConfigurationAsync(CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.GetAsync<VmConfiguration>("/vm/config");
+        return await _vm.Socket.GetAsync<VmConfiguration>("/vm/config", cancellationToken);
     }
 
     /// <summary>
@@ -48,10 +50,13 @@ public sealed class VmManagement
     /// Endpoint: "PUT /actions".
     /// </summary>
     /// <param name="action">The <see cref="VmAction"/> to be performed</param>
-    /// <returns>The <see cref="ManagementResponse"/> returned that contains no content if successful</returns>
-    public async Task<ManagementResponse> PerformActionAsync(VmAction action)
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>The <see cref="Response"/> with no content</returns>
+    public async Task<Response> PerformActionAsync(
+        VmAction action,
+        CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.PutAsync("/actions", action);
+        return await _vm.Socket.PutAsync("/actions", action, cancellationToken);
     }
 
     /// <summary>
@@ -59,10 +64,11 @@ public sealed class VmManagement
     /// balloon was configured pre-boot of the microVM.
     /// Endpoint: "GET /balloon".
     /// </summary>
-    /// <returns>The <see cref="ManagementResponse"/> returned containing a <see cref="VmBalloon"/> upon success</returns>
-    public async Task<ManagementResponse> GetBalloonAsync()
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>The <see cref="ResponseWith{VmBalloon}"/> response</returns>
+    public async Task<ResponseWith<VmBalloon>> GetBalloonAsync(CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.GetAsync<VmBalloon>("/balloon");
+        return await _vm.Socket.GetAsync<VmBalloon>("/balloon", cancellationToken);
     }
 
     /// <summary>
@@ -70,10 +76,13 @@ public sealed class VmManagement
     /// Endpoint: "PATCH /balloon".
     /// </summary>
     /// <param name="balloonUpdate">The <see cref="VmBalloonUpdate"/> to be performed.</param>
-    /// <returns>A no-content <see cref="ManagementResponse"/> if successful</returns>
-    public async Task<ManagementResponse> UpdateBalloonAsync(VmBalloonUpdate balloonUpdate)
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>A <see cref="Response"/> with no content</returns>
+    public async Task<Response> UpdateBalloonAsync(
+        VmBalloonUpdate balloonUpdate,
+        CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.PatchAsync("/balloon", balloonUpdate);
+        return await _vm.Socket.PatchAsync("/balloon", balloonUpdate, cancellationToken);
     }
 
     /// <summary>
@@ -81,10 +90,11 @@ public sealed class VmManagement
     /// enabled (<see cref="VmBalloon.StatsPollingIntervalS"/> is greater than 0).
     /// Endpoint: "GET /balloon/statistics".
     /// </summary>
-    /// <returns>A <see cref="ManagementResponse"/> with <see cref="VmBalloonStatistics"/> if successful</returns>
-    public async Task<ManagementResponse> GetBalloonStatisticsAsync()
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>A <see cref="ResponseWith{VmBalloonStatistics}"/> response</returns>
+    public async Task<ResponseWith<VmBalloonStatistics>> GetBalloonStatisticsAsync(CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.GetAsync<VmBalloonStatistics>("/balloon/statistics");
+        return await _vm.Socket.GetAsync<VmBalloonStatistics>("/balloon/statistics", cancellationToken);
     }
 
     /// <summary>
@@ -93,11 +103,13 @@ public sealed class VmManagement
     /// Endpoint: "PATCH /balloon/statistics".
     /// </summary>
     /// <param name="balloonStatisticsUpdate">The specified <see cref="VmBalloonStatisticsUpdate"/> to be applied</param>
-    /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
-    public async Task<ManagementResponse> UpdateBalloonStatisticsAsync(
-        VmBalloonStatisticsUpdate balloonStatisticsUpdate)
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>A <see cref="Response"/> with no content</returns>
+    public async Task<Response> UpdateBalloonStatisticsAsync(
+        VmBalloonStatisticsUpdate balloonStatisticsUpdate,
+        CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.PatchAsync("/balloon/statistics", balloonStatisticsUpdate);
+        return await _vm.Socket.PatchAsync("/balloon/statistics", balloonStatisticsUpdate, cancellationToken);
     }
 
     /// <summary>
@@ -107,11 +119,14 @@ public sealed class VmManagement
     /// Endpoint: "PATCH /network-interfaces/{iface-id}".
     /// </summary>
     /// <param name="networkInterfaceUpdate">The <see cref="VmNetworkInterfaceUpdate"/> to be applied</param>
-    /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
-    public async Task<ManagementResponse> UpdateNetworkInterfaceAsync(VmNetworkInterfaceUpdate networkInterfaceUpdate)
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>A <see cref="Response"/> with no content</returns>
+    public async Task<Response> UpdateNetworkInterfaceAsync(
+        VmNetworkInterfaceUpdate networkInterfaceUpdate,
+        CancellationToken cancellationToken = default)
     {
         return await _vm.Socket.PatchAsync($"/network-interfaces/{networkInterfaceUpdate.IfaceId}",
-            networkInterfaceUpdate);
+            networkInterfaceUpdate, cancellationToken);
     }
 
     /// <summary>
@@ -119,10 +134,13 @@ public sealed class VmManagement
     /// Endpoint: "PATCH /vm".
     /// </summary>
     /// <param name="stateUpdate">The <see cref="VmStateUpdate"/> to be applied</param>
-    /// <returns>A <see cref="ManagementResponse"/> with no content if successful</returns>
-    public async Task<ManagementResponse> UpdateStateAsync(VmStateUpdate stateUpdate)
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>A <see cref="Response"/> with no content</returns>
+    public async Task<Response> UpdateStateAsync(
+        VmStateUpdate stateUpdate,
+        CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.PatchAsync("/vm", stateUpdate);
+        return await _vm.Socket.PatchAsync("/vm", stateUpdate, cancellationToken);
     }
 
     /// <summary>
@@ -130,52 +148,55 @@ public sealed class VmManagement
     /// Endpoint: "PATCH /drives/{drive-id}".
     /// </summary>
     /// <param name="driveUpdate">The <see cref="VmDriveUpdate"/> to be applied</param>
-    /// <returns>The <see cref="ManagementResponse"/> containing no content if successful</returns>
-    public async Task<ManagementResponse> UpdateDriveAsync(VmDriveUpdate driveUpdate)
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor</param>
+    /// <returns>The <see cref="Response"/> with no content</returns>
+    public async Task<Response> UpdateDriveAsync(
+        VmDriveUpdate driveUpdate,
+        CancellationToken cancellationToken = default)
     {
-        return await _vm.Socket.PatchAsync($"/drives/{driveUpdate.DriveId}", driveUpdate);
+        return await _vm.Socket.PatchAsync($"/drives/{driveUpdate.DriveId}", driveUpdate, cancellationToken);
     }
 
-    internal async Task ApplyVmConfigurationAsync(bool parallelize)
+    internal async Task ApplyVmConfigurationAsync(bool parallelize, CancellationToken cancellationToken)
     {
         var tasks = new List<Task>
         {
-            _vm.Socket.PutAsync("/boot-source", _vm.VmConfiguration.BootSource),
-            _vm.Socket.PutAsync("/machine-config", _vm.VmConfiguration.MachineConfiguration)
+            _vm.Socket.PutAsync("/boot-source", _vm.VmConfiguration.BootSource, cancellationToken),
+            _vm.Socket.PutAsync("/machine-config", _vm.VmConfiguration.MachineConfiguration, cancellationToken)
         };
 
         tasks.AddRange(_vm.VmConfiguration.Drives
-            .Select(drive => _vm.Socket.PutAsync($"/drives/{drive.DriveId}", drive)));
+            .Select(drive => _vm.Socket.PutAsync($"/drives/{drive.DriveId}", drive, cancellationToken)));
 
         if (_vm.VmConfiguration.NetworkInterfaces is not null)
         {
             tasks.AddRange(_vm.VmConfiguration.NetworkInterfaces
-                .Select(networkInterface => _vm.Socket.PutAsync($"/network-interfaces/{networkInterface.IfaceId}", networkInterface)));
+                .Select(networkInterface => _vm.Socket.PutAsync($"/network-interfaces/{networkInterface.IfaceId}", networkInterface, cancellationToken)));
         }
 
         if (_vm.VmConfiguration.Balloon is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/balloon", _vm.VmConfiguration.Balloon));
+            tasks.Add(_vm.Socket.PutAsync("/balloon", _vm.VmConfiguration.Balloon, cancellationToken));
         }
 
         if (_vm.VmConfiguration.Logger is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/logger", _vm.VmConfiguration.Logger));
+            tasks.Add(_vm.Socket.PutAsync("/logger", _vm.VmConfiguration.Logger, cancellationToken));
         }
 
         if (_vm.VmConfiguration.Metrics is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/metrics", _vm.VmConfiguration.Metrics));
+            tasks.Add(_vm.Socket.PutAsync("/metrics", _vm.VmConfiguration.Metrics, cancellationToken));
         }
 
         if (_vm.VmConfiguration.EntropyDevice is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/entropy", _vm.VmConfiguration.EntropyDevice));
+            tasks.Add(_vm.Socket.PutAsync("/entropy", _vm.VmConfiguration.EntropyDevice, cancellationToken));
         }
 
         if (_vm.VmConfiguration.Vsock is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/vsock", _vm.VmConfiguration.Vsock));
+            tasks.Add(_vm.Socket.PutAsync("/vsock", _vm.VmConfiguration.Vsock, cancellationToken));
         }
 
         if (parallelize)
@@ -189,5 +210,15 @@ public sealed class VmManagement
                 await task;
             }
         }
+    }
+
+    public static class Problems
+    {
+        public const string TimedOut = "request failed: timed out according to the given CancellationToken";
+        public const string CouldNotConnect = "request failed: could not connect";
+        public const string CouldNotReceiveStatusCode = "request failed: could not read HTTP status code";
+        public const string CouldNotReadResponseBody = "request failed: could not read response body";
+        public const string CouldNotParseFaultMessage = "could not parse fault message";
+        public const string CouldNotDeserializeJson = "request failed: could not deserialize JSON";
     }
 }

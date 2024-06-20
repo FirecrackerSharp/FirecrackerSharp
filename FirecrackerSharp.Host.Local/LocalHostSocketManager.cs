@@ -4,11 +4,11 @@ namespace FirecrackerSharp.Host.Local;
 
 internal sealed class LocalHostSocketManager : IHostSocketManager
 {
-    public IHostSocket Connect(string socketAddress, string baseAddress)
+    public IHostSocket Connect(string socketPath, string baseUri)
     {
-        if (!File.Exists(socketAddress))
+        if (!File.Exists(socketPath))
         {
-            throw new SocketDoesNotExistException($"The socket at \"{socketAddress}\" does not exist");
+            throw new SocketDoesNotExistException($"The socket at \"{socketPath}\" does not exist");
         }
         
         var httpClient = new HttpClient(new SocketsHttpHandler
@@ -16,13 +16,13 @@ internal sealed class LocalHostSocketManager : IHostSocketManager
             ConnectCallback = async (_, token) =>
             {
                 var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
-                var endpoint = new UnixDomainSocketEndPoint(socketAddress);
+                var endpoint = new UnixDomainSocketEndPoint(socketPath);
                 await socket.ConnectAsync(endpoint, token);
                 return new NetworkStream(socket, ownsSocket: true);
             }
         })
         {
-            BaseAddress = new Uri(baseAddress)
+            BaseAddress = new Uri(baseUri)
         };
         return new LocalHostSocket(httpClient);
     }

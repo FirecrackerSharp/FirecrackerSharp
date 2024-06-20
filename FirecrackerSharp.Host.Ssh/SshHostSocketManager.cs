@@ -2,13 +2,13 @@ namespace FirecrackerSharp.Host.Ssh;
 
 internal sealed class SshHostSocketManager(ConnectionPool connectionPool, CurlConfiguration curlConfiguration) : IHostSocketManager
 {
-    public IHostSocket Connect(string socketAddress, string baseAddress)
+    public IHostSocket Connect(string socketPath, string baseUri)
     {
-        if (!connectionPool.Sftp.Exists(socketAddress))
+        if (!connectionPool.Sftp.Exists(socketPath))
         {
-            throw new SocketDoesNotExistException($"The \"{socketAddress}\" socket does not exist");
+            throw new SocketDoesNotExistException($"The \"{socketPath}\" socket does not exist");
         }
         
-        return new SshHostSocket(connectionPool, curlConfiguration, baseAddress, socketAddress);
+        return new SshHostSocket(connectionPool, curlConfiguration, baseUri, socketPath);
     }
 }

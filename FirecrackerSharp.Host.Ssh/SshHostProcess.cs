@@ -51,7 +51,6 @@ internal sealed class SshHostProcess : IHostProcess, IAsyncDisposable
 
     public async Task KillAsync()
     {
-        _shellStream.WriteLine("^C");
         await DisposeAsync();
     }
 

@@ -1,5 +1,4 @@
 using AutoFixture.Xunit2;
-using DotNet.Testcontainers.Builders;
 using FirecrackerSharp.Management;
 using FluentAssertions;
 
@@ -8,6 +7,7 @@ namespace FirecrackerSharp.Host.Ssh.Tests;
 public class SshHostSocketManagerTests : SshHostFixture
 {
     private const string SocketAddress = "/tmp/uds-listener.sock";
+    private static CancellationToken CancellationToken => new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
     
     [Fact]
     public async Task Connect_ShouldNotThrow_ForExistingSocket()
@@ -29,81 +29,72 @@ public class SshHostSocketManagerTests : SshHostFixture
     public async Task GetAsync_ShouldReturnOk()
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.GetAsync<DataRecord>("get/ok");
-        response.TryUnwrap<DataRecord>()?
-            .Field.Should().Be(1);
+        var response = await socket.GetAsync<DataRecord>("get/ok", CancellationToken);
+        response.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task GetAsync_ShouldReturnBadRequest()
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.GetAsync<DataRecord>("get/bad-request");
-        var (errorType, _) = response.TryUnwrapError();
-        errorType.Should().Be(ManagementResponseType.BadRequest);
+        var response = await socket.GetAsync<DataRecord>("get/bad-request", CancellationToken);
+        response.Type.Should().Be(ResponseType.BadRequest);
     }
 
     [Fact]
     public async Task GetAsync_ShouldReturnInternalServerError()
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.GetAsync<DataRecord>("get/error");
-        var (errorType, _) = response.TryUnwrapError();
-        errorType.Should().Be(ManagementResponseType.InternalError);
+        var response = await socket.GetAsync<DataRecord>("get/error", CancellationToken);
+        response.Type.Should().Be(ResponseType.InternalError);
     }
 
     [Theory, AutoData]
     public async Task PatchAsync_ShouldReturnOk(DataRecord dataRecord)
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.PatchAsync("patch/ok", dataRecord);
-        response.TryUnwrap<DataRecord>()?
-            .Field.Should().Be(1);
+        var response = await socket.PatchAsync("patch/ok", dataRecord, CancellationToken);
+        response.IsSuccess.Should().BeTrue();
     }
 
     [Theory, AutoData]
     public async Task PatchAsync_ShouldReturnBadRequest(DataRecord dataRecord)
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.PatchAsync("patch/bad-request", dataRecord);
-        var (errorType, _) = response.TryUnwrapError();
-        errorType.Should().Be(ManagementResponseType.BadRequest);
+        var response = await socket.PatchAsync("patch/bad-request", dataRecord, CancellationToken);
+        response.Type.Should().Be(ResponseType.BadRequest);
     }
 
     [Theory, AutoData]
     public async Task PatchAsync_ShouldReturnInternalServerError(DataRecord dataRecord)
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.PatchAsync("patch/error", dataRecord);
-        var (errorType, _) = response.TryUnwrapError();
-        errorType.Should().Be(ManagementResponseType.InternalError);
+        var response = await socket.PatchAsync("patch/error", dataRecord, CancellationToken);
+        response.Type.Should().Be(ResponseType.InternalError);
     }
 
     [Theory, AutoData]
     public async Task PutAsync_ShouldReturnOk(DataRecord dataRecord)
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.PutAsync("put/ok", dataRecord);
-        response.TryUnwrap<DataRecord>()?
-            .Field.Should().Be(1);
+        var response = await socket.PutAsync("put/ok", dataRecord, CancellationToken);
+        response.IsSuccess.Should().BeTrue();
     }
 
     [Theory, AutoData]
     public async Task PutAsync_ShouldReturnBadRequest(DataRecord dataRecord)
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.PutAsync("put/bad-request", dataRecord);
-        var (errorType, _) = response.TryUnwrapError();
-        errorType.Should().Be(ManagementResponseType.BadRequest);
+        var response = await socket.PutAsync("put/bad-request", dataRecord, CancellationToken);
+        response.Type.Should().Be(ResponseType.BadRequest);
     }
     
     [Theory, AutoData]
     public async Task PutAsync_ShouldReturnInternalServerError(DataRecord dataRecord)
     {
         var socket = await ConnectToUdsAsync();
-        var response = await socket.PutAsync("put/error", dataRecord);
-        var (errorType, _) = response.TryUnwrapError();
-        errorType.Should().Be(ManagementResponseType.InternalError);
+        var response = await socket.PutAsync("put/error", dataRecord, CancellationToken);
+        response.Type.Should().Be(ResponseType.InternalError);
     }
 
     private async Task<IHostSocket> ConnectToUdsAsync()
@@ -141,4 +132,5 @@ public class SshHostSocketManagerTests : SshHostFixture
 }
 
 // ReSharper disable once ClassNeverInstantiated.Global
+// ReSharper disable once NotAccessedPositionalProperty.Global
 public record DataRecord(int Field);

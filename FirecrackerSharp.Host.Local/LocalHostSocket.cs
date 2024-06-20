@@ -8,52 +8,113 @@ namespace FirecrackerSharp.Host.Local;
 
 internal sealed class LocalHostSocket(HttpClient httpClient) : IHostSocket
 {
-    public async Task<ManagementResponse> GetAsync<T>(string uri)
-    {
-        var response = await httpClient.GetAsync(uri);
-        var json = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode) return HandleFault(response, json);
-        var obj = JsonSerializer.Deserialize<T>(json, FirecrackerSerialization.Options);
-        return ManagementResponse.Ok(obj);
-    }
-
-    public async Task<ManagementResponse> PutAsync<T>(string uri, T content)
-    {
-        var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
-        var response = await httpClient.PutAsync(uri, new StringContent(requestJson, MediaTypeHeaderValue.Parse("application/json")));
-        if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
-        var responseJson = await response.Content.ReadAsStringAsync();
-        return HandleFault(response, responseJson);
-    }
-
-    public async Task<ManagementResponse> PatchAsync<T>(string uri, T content)
-    {
-        var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
-        var response = await httpClient.PatchAsync(uri, new StringContent(requestJson, MediaTypeHeaderValue.Parse("application/json")));
-        if (response.IsSuccessStatusCode) return ManagementResponse.NoContent;
-        var responseJson = await response.Content.ReadAsStringAsync();
-        return HandleFault(response, responseJson);
-    }
-
     public void Dispose()
     {
         httpClient.Dispose();
     }
+    
+    public async Task<ResponseWith<TReceived>> GetAsync<TReceived>(string uri, CancellationToken cancellationToken) where TReceived : class
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.GetAsync(uri, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return ResponseWith<TReceived>.InternalError(VmManagement.Problems.CouldNotConnect);
+        }
+        catch (TaskCanceledException)
+        {
+            return ResponseWith<TReceived>.InternalError(VmManagement.Problems.TimedOut);
+        }
 
-    private static ManagementResponse HandleFault(HttpResponseMessage response, string json)
+        string responseJson;
+        try
+        {
+            responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        }
+        catch (Exception)
+        {
+            return ResponseWith<TReceived>.InternalError(VmManagement.Problems.CouldNotReadResponseBody);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var (responseType, error) = ParseFault(response, responseJson);
+            return responseType == ResponseType.BadRequest
+                ? ResponseWith<TReceived>.BadRequest(error)
+                : ResponseWith<TReceived>.InternalError(error);
+        }
+
+        TReceived obj;
+        try
+        {
+            obj = JsonSerializer.Deserialize<TReceived>(responseJson, FirecrackerSerialization.Options)!;
+        }
+        catch (JsonException)
+        {
+            return ResponseWith<TReceived>.InternalError(VmManagement.Problems.CouldNotDeserializeJson);
+        }
+
+        return ResponseWith<TReceived>.Success(obj);
+    }
+
+    public Task<Response> PutAsync<TSent>(string uri, TSent content, CancellationToken cancellationToken) where TSent : class =>
+        PutOrPatchAsync(content, c => httpClient.PutAsync(uri, c, cancellationToken));
+
+    public Task<Response> PatchAsync<TSent>(string uri, TSent content, CancellationToken cancellationToken) where TSent : class =>
+        PutOrPatchAsync(content, c => httpClient.PatchAsync(uri, c, cancellationToken));
+
+    private static async Task<Response> PutOrPatchAsync<TSent>(TSent content,
+        Func<StringContent, Task<HttpResponseMessage>> action)
+    {
+        var requestJson = JsonSerializer.Serialize(content, FirecrackerSerialization.Options);
+        HttpResponseMessage response;
+        try
+        {
+            var stringContent = new StringContent(requestJson, MediaTypeHeaderValue.Parse("application/json"));
+            response = await action(stringContent);
+        }
+        catch (HttpRequestException)
+        {
+            return Response.InternalError(VmManagement.Problems.CouldNotConnect);
+        }
+        catch (TaskCanceledException)
+        {
+            return Response.InternalError(VmManagement.Problems.TimedOut);
+        }
+        
+        if (response.IsSuccessStatusCode) return Response.Success;
+        
+        string responseJson;
+        try
+        {
+            responseJson = await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception)
+        {
+            return Response.InternalError(VmManagement.Problems.CouldNotReadResponseBody);
+        }
+        
+        var (responseType, error) = ParseFault(response, responseJson);
+        return responseType == ResponseType.BadRequest ? Response.BadRequest(error) : Response.InternalError(error);
+    }
+    
+    private static (ResponseType, string) ParseFault(HttpResponseMessage response, string json)
     {
         var badRequest = response.StatusCode == HttpStatusCode.BadRequest;
-        var faultMessage = "no fault message found";
-
+        var faultMessage = VmManagement.Problems.CouldNotParseFaultMessage;
+    
         try
         {
             faultMessage = JsonSerializer
                 .Deserialize<JsonNode>(json, FirecrackerSerialization.Options)
                 ?["fault_message"]
-                ?.GetValue<string>() ?? "no fault message found";
+                ?.GetValue<string>() ?? VmManagement.Problems.CouldNotParseFaultMessage;
         }
         catch (JsonException) {}
-
-        return badRequest ? ManagementResponse.BadRequest(faultMessage) : ManagementResponse.InternalError(faultMessage);
+    
+        return badRequest ? (ResponseType.BadRequest, faultMessage) : (ResponseType.InternalError, faultMessage);
     }
 }

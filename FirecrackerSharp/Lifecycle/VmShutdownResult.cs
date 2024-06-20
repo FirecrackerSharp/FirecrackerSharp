@@ -27,5 +27,9 @@ public enum VmShutdownResult
     /// <summary>
     /// The shutdown failed due to the primary write of the dispatched "reboot" TTY command not going through the TTY.
     /// </summary>
-    FailedDueToTtyNotResponding
+    FailedDueToTtyNotResponding,
+    /// <summary>
+    /// The shutdown failed due to an exception that is unknown
+    /// </summary>
+    FailedDueToUnknownReason
 }

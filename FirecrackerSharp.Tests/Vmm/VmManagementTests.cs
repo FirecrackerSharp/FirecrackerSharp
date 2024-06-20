@@ -14,14 +14,14 @@ public class VmManagementTests : SingleVmFixture
     public async Task GetInfoAsync_ShouldSucceed()
     {
         var response = await Vm.Management.GetInfoAsync();
-        response.ShouldSucceedWith<VmInfo>();
+        response.Content.Should().NotBeNull();
     }
 
     [Fact]
     public async Task GetCurrentConfigurationAsync_ShouldSucceed()
     {
         var response = await Vm.Management.GetCurrentConfigurationAsync();
-        response.ShouldSucceedWith<VmConfiguration>();
+        response.Content.Should().NotBeNull();
     }
 
     [Theory]
@@ -30,14 +30,14 @@ public class VmManagementTests : SingleVmFixture
     public async Task PerformActionAsync_ShouldSucceed(VmActionType vmActionType)
     {
         var response = await Vm.Management.PerformActionAsync(new VmAction(vmActionType));
-        response.ShouldSucceed();
+        response.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task GetBalloonAsync_ShouldSucceed()
     {
         var response = await Vm.Management.GetBalloonAsync();
-        response.ShouldSucceedWith<VmBalloon>();
+        response.Content.Should().NotBeNull();
     }
 
     [Fact]
@@ -46,18 +46,18 @@ public class VmManagementTests : SingleVmFixture
         const int newBalloonAmountMib = 256;
         
         var updateResponse = await Vm.Management.UpdateBalloonAsync(new VmBalloonUpdate(newBalloonAmountMib));
-        updateResponse.ShouldSucceed();
+        updateResponse.IsSuccess.Should().BeTrue();
 
         var checkResponse = await Vm.Management.GetBalloonAsync();
-        checkResponse.ShouldSucceedWith<VmBalloon>()
-            .AmountMib.Should().Be(newBalloonAmountMib);
+        checkResponse.Content.Should().NotBeNull();
+        checkResponse.Content!.AmountMib.Should().Be(newBalloonAmountMib);
     }
 
     [Fact]
     public async Task GetBalloonStatisticsAsync_ShouldSucceed()
     {
         var response = await Vm.Management.GetBalloonStatisticsAsync();
-        response.ShouldSucceedWith<VmBalloonStatistics>();
+        response.Content.Should().NotBeNull();
     }
 
     [Fact]
@@ -65,19 +65,18 @@ public class VmManagementTests : SingleVmFixture
     {
         const int newPollingInterval = 3;
 
-        var updateResponse =
-            await Vm.Management.UpdateBalloonStatisticsAsync(new VmBalloonStatisticsUpdate(newPollingInterval));
-        updateResponse.ShouldSucceed();
+        var updateResponse = await Vm.Management.UpdateBalloonStatisticsAsync(new VmBalloonStatisticsUpdate(newPollingInterval));
+        updateResponse.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task UpdateStateAsync_CanPauseAndResumeVm()
     {
         var pauseResponse = await Vm.Management.UpdateStateAsync(new VmStateUpdate(VmStateForUpdate.Paused));
-        pauseResponse.ShouldSucceed();
+        pauseResponse.IsSuccess.Should().BeTrue();
 
         var resumeResponse = await Vm.Management.UpdateStateAsync(new VmStateUpdate(VmStateForUpdate.Resumed));
-        resumeResponse.ShouldSucceed();
+        resumeResponse.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -87,6 +86,6 @@ public class VmManagementTests : SingleVmFixture
             "rootfs", RateLimiter: new VmRateLimiter(
                 new VmTokenBucket(10, 10, 10),
                 new VmTokenBucket(10, 10, 10))));
-        response.ShouldSucceed();
+        response.IsSuccess.Should().BeTrue();
     }
 }

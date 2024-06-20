@@ -4,9 +4,9 @@ namespace FirecrackerSharp.Host;
 
 public interface IHostSocket : IDisposable
 {
-    public Task<ManagementResponse> GetAsync<T>(string uri);
+    public Task<ResponseWith<TReceived>> GetAsync<TReceived>(string uri, CancellationToken cancellationToken) where TReceived : class;
 
-    public Task<ManagementResponse> PutAsync<T>(string uri, T content);
+    public Task<Response> PutAsync<TSent>(string uri, TSent content, CancellationToken cancellationToken) where TSent : class;
 
-    public Task<ManagementResponse> PatchAsync<T>(string uri, T content);
+    public Task<Response> PatchAsync<TSent>(string uri, TSent content, CancellationToken cancellationToken) where TSent : class;
 }

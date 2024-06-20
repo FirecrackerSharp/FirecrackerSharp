@@ -34,14 +34,16 @@ public class LocalHostSocketManagerTests : LocalHostFixture
     {
         await WithUdsAsync(async socket =>
         {
-            var okResponse = await socket.GetAsync<DataRecord>("/get/ok");
-            okResponse.TryUnwrap<DataRecord>()?.Field.Should().Be(1);
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
             
-            var badRequestResponse = await socket.GetAsync<DataRecord>("/get/bad-request");
-            badRequestResponse.TryUnwrapError().Item1.Should().Be(ManagementResponseType.BadRequest);
+            var okResponse = await socket.GetAsync<DataRecord>("/get/ok", cancellationToken);
+            okResponse.IsSuccess.Should().BeTrue();
             
-            var errorResponse = await socket.GetAsync<DataRecord>("/get/error");
-            errorResponse.TryUnwrapError().Item1.Should().Be(ManagementResponseType.InternalError);
+            var badRequestResponse = await socket.GetAsync<DataRecord>("/get/bad-request", cancellationToken);
+            badRequestResponse.Type.Should().Be(ResponseType.BadRequest);
+            
+            var errorResponse = await socket.GetAsync<DataRecord>("/get/error", cancellationToken);
+            errorResponse.Type.Should().Be(ResponseType.InternalError);
         });
     }
 
@@ -50,14 +52,16 @@ public class LocalHostSocketManagerTests : LocalHostFixture
     {
         await WithUdsAsync(async socket =>
         {
-            var okResponse = await socket.PatchAsync("/patch/ok", dataRecord);
-            okResponse.TryUnwrap<DataRecord>()?.Field.Should().Be(1);
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
+            
+            var okResponse = await socket.PatchAsync("/patch/ok", dataRecord, cancellationToken);
+            okResponse.IsSuccess.Should().BeTrue();
 
-            var badRequestResponse = await socket.PatchAsync("/patch/bad-request", dataRecord);
-            badRequestResponse.TryUnwrapError().Item1.Should().Be(ManagementResponseType.BadRequest);
+            var badRequestResponse = await socket.PatchAsync("/patch/bad-request", dataRecord, cancellationToken);
+            badRequestResponse.Type.Should().Be(ResponseType.BadRequest);
 
-            var errorResponse = await socket.PatchAsync("/patch/error", dataRecord);
-            errorResponse.TryUnwrapError().Item1.Should().Be(ManagementResponseType.InternalError);
+            var errorResponse = await socket.PatchAsync("/patch/error", dataRecord, cancellationToken);
+            errorResponse.Type.Should().Be(ResponseType.InternalError);
         });
     }
 
@@ -66,14 +70,16 @@ public class LocalHostSocketManagerTests : LocalHostFixture
     {
         await WithUdsAsync(async socket =>
         {
-            var okResponse = await socket.PutAsync("/put/ok", dataRecord);
-            okResponse.TryUnwrap<DataRecord>()?.Field.Should().Be(1);
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token;
+            
+            var okResponse = await socket.PutAsync("/put/ok", dataRecord, cancellationToken);
+            okResponse.IsSuccess.Should().BeTrue();
 
-            var badRequestResponse = await socket.PutAsync("/put/bad-request", dataRecord);
-            badRequestResponse.TryUnwrapError().Item1.Should().Be(ManagementResponseType.BadRequest);
+            var badRequestResponse = await socket.PutAsync("/put/bad-request", dataRecord, cancellationToken);
+            badRequestResponse.Type.Should().Be(ResponseType.BadRequest);
 
-            var errorResponse = await socket.PutAsync("/put/error", dataRecord);
-            errorResponse.TryUnwrapError().Item1.Should().Be(ManagementResponseType.InternalError);
+            var errorResponse = await socket.PutAsync("/put/error", dataRecord, cancellationToken);
+            errorResponse.Type.Should().Be(ResponseType.InternalError);
         });
     }
 
@@ -115,4 +121,5 @@ public class LocalHostSocketManagerTests : LocalHostFixture
 }
 
 // ReSharper disable once ClassNeverInstantiated.Global
+// ReSharper disable once NotAccessedPositionalProperty.Global
 public record DataRecord(int Field);

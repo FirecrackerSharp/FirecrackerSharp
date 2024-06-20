@@ -127,16 +127,24 @@ public abstract class Vm
         
         if (VmConfiguration.ApplicationMode != VmConfigurationApplicationMode.JsonConfiguration)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisForSocketInitialization));
-            
+            if (VmConfiguration.WaitOptions.DelayBeforeBootApiRequests.HasValue)
+            {
+                await Task.Delay(VmConfiguration.WaitOptions.DelayBeforeBootApiRequests.Value);
+            }
+
+            var cancellationToken = new CancellationTokenSource(VmConfiguration.WaitOptions.TimeoutForBootApiRequests).Token;
             await _management.ApplyVmConfigurationAsync(
-                parallelize: VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ParallelizedApiCalls);
+                parallelize: VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ParallelizedApiCalls,
+                cancellationToken);
             
-            await _management.PerformActionAsync(new VmAction(VmActionType.InstanceStart));
+            await _management.PerformActionAsync(new VmAction(VmActionType.InstanceStart), cancellationToken);
         }
-        
-        await Task.Delay(TimeSpan.FromMilliseconds(FirecrackerOptions.WaitMillisAfterBoot));
-        
+
+        if (VmConfiguration.WaitOptions.DelayForBoot.HasValue)
+        {
+            await Task.Delay(VmConfiguration.WaitOptions.DelayForBoot.Value);
+        }
+
         await AuthenticateTtyAsync();
     }
 
@@ -190,12 +198,11 @@ public abstract class Vm
         }
 
         var shutdownResult = VmShutdownResult.Successful;
-        var cancellationTokenSource = new CancellationTokenSource();
-        cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
+        var cancellationToken = new CancellationTokenSource(VmConfiguration.WaitOptions.TimeoutForShutdown).Token;
 
         try
         {
-            await Process!.WriteLineAsync("reboot", cancellationTokenSource.Token);
+            await Process!.WriteLineAsync("reboot", cancellationToken);
             var exited = await Process!.WaitForExitAsync(TimeSpan.FromSeconds(30), "Firecracker exiting");
             if (exited)
             {
@@ -217,6 +224,11 @@ public abstract class Vm
         {
             Logger.Warning("microVM {vmId} didn't respond to reboot signal being written to TTY", VmId);
             shutdownResult = VmShutdownResult.FailedDueToTtyNotResponding;
+        }
+        catch (Exception exception)
+        {
+            Logger.Warning("microVM {vmId} wasn't shut down due to an unknown exception: {exception}", VmId, exception);
+            shutdownResult = VmShutdownResult.FailedDueToUnknownReason;
         }
 
         try
