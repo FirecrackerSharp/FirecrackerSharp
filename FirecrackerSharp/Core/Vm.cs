@@ -96,7 +96,8 @@ public abstract class Vm
     /// </summary>
     /// <exception cref="NotAccessibleDueToLifecycleException">If this was called not during the "not booted"
     /// phase, which is the only one supported for this operation</exception>
-    public async Task BootAsync()
+    /// <returns>A <see cref="VmBootResult"/> indicating the success or failure of this boot operation</returns>
+    public async Task<VmBootResult> BootAsync()
     {
         if (Lifecycle.CurrentPhase != VmLifecyclePhase.NotBooted)
         {
@@ -104,10 +105,22 @@ public abstract class Vm
         }
 
         Lifecycle.CurrentPhase = VmLifecyclePhase.Booting;
-        await BootInternalAsync();
-        await HandlePostBootAsync();
+        try
+        { await BootInternalAsync(); }
+        catch (Exception)
+        { return VmBootResult.FailedDuringProcessInvocation; }
+
+        VmBootResult finalResult;
+        try
+        { finalResult = await HandlePostBootAsync(); }
+        catch (Exception)
+        { return VmBootResult.FailedDueToUnknownReason; }
+
+        if (finalResult != VmBootResult.Successful) return finalResult;
+        
         Logger.Information("Launched microVM {vmId}", VmId);
         Lifecycle.CurrentPhase = VmLifecyclePhase.Active;
+        return VmBootResult.Successful;
     }
 
     protected abstract Task BootInternalAsync();
@@ -121,7 +134,7 @@ public abstract class Vm
         Logger.Debug("Configuration was serialized (to JSON) as a transit to: {configPath}", configPath);
     }
 
-    private async Task HandlePostBootAsync()
+    private async Task<VmBootResult> HandlePostBootAsync()
     {
         _ttyClient.StartListening();
         
@@ -133,11 +146,13 @@ public abstract class Vm
             }
 
             var cancellationToken = new CancellationTokenSource(VmConfiguration.WaitOptions.TimeoutForBootApiRequests).Token;
-            await _management.ApplyVmConfigurationAsync(
+            var allResponsesAreSuccessful = await _management.ApplyVmConfigurationAsync(
                 parallelize: VmConfiguration.ApplicationMode == VmConfigurationApplicationMode.ParallelizedApiCalls,
                 cancellationToken);
+            if (!allResponsesAreSuccessful) return VmBootResult.FailedDueToApiRequestFailure;
             
-            await _management.PerformActionAsync(new VmAction(VmActionType.InstanceStart), cancellationToken);
+            var startResponse = await _management.PerformActionAsync(new VmAction(VmActionType.InstanceStart), cancellationToken);
+            if (startResponse.IsFailure) return VmBootResult.FailedDueToApiRequestFailure;
         }
 
         if (VmConfiguration.WaitOptions.DelayForBoot.HasValue)
@@ -145,12 +160,13 @@ public abstract class Vm
             await Task.Delay(VmConfiguration.WaitOptions.DelayForBoot.Value);
         }
 
-        await AuthenticateTtyAsync();
+        var authSuccessful = await AuthenticateTtyAsync();
+        return authSuccessful ? VmBootResult.Successful : VmBootResult.FailedDuringTtyAuthentication;
     }
 
-    private async Task AuthenticateTtyAsync()
+    private async Task<bool> AuthenticateTtyAsync()
     {
-        if (VmConfiguration.TtyAuthentication is null) return;
+        if (VmConfiguration.TtyAuthentication is null) return true;
         
         try
         {
@@ -169,11 +185,14 @@ public abstract class Vm
                 VmConfiguration.TtyAuthentication.Password,
                 cancellationToken: ttyAuthenticationTokenSource.Token);
             _ttyClient.CompletePrimaryWrite();
+            
+            return true;
         }
         catch (TtyException)
         {
             Logger.Error("TTY authentication failed for microVM {vmId}, likely due to a" +
                          " misconfiguration. A graceful shutdown may not be possible", VmId);
+            return false;
         }
     }
 

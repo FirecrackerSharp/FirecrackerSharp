@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
 
         <PackageId>FirecrackerSharp.Host.Ssh</PackageId>
-        <Version>1.0.0-rc.5</Version>
+        <Version>1.0.0-rc.6</Version>
         <Authors>kanpov</Authors>
         <Company>kanpov</Company>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

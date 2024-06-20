@@ -4,6 +4,7 @@ using FirecrackerSharp.Data.Ballooning;
 using FirecrackerSharp.Data.Drives;
 using FirecrackerSharp.Installation;
 using FirecrackerSharp.Lifecycle;
+using FluentAssertions;
 
 namespace FirecrackerSharp.Tests.Helpers;
 
@@ -32,7 +33,8 @@ public static class VmArrange
             FirecrackerInstall,
             FirecrackerOptions,
             VmId);
-        await unrestrictedVm.BootAsync();
+        var bootResult = await unrestrictedVm.BootAsync();
+        bootResult.IsSuccessful().Should().BeTrue();
         return unrestrictedVm;
     }
 
@@ -47,7 +49,8 @@ public static class VmArrange
             FirecrackerOptions,
             JailerOptions,
             VmId);
-        await jailedVm.BootAsync();
+        var bootResult = await jailedVm.BootAsync();
+        bootResult.IsSuccessful().Should().BeTrue();
         return jailedVm;
     }
 }

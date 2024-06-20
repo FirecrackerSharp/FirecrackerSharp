@@ -157,46 +157,49 @@ public sealed class VmManagement
         return await _vm.Socket.PatchAsync($"/drives/{driveUpdate.DriveId}", driveUpdate, cancellationToken);
     }
 
-    internal async Task ApplyVmConfigurationAsync(bool parallelize, CancellationToken cancellationToken)
+    internal async Task<bool> ApplyVmConfigurationAsync(bool parallelize, CancellationToken cancellationToken)
     {
+        var allResponsesAreSuccessful = true;
+        
         var tasks = new List<Task>
         {
-            _vm.Socket.PutAsync("/boot-source", _vm.VmConfiguration.BootSource, cancellationToken),
-            _vm.Socket.PutAsync("/machine-config", _vm.VmConfiguration.MachineConfiguration, cancellationToken)
+            Wrap(() =>_vm.Socket.PutAsync("/boot-source", _vm.VmConfiguration.BootSource, cancellationToken)),
+            Wrap(() => _vm.Socket.PutAsync("/machine-config", _vm.VmConfiguration.MachineConfiguration, cancellationToken))
         };
 
         tasks.AddRange(_vm.VmConfiguration.Drives
-            .Select(drive => _vm.Socket.PutAsync($"/drives/{drive.DriveId}", drive, cancellationToken)));
+            .Select(drive => Wrap(() => _vm.Socket.PutAsync($"/drives/{drive.DriveId}", drive, cancellationToken))));
 
         if (_vm.VmConfiguration.NetworkInterfaces is not null)
         {
             tasks.AddRange(_vm.VmConfiguration.NetworkInterfaces
-                .Select(networkInterface => _vm.Socket.PutAsync($"/network-interfaces/{networkInterface.IfaceId}", networkInterface, cancellationToken)));
+                .Select(networkInterface =>
+                    Wrap(() => _vm.Socket.PutAsync($"/network-interfaces/{networkInterface.IfaceId}", networkInterface, cancellationToken))));
         }
 
         if (_vm.VmConfiguration.Balloon is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/balloon", _vm.VmConfiguration.Balloon, cancellationToken));
+            tasks.Add(Wrap(() =>_vm.Socket.PutAsync("/balloon", _vm.VmConfiguration.Balloon, cancellationToken)));
         }
 
         if (_vm.VmConfiguration.Logger is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/logger", _vm.VmConfiguration.Logger, cancellationToken));
+            tasks.Add(Wrap(() => _vm.Socket.PutAsync("/logger", _vm.VmConfiguration.Logger, cancellationToken)));
         }
 
         if (_vm.VmConfiguration.Metrics is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/metrics", _vm.VmConfiguration.Metrics, cancellationToken));
+            tasks.Add(Wrap(() => _vm.Socket.PutAsync("/metrics", _vm.VmConfiguration.Metrics, cancellationToken)));
         }
 
         if (_vm.VmConfiguration.EntropyDevice is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/entropy", _vm.VmConfiguration.EntropyDevice, cancellationToken));
+            tasks.Add(Wrap(() =>_vm.Socket.PutAsync("/entropy", _vm.VmConfiguration.EntropyDevice, cancellationToken)));
         }
 
         if (_vm.VmConfiguration.Vsock is not null)
         {
-            tasks.Add(_vm.Socket.PutAsync("/vsock", _vm.VmConfiguration.Vsock, cancellationToken));
+            tasks.Add(Wrap(() => _vm.Socket.PutAsync("/vsock", _vm.VmConfiguration.Vsock, cancellationToken)));
         }
 
         if (parallelize)
@@ -210,11 +213,23 @@ public sealed class VmManagement
                 await task;
             }
         }
+
+        return allResponsesAreSuccessful;
+
+        async Task Wrap(Func<Task<Response>> action)
+        {
+            var response = await action();
+            if (response != Response.Success) allResponsesAreSuccessful = false;
+        }
     }
 
+    /// <summary>
+    /// Static messages that are meant to be reused by multiple VM host implementations as errors inside faulty
+    /// Management API responses.
+    /// </summary>
     public static class Problems
     {
-        public const string TimedOut = "request failed: timed out according to the given CancellationToken";
+        public const string TimedOut = "request failed: timed out according to the given cancellation token";
         public const string CouldNotConnect = "request failed: could not connect";
         public const string CouldNotReceiveStatusCode = "request failed: could not read HTTP status code";
         public const string CouldNotReadResponseBody = "request failed: could not read response body";
