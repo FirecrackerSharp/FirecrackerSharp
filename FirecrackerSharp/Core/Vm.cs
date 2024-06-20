@@ -195,7 +195,7 @@ public abstract class Vm
 
         try
         {
-            await _ttyClient.BeginPrimaryWriteAsync("reboot", cancellationToken: cancellationTokenSource.Token);
+            await Process!.WriteLineAsync("reboot", cancellationTokenSource.Token);
             try
             {
                 await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));

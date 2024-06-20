@@ -56,6 +56,6 @@ public sealed class ExitSignalCompletionTracker : ICompletionTracker
 
     public bool Check(string line)
     {
-        return line.Trim() == _currentExitSignal;
+        return line.Trim('\n') == _currentExitSignal;
     }
 }

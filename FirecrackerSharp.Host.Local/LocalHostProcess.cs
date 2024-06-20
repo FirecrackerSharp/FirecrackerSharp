@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 
 namespace FirecrackerSharp.Host.Local;
 
@@ -6,8 +7,8 @@ internal sealed class LocalHostProcess : IHostProcess
 {
     private readonly Process _osProcess;
     
-    public StreamWriter StdinWriter => _osProcess.StandardInput;
     public string CurrentOutput { get; set; } = string.Empty;
+    public bool SupportsExpect => false;
     public event EventHandler<string>? OutputReceived;
 
     internal LocalHostProcess(Process osProcess)
@@ -37,6 +38,18 @@ internal sealed class LocalHostProcess : IHostProcess
         {
             CurrentOutput += line;
         };
+    }
+
+    public bool Expect(string text, TimeSpan timeout) => false;
+
+    public Task WriteAsync(string text, CancellationToken cancellationToken)
+    {
+        return _osProcess.StandardInput.WriteAsync(new StringBuilder(text), cancellationToken);
+    }
+
+    public Task WriteLineAsync(string text, CancellationToken cancellationToken)
+    {
+        return _osProcess.StandardInput.WriteLineAsync(new StringBuilder(text), cancellationToken);
     }
 
     public Task KillAsync()

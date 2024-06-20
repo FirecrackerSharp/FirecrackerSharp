@@ -51,8 +51,8 @@ internal sealed class LocalHostProcessManager : IHostProcessManager
         
         var process = new LocalHostProcess(osProcess);
 
-        await process.StdinWriter.WriteLineAsync(password);
-        await process.StdinWriter.WriteLineAsync(executable + " " + args);
+        await process.WriteLineAsync(password, default);
+        await process.WriteLineAsync(executable + " " + args, default);
 
         return process;
     }

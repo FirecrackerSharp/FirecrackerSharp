@@ -15,12 +15,12 @@ public static class VmArrange
         Drives: [new VmDrive("rootfs", IsRootDevice: true, PathOnHost: "/opt/testdata/ubuntu-22.04.ext4")],
         Balloon: new VmBalloon(AmountMib: 128, DeflateOnOom: false, StatsPollingIntervalS: 1));
 
-    private static FirecrackerOptions FirecrackerOptions => new(
+    private static readonly FirecrackerOptions FirecrackerOptions = new(
         Guid.NewGuid().ToString(),
         WaitMillisAfterBoot: 2000,
         WaitMillisForSocketInitialization: 200);
 
-    private static JailerOptions JailerOptions => new(
+    private static readonly JailerOptions JailerOptions = new(
         1000, 1000, SudoPassword: Environment.GetEnvironmentVariable("FSH_ROOT_PASSWORD"));
 
     private static readonly FirecrackerInstall FirecrackerInstall = new(

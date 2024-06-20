@@ -24,6 +24,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\FirecrackerSharp.Host.Local\FirecrackerSharp.Host.Local.csproj" />
+      <ProjectReference Include="..\FirecrackerSharp.Host.Ssh\FirecrackerSharp.Host.Ssh.csproj" />
       <ProjectReference Include="..\FirecrackerSharp\FirecrackerSharp.csproj" />
     </ItemGroup>
 

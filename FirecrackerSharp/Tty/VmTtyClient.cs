@@ -323,11 +323,11 @@ public sealed class VmTtyClient
         {
             if (insertNewline)
             {
-                await _vm.Process!.StdinWriter.WriteLineAsync(new StringBuilder(inputText), cancellationToken);
+                await _vm.Process!.WriteLineAsync(inputText, cancellationToken);
             }
             else
             {
-                await _vm.Process!.StdinWriter.WriteAsync(new StringBuilder(inputText), cancellationToken);
+                await _vm.Process!.WriteAsync(inputText, cancellationToken);
             }
         }
         catch (OperationCanceledException)
