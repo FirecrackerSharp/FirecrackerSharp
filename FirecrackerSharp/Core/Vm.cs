@@ -196,12 +196,12 @@ public abstract class Vm
         try
         {
             await Process!.WriteLineAsync("reboot", cancellationTokenSource.Token);
-            try
+            var exited = await Process!.WaitForExitAsync(TimeSpan.FromSeconds(30), "Firecracker exiting");
+            if (exited)
             {
-                await Process!.WaitForGracefulExitAsync(TimeSpan.FromSeconds(30));
                 Logger.Information("microVM {vmId} exited gracefully", VmId);
             }
-            catch (Exception)
+            else
             {
                 await Process!.KillAsync();
                 Logger.Warning("microVM {vmId} had to be forcefully killed", VmId);

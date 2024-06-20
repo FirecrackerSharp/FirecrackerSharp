@@ -1,4 +1,3 @@
-using System.Text;
 using FirecrackerSharp.Core;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tty.CompletionTracking;
@@ -87,16 +86,17 @@ public sealed class VmTtyClient
             var shouldCapture = true;
             var shouldCompletePrimary = false;
             var shouldCompleteIntermittent = false;
+            var trimmedLine = line.TrimEnd('\r', '\n');
             
             if (_primaryCompletionTracker is not null)
             {
-                shouldCompletePrimary = _primaryCompletionTracker.Check(line);
-                shouldCapture = _primaryCompletionTracker.ShouldCapture(line);
+                shouldCompletePrimary = _primaryCompletionTracker.Check(trimmedLine);
+                shouldCapture = _primaryCompletionTracker.ShouldCapture(trimmedLine);
             }
 
             if (_intermittentCompletionTracker is not null)
             {
-                shouldCompleteIntermittent = _intermittentCompletionTracker.Check(line);
+                shouldCompleteIntermittent = _intermittentCompletionTracker.Check(trimmedLine);
             }
             
             if (shouldCapture && OutputBuffer is not null)

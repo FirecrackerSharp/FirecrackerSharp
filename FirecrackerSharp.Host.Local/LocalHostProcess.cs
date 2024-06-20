@@ -8,7 +8,6 @@ internal sealed class LocalHostProcess : IHostProcess
     private readonly Process _osProcess;
     
     public string CurrentOutput { get; set; } = string.Empty;
-    public bool SupportsExpect => false;
     public event EventHandler<string>? OutputReceived;
 
     internal LocalHostProcess(Process osProcess)
@@ -40,8 +39,6 @@ internal sealed class LocalHostProcess : IHostProcess
         };
     }
 
-    public bool Expect(string text, TimeSpan timeout) => false;
-
     public Task WriteAsync(string text, CancellationToken cancellationToken)
     {
         return _osProcess.StandardInput.WriteAsync(new StringBuilder(text), cancellationToken);
@@ -58,7 +55,7 @@ internal sealed class LocalHostProcess : IHostProcess
         return Task.CompletedTask;
     }
 
-    public async Task<bool> WaitForGracefulExitAsync(TimeSpan timeout)
+    public async Task<bool> WaitForExitAsync(TimeSpan timeout, string? expectation)
     {
         var cancellationToken = new CancellationTokenSource(timeout).Token;
         try

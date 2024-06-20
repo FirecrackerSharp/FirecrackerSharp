@@ -28,8 +28,6 @@ public sealed class StringMatchCompletionTracker(
 
     public bool Check(string line)
     {
-        line = line.Trim('\n');
-        
         return stringMatchOperation switch
         {
             StringMatchOperation.Contains => line.Contains(value, stringComparison),

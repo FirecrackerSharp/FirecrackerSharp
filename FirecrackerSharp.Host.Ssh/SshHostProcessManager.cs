@@ -13,7 +13,7 @@ internal sealed class SshHostProcessManager(ConnectionPool connectionPool, Shell
             shellConfiguration.Height,
             shellConfiguration.BufferSize);
         shellStream.WriteLine(executable + " " + args);
-        return new SshHostProcess(shellStream, ssh, shellConfiguration);
+        return new SshHostProcess(shellStream, ssh);
     }
 
     public bool IsEscalated => connectionPool.ConnectionInfo.Username == "root";

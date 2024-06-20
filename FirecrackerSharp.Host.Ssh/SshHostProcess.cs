@@ -7,45 +7,34 @@ internal sealed class SshHostProcess : IHostProcess, IAsyncDisposable
 {
     private readonly ShellStream _shellStream;
     private readonly IBaseClient _sshClient;
-    private readonly ShellConfiguration _shellConfiguration;
     private readonly StringBuilder _buffer = new();
     
     public string CurrentOutput { get; set; } = string.Empty;
 
-    public bool SupportsExpect => true;
     public event EventHandler<string>? OutputReceived;
 
-    internal SshHostProcess(ShellStream shellStream, IBaseClient sshClient, ShellConfiguration shellConfiguration)
+    internal SshHostProcess(ShellStream shellStream, IBaseClient sshClient)
     {
         _shellStream = shellStream;
         _sshClient = sshClient;
-        _shellConfiguration = shellConfiguration;
 
         _shellStream.DataReceived += (_, args) =>
         {
             var line = Encoding.UTF8.GetString(args.Data);
-            if (line != "")
-            {
-                _buffer.Append(line);
-                var content = _buffer.ToString();
-                if (content.EndsWith('\n'))
-                {
-                    OutputReceived?.Invoke(sender: this, content);
-                    _buffer.Clear();
-                }
-            }
+            if (line == "") return;
+            
+            _buffer.Append(line);
+            var content = _buffer.ToString();
+            if (!content.EndsWith('\n')) return;
+            
+            OutputReceived?.Invoke(sender: this, content);
+            _buffer.Clear();
         };
 
         OutputReceived += (_, line) =>
         {
             CurrentOutput += line;
         };
-    }
-
-    public bool Expect(string text, TimeSpan timeout)
-    {
-        var result = _shellStream.Expect(text, timeout);
-        return result is not null;
     }
 
     public Task WriteAsync(string text, CancellationToken cancellationToken)
@@ -57,7 +46,6 @@ internal sealed class SshHostProcess : IHostProcess, IAsyncDisposable
     public Task WriteLineAsync(string text, CancellationToken cancellationToken)
     {
         _shellStream.WriteLine(text);
-        _shellStream.Expect("exit_code");
         return Task.CompletedTask;
     }
 
@@ -67,9 +55,10 @@ internal sealed class SshHostProcess : IHostProcess, IAsyncDisposable
         await DisposeAsync();
     }
 
-    public async Task<bool> WaitForGracefulExitAsync(TimeSpan timeout)
+    public async Task<bool> WaitForExitAsync(TimeSpan timeout, string? expectation)
     {
-        var result = _shellStream.Expect(_shellConfiguration.ExpectedShellEnding, timeout);
+        if (expectation is null) return false;
+        var result = _shellStream.Expect(expectation, timeout);
         await DisposeAsync();
         return result is not null;
     }

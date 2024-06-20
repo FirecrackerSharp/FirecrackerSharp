@@ -13,21 +13,18 @@ namespace FirecrackerSharp.Host.Ssh;
 /// <param name="Width">The width of the terminal</param>
 /// <param name="Height">The height of the terminal</param>
 /// <param name="BufferSize">The buffer size of the terminal</param>
-/// <param name="ExpectedShellEnding">The expected ending of this shell. This is used in order to detect when the
-/// Firecracker process has terminated</param>
 public sealed record ShellConfiguration(
     string Terminal,
     uint Columns,
     uint Rows,
     uint Width,
     uint Height,
-    int BufferSize,
-    string ExpectedShellEnding)
+    int BufferSize)
 {
     /// <summary>
     /// A default <see cref="ShellConfiguration"/> usable for most cases. Uses Bash with 1000x1000 columns and rows,
-    /// 1000x1000 size and a ":~#" expected ending.
+    /// 1000x1000 size.
     /// </summary>
     public static readonly ShellConfiguration Default = new(
-        "/bin/bash", 1000, 1000, 1000, 1000, 1000, ":~#");
+        "/bin/bash", 1000, 1000, 1000, 1000, 1000);
 }
