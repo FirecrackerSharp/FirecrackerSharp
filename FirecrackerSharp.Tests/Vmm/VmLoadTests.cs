@@ -46,7 +46,7 @@ public class VmLoadTests : MinimalFixture
 
         for (var i = 0; i < load; ++i)
         {
-            bootTasks.Add(jailed ? JailedLaunchAsync() : UnrestrictedLaunchAsync());
+            bootTasks.Add(jailed ? JailedLaunchAsync() : UnrestrictedLaunchAsync(i));
         }
 
         await Task.WhenAll(bootTasks);
@@ -62,9 +62,12 @@ public class VmLoadTests : MinimalFixture
 
         return;
 
-        async Task UnrestrictedLaunchAsync()
+        async Task UnrestrictedLaunchAsync(int i)
         {
-            vms.Add(await VmArrange.StartUnrestrictedVm());
+            var vm = VmArrange.GetUnrestrictedVm();
+            vm.Lifecycle.AttachAllLogTargetsToSingle(ILogTarget.ToFile($"/tmp/log{i}.txt"));
+            await vm.BootAsync();
+            vms.Add(vm);
         }
         
         async Task JailedLaunchAsync()
@@ -75,7 +78,7 @@ public class VmLoadTests : MinimalFixture
         async Task ShutdownAsync(Vm vm)
         {
             var shutdownResult = await vm.ShutdownAsync();
-            if (shutdownResult.IsFailure())
+            if (!shutdownResult.IsSuccessful())
             {
                 allGracefulShutdowns = false;
                 // don't leave healthy VMs running if only one broke, that'd exhaust the runner's system resources

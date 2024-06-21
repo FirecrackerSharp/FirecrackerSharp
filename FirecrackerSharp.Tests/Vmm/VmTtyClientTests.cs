@@ -65,6 +65,7 @@ public class VmTtyClientTests : SingleVmFixture
     {
         var token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
         await Vm.TtyClient.StartBufferedCommandAsync("read n && echo $n", cancellationToken: token);
+        await Task.Delay(TimeSpan.FromMilliseconds(10), token);
         await Vm.TtyClient.BeginIntermittentWriteAsync("sample_input", cancellationToken: token);
         Vm.TtyClient.CompleteIntermittentWrite();
         Vm.TtyClient.IsAvailableForIntermittentWrite.Should().BeTrue();

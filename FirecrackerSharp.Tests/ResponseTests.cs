@@ -88,7 +88,7 @@ public class ResponseTests
             t3 = true;
         });
         t3.Should().BeTrue();
-        await ResponseWith<Container>.BadRequest("br").IfSuccessAsync(async value =>
+        await ResponseWith<Container>.BadRequest("br").IfSuccessAsync(async _ =>
         {
             await Task.Delay(10);
             t4 = true;

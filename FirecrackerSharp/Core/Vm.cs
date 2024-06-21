@@ -6,6 +6,7 @@ using FirecrackerSharp.Installation;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Management;
 using FirecrackerSharp.Tty;
+using FirecrackerSharp.Tty.Multiplexing;
 using Serilog;
 
 namespace FirecrackerSharp.Core;
@@ -37,12 +38,13 @@ public abstract class Vm
 
     private readonly VmManagement _management;
     private readonly VmTtyClient _ttyClient;
+    private readonly VmTtyMultiplexer _ttyMultiplexer;
 
     /// <summary>
     /// The <see cref="VmManagement"/> instance linked to this <see cref="Vm"/> that allows access to the Firecracker
     /// Management API that is linked to this <see cref="Vm"/>'s Firecracker UDS.
-    /// This is a running microVM facility, meaning it is only available during the active <see cref="VmLifecyclePhase"/>,
-    /// otherwise a <see cref="NotAccessibleDueToLifecycleException"/> will be thrown during a get attempt.
+    /// <exception cref="NotAccessibleDueToLifecycleException">When trying to access this facility when the microVM
+    /// is not active</exception>
     /// </summary>
     public VmManagement Management
     {
@@ -57,16 +59,35 @@ public abstract class Vm
     /// <summary>
     /// The <see cref="VmTtyClient"/> instance linked to this <see cref="Vm"/> that allows direct access to the microVM's
     /// serial console / boot TTY.
-    /// This is a running microVM facility, meaning it is only available during the active <see cref="VmLifecyclePhase"/>,
-    /// otherwise a <see cref="NotAccessibleDueToLifecycleException"/> will be thrown during a get attempt.
+    /// <exception cref="NotAccessibleDueToLifecycleException">When trying to access this facility when the microVM
+    /// is not active</exception>
     /// </summary>
     public VmTtyClient TtyClient
     {
         get
         {
             if (Lifecycle.IsNotActive)
-                throw new NotAccessibleDueToLifecycleException("A microVM's TTY cannot be accessed when not active");
+                throw new NotAccessibleDueToLifecycleException("A microVM's TTY cannot be accessed with direct access" +
+                                                               "when not active");
             return _ttyClient;
+        }
+    }
+
+    /// <summary>
+    /// The <see cref="VmTtyMultiplexer"/> instance linked to this <see cref="Vm"/> that allows multiplexed access to
+    /// the microVM's boot TTY. For the multiplexer to function, GNU screen must be installed inside the microVM
+    /// (preferably, when setting up the rootfs).
+    /// </summary>
+    /// <exception cref="NotAccessibleDueToLifecycleException">When trying to access this facility when the microVM
+    /// is not active</exception>
+    public VmTtyMultiplexer TtyMultiplexer
+    {
+        get
+        {
+            if (Lifecycle.IsNotActive)
+                throw new NotAccessibleDueToLifecycleException("A microVM's TTY cannot be accessed with a multiplexer" +
+                                                               "when not active");
+            return _ttyMultiplexer;
         }
     }
 
@@ -89,6 +110,7 @@ public abstract class Vm
         VmId = vmId;
         _management = new VmManagement(this);
         _ttyClient = new VmTtyClient(this);
+        _ttyMultiplexer = new VmTtyMultiplexer(_ttyClient);
     }
 
     /// <summary>
