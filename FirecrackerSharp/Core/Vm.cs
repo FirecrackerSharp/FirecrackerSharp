@@ -6,6 +6,7 @@ using FirecrackerSharp.Installation;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Management;
 using FirecrackerSharp.Tty;
+using FirecrackerSharp.Tty.Multiplexing;
 using Serilog;
 
 namespace FirecrackerSharp.Core;
@@ -37,19 +38,22 @@ public abstract class Vm
 
     private readonly VmManagement _management;
     private readonly VmTtyClient _ttyClient;
+    private readonly VmTtyMultiplexer _ttyMultiplexer;
 
     /// <summary>
     /// The <see cref="VmManagement"/> instance linked to this <see cref="Vm"/> that allows access to the Firecracker
     /// Management API that is linked to this <see cref="Vm"/>'s Firecracker UDS.
-    /// This is a running microVM facility, meaning it is only available during the active <see cref="VmLifecyclePhase"/>,
-    /// otherwise a <see cref="NotAccessibleDueToLifecycleException"/> will be thrown during a get attempt.
+    /// <exception cref="NotAccessibleDueToLifecycleException">When accessing during an inactive state of the microVM</exception>
     /// </summary>
     public VmManagement Management
     {
         get
         {
             if (Lifecycle.IsNotActive)
+            {
                 throw new NotAccessibleDueToLifecycleException("A microVM cannot be managed when not active");
+            }
+
             return _management;
         }
     }
@@ -57,16 +61,33 @@ public abstract class Vm
     /// <summary>
     /// The <see cref="VmTtyClient"/> instance linked to this <see cref="Vm"/> that allows direct access to the microVM's
     /// serial console / boot TTY.
-    /// This is a running microVM facility, meaning it is only available during the active <see cref="VmLifecyclePhase"/>,
-    /// otherwise a <see cref="NotAccessibleDueToLifecycleException"/> will be thrown during a get attempt.
+    /// <exception cref="NotAccessibleDueToLifecycleException">When accessing during an inactive state of the microVM</exception>
     /// </summary>
     public VmTtyClient TtyClient
     {
         get
         {
             if (Lifecycle.IsNotActive)
-                throw new NotAccessibleDueToLifecycleException("A microVM's TTY cannot be accessed when not active");
+            {
+                throw new NotAccessibleDueToLifecycleException(
+                    "A microVM's TTY cannot be accessed with the direct client when not active");
+            }
+            
             return _ttyClient;
+        }
+    }
+
+    public VmTtyMultiplexer TtyMultiplexer
+    {
+        get
+        {
+            if (Lifecycle.IsNotActive)
+            {
+                throw new NotAccessibleDueToLifecycleException(
+                    "A microVM's TTY cannot be accessed with the multiplexer client when not active");
+            }
+
+            return _ttyMultiplexer;
         }
     }
 
@@ -89,6 +110,7 @@ public abstract class Vm
         VmId = vmId;
         _management = new VmManagement(this);
         _ttyClient = new VmTtyClient(this);
+        _ttyMultiplexer = new VmTtyMultiplexer(_ttyClient);
     }
 
     /// <summary>

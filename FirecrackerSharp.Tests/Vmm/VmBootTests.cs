@@ -1,7 +1,6 @@
 using FirecrackerSharp.Data;
 using FirecrackerSharp.Lifecycle;
 using FirecrackerSharp.Tests.Helpers;
-using FirecrackerSharp.Tty.CompletionTracking;
 using FluentAssertions;
 
 namespace FirecrackerSharp.Tests.Vmm;
