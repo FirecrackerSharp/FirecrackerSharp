@@ -349,8 +349,8 @@ public sealed class VmTtyClient
         {
             while (true)
             {
-                await Task.Delay(pollTimeSpan.Value, cancellationToken);
                 if (semaphore.CurrentCount > 0) break;
+                await Task.Delay(pollTimeSpan.Value, cancellationToken);
             }
         }
         catch (OperationCanceledException)

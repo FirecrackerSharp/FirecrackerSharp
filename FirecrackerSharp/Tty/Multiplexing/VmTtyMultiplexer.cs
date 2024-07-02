@@ -31,7 +31,7 @@ public sealed class VmTtyMultiplexer
         var capturePath = captureMode == CaptureMode.None
             ? null
             : capturePathGenerator.GetCapturePath(commandId, commandText, captureMode);
-        var multiplexerCommand = new TtyMultiplexerCommand(commandId, captureMode, commandText, capturePath);
+        var multiplexerCommand = new TtyMultiplexerCommand(commandId, captureMode, commandText, capturePath, _ttyClient);
         
         // issue initializing write
         await _ttyClient.BeginPrimaryWriteAsync($"screen -dmS {commandId}", completionTracker: initCompletionTracker,
@@ -39,11 +39,11 @@ public sealed class VmTtyMultiplexer
         await _ttyClient.WaitForPrimaryAvailabilityAsync(pollTimeSpan, cancellationToken: cancellationToken);
         
         // find exact command text, taking capture mode into account
-        var issuingCommandText = $"screen -X -p 0 -S {commandId} stuff \"{commandText} ^M\"";
+        var issuingCommandText = $"screen -p 0 -XS {commandId} stuff \"{commandText} ^M\"";
         if (captureMode != CaptureMode.None)
         {
             var delimiter = captureMode == CaptureMode.StandardOutput ? ">" : "&>";
-            issuingCommandText = $"screen -X -p 0 -S {commandId} stuff \"{commandText} {delimiter} {capturePath} ^M\"";
+            issuingCommandText = $"screen -p 0 -XS {commandId} stuff \"{commandText} {delimiter} {capturePath} ^M\"";
         }
 
         // issue command-sending write
