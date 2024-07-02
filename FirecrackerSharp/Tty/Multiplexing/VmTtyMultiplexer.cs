@@ -7,6 +7,9 @@ public sealed class VmTtyMultiplexer
     private readonly VmTtyClient _ttyClient;
     private ulong _lastCommandId;
 
+    private readonly List<TtyMultiplexerCommand> _commands = [];
+    public IReadOnlyList<TtyMultiplexerCommand> Commands => _commands;
+
     internal VmTtyMultiplexer(VmTtyClient ttyClient)
     {
         _ttyClient = ttyClient;
@@ -51,6 +54,10 @@ public sealed class VmTtyMultiplexer
             cancellationToken: cancellationToken);
         await _ttyClient.WaitForPrimaryAvailabilityAsync(pollTimeSpan, cancellationToken: cancellationToken);
 
+        _commands.Add(multiplexerCommand);
         return multiplexerCommand;
     }
+
+    public TtyMultiplexerCommand? GetCommandById(ulong commandId) =>
+        _commands.FirstOrDefault(c => c.Id == commandId);
 }

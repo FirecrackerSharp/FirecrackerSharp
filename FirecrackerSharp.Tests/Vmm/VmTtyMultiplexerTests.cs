@@ -9,8 +9,9 @@ public class VmTtyMultiplexerTests : SingleVmFixture
     public async Task Stub()
     {
         var cmd = await Vm.TtyMultiplexer.StartCommandAsync("cat --help", CaptureMode.StandardOutputAndError);
-        await Task.Delay(10);
         await cmd.SendCtrlCAsync();
+        var ocmd = Vm.TtyMultiplexer.GetCommandById(1);
+        
         var output = await cmd.CaptureOutputIntoMemoryAsync();
         Console.WriteLine(output);
     }
